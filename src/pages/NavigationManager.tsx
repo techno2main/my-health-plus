@@ -17,6 +17,12 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const ICON_MAP: Record<string, any> = {
   Home, Pill, Package, Calendar, Settings,
@@ -25,17 +31,13 @@ const ICON_MAP: Record<string, any> = {
   Moon, Sun, Mail, Phone, MapPin, Search
 };
 
-const iconNames = [
-  "Home", "Pill", "Package", "Calendar", "Settings",
-  "User", "Heart", "Bell", "Shield", "FileText",
-  "ClipboardList", "Users", "Database", "Smartphone",
-  "Moon", "Sun", "Mail", "Phone", "MapPin", "Search"
-];
+const iconNames = Object.keys(ICON_MAP);
 
 export default function NavigationManager() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -134,6 +136,7 @@ export default function NavigationManager() {
       is_active: true,
     });
     setEditingId(null);
+    setIsDialogOpen(false);
   };
 
   const handleEdit = (item: any) => {
@@ -145,6 +148,7 @@ export default function NavigationManager() {
       position: item.position,
       is_active: item.is_active,
     });
+    setIsDialogOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -172,105 +176,13 @@ export default function NavigationManager() {
             <h1 className="text-3xl font-bold">Gestion de la navigation</h1>
             <p className="text-muted-foreground">Configurez les items de votre barre de navigation</p>
           </div>
+          <Button onClick={() => setIsDialogOpen(true)}>
+            <Plus className="h-4 w-4" />
+          </Button>
         </div>
-
-        {/* Formulaire */}
-        <Card className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <h3 className="text-lg font-semibold mb-4">
-              {editingId ? "Modifier l'item" : "Ajouter un item"}
-            </h3>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom affiché</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Accueil"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="path">Lien</Label>
-                <Input
-                  id="path"
-                  value={formData.path}
-                  onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-                  placeholder="/"
-                  required
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="icon">Icône</Label>
-                <Select
-                  value={formData.icon}
-                  onValueChange={(value) => setFormData({ ...formData, icon: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-[200px] bg-background">
-                    {iconNames.map((iconName) => {
-                      const Icon = getIconComponent(iconName);
-                      return (
-                        <SelectItem key={iconName} value={iconName}>
-                          <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
-                            {iconName}
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="position">Position</Label>
-                <Input
-                  id="position"
-                  type="number"
-                  min="1"
-                  value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) })}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-                />
-                <Label htmlFor="is_active">Actif</Label>
-              </div>
-
-              <div className="flex gap-2">
-                {editingId && (
-                  <Button type="button" variant="outline" onClick={resetForm}>
-                    Annuler
-                  </Button>
-                )}
-                <Button type="submit">
-                  <Save className="mr-2 h-4 w-4" />
-                  {editingId ? "Modifier" : "Ajouter"}
-                </Button>
-              </div>
-            </div>
-          </form>
-        </Card>
 
         {/* Liste des items */}
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Items de navigation</h3>
-          
           {isLoading ? (
             <Card className="p-6 text-center text-muted-foreground">
               Chargement...
@@ -334,6 +246,100 @@ export default function NavigationManager() {
           )}
         </div>
       </div>
+
+      {/* Dialog Formulaire */}
+      <Dialog open={isDialogOpen} onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) resetForm();
+      }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {editingId ? "Modifier l'item" : "Ajouter un item"}
+            </DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom affiché</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Accueil"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="path">Lien</Label>
+              <Input
+                id="path"
+                value={formData.path}
+                onChange={(e) => setFormData({ ...formData, path: e.target.value })}
+                placeholder="/"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="icon">Icône</Label>
+              <Select
+                value={formData.icon}
+                onValueChange={(value) => setFormData({ ...formData, icon: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-[200px] bg-background">
+                  {iconNames.map((iconName) => {
+                    const Icon = getIconComponent(iconName);
+                    return (
+                      <SelectItem key={iconName} value={iconName}>
+                        <div className="flex items-center gap-2">
+                          <Icon className="h-4 w-4" />
+                          {iconName}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="position">Position</Label>
+              <Input
+                id="position"
+                type="number"
+                min="1"
+                value={formData.position}
+                onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) })}
+                required
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Switch
+                id="is_active"
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              />
+              <Label htmlFor="is_active">Actif</Label>
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Annuler
+              </Button>
+              <Button type="submit">
+                <Save className="mr-2 h-4 w-4" />
+                {editingId ? "Modifier" : "Ajouter"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
