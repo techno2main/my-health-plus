@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  Trash2, Save, ChevronUp, ChevronDown, Pencil,
+  Trash2, ChevronUp, ChevronDown, Pencil, ArrowLeft,
   Home, Pill, Package, Calendar, Settings,
   User, Heart, Bell, Shield, FileText,
   ClipboardList, Users, Database, Smartphone,
@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   Dialog,
   DialogContent,
@@ -446,92 +447,115 @@ export default function NavigationManager() {
         setIsDialogOpen(open);
         if (!open) resetForm();
       }}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {editingId ? "Modifier l'item" : "Ajouter un item"}
-            </DialogTitle>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setIsDialogOpen(false)} 
+                className="h-8 w-8 p-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <DialogTitle>
+                {editingId ? "Modifier" : "Ajouter"}
+              </DialogTitle>
+            </div>
           </DialogHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom affiché</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Accueil"
-                required
-              />
-            </div>
+          <ScrollArea className="flex-1 px-6">
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nom affiché</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Accueil"
+                  className="bg-surface"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="path">Lien</Label>
-              <Input
-                id="path"
-                value={formData.path}
-                onChange={(e) => setFormData({ ...formData, path: e.target.value })}
-                placeholder="/"
-                required
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="path">Lien</Label>
+                <Input
+                  id="path"
+                  value={formData.path}
+                  onChange={(e) => setFormData({ ...formData, path: e.target.value })}
+                  placeholder="/"
+                  className="bg-surface"
+                  required
+                />
+              </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="icon">Icône</Label>
-              <Select
-                value={formData.icon}
-                onValueChange={(value) => setFormData({ ...formData, icon: value })}
+              <div className="space-y-2">
+                <Label htmlFor="icon">Icône</Label>
+                <Select
+                  value={formData.icon}
+                  onValueChange={(value) => setFormData({ ...formData, icon: value })}
+                >
+                  <SelectTrigger className="bg-surface">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-[200px] bg-background">
+                    {iconNames.map((iconName) => {
+                      const Icon = getIconComponent(iconName);
+                      return (
+                        <SelectItem key={iconName} value={iconName}>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            {iconName}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="position">Position</Label>
+                <Input
+                  id="position"
+                  type="number"
+                  min="1"
+                  value={formData.position}
+                  onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) })}
+                  className="bg-surface"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Switch
+                  id="is_active"
+                  checked={formData.is_active}
+                  onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                />
+                <Label htmlFor="is_active">Actif</Label>
+              </div>
+            </div>
+          </ScrollArea>
+
+          <div className="px-6 py-4 border-t shrink-0 bg-background">
+            <div className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsDialogOpen(false)} 
+                className="flex-1 h-9"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-[200px] bg-background">
-                  {iconNames.map((iconName) => {
-                    const Icon = getIconComponent(iconName);
-                    return (
-                      <SelectItem key={iconName} value={iconName}>
-                        <div className="flex items-center gap-2">
-                          <Icon className="h-4 w-4" />
-                          {iconName}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="position">Position</Label>
-              <Input
-                id="position"
-                type="number"
-                min="1"
-                value={formData.position}
-                onChange={(e) => setFormData({ ...formData, position: parseInt(e.target.value) })}
-                required
-              />
-            </div>
-
-            <div className="flex items-center gap-2">
-              <Switch
-                id="is_active"
-                checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
-              />
-              <Label htmlFor="is_active">Actif</Label>
-            </div>
-
-            <div className="flex gap-2 justify-end">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Annuler
               </Button>
-              <Button type="submit">
-                <Save className="mr-2 h-4 w-4" />
+              <Button 
+                onClick={handleSubmit} 
+                className="flex-1 gradient-primary h-9"
+              >
                 {editingId ? "Modifier" : "Ajouter"}
               </Button>
             </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </AppLayout>
