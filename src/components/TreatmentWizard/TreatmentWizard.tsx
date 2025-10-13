@@ -61,25 +61,19 @@ export function TreatmentWizard() {
     }
   };
 
-  const canGoNext = () => {
-    switch (currentStep) {
-      case 1:
-        return formData.name.trim() !== "";
-      case 2:
-        return formData.medications.length > 0;
-      case 3:
-        return formData.medications.every((_, index) => 
-          formData.stocks[index] && formData.stocks[index] > 0
-        );
-      case 4:
-        return true;
-      default:
-        return false;
-    }
+  const canSubmit = () => {
+    // Validation only for final submit
+    return (
+      formData.name.trim() !== "" &&
+      formData.medications.length > 0 &&
+      formData.medications.every((_, index) => 
+        formData.stocks[index] && formData.stocks[index] > 0
+      )
+    );
   };
 
   const handleNext = () => {
-    if (canGoNext() && currentStep < TOTAL_STEPS) {
+    if (currentStep < TOTAL_STEPS) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -91,7 +85,14 @@ export function TreatmentWizard() {
   };
 
   const handleSubmit = async () => {
-    if (!canGoNext()) return;
+    if (!canSubmit()) {
+      toast({
+        title: "Informations manquantes",
+        description: "Veuillez renseigner tous les champs obligatoires avant de créer le traitement.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setLoading(true);
     try {
@@ -263,7 +264,7 @@ export function TreatmentWizard() {
           <Button
             type="button"
             onClick={handleNext}
-            disabled={!canGoNext() || loading}
+            disabled={loading}
             className="flex-1 gradient-primary"
           >
             Suivant
@@ -273,7 +274,7 @@ export function TreatmentWizard() {
           <Button
             type="button"
             onClick={handleSubmit}
-            disabled={!canGoNext() || loading}
+            disabled={loading}
             className="flex-1 gradient-primary"
           >
             {loading ? "Enregistrement..." : (
