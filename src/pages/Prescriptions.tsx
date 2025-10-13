@@ -26,6 +26,11 @@ interface PrescriptionWithDetails extends Prescription {
     id: string;
     name: string;
   }>;
+  medications: Array<{
+    id: string;
+    name: string;
+    dosage: string;
+  }>;
 }
 
 export default function Prescriptions() {
@@ -89,12 +94,28 @@ export default function Prescriptions() {
             .select("id, name")
             .eq("prescription_id", presc.id);
 
+          // Charger tous les médicaments des traitements liés
+          const medications: Array<{ id: string; name: string; dosage: string }> = [];
+          if (treatmentsData && treatmentsData.length > 0) {
+            for (const treatment of treatmentsData) {
+              const { data: medsData } = await supabase
+                .from("medications")
+                .select("id, name, dosage")
+                .eq("treatment_id", treatment.id);
+              
+              if (medsData) {
+                medications.push(...medsData);
+              }
+            }
+          }
+
           return {
             ...presc,
             doctor_name,
             expiry_date: expiryDate.toISOString(),
             status,
-            treatments: treatmentsData || []
+            treatments: treatmentsData || [],
+            medications
           };
         })
       );
@@ -248,12 +269,14 @@ export default function Prescriptions() {
                   </div>
                 </div>
 
-                {prescription.treatments.length > 0 && (
+                {prescription.medications.length > 0 && (
                   <div className="mb-4">
                     <p className="text-sm text-muted-foreground mb-2">Médicaments prescrits</p>
                     <div className="flex flex-wrap gap-2">
-                      {prescription.treatments.map((treatment) => (
-                        <Badge key={treatment.id} variant="muted">{treatment.name}</Badge>
+                      {prescription.medications.map((medication) => (
+                        <Badge key={medication.id} variant="muted">
+                          {medication.name}
+                        </Badge>
                       ))}
                     </div>
                   </div>
