@@ -287,7 +287,7 @@ export type Database = {
           notes: string | null
           pathology: string | null
           pharmacy_id: string | null
-          prescription_id: string
+          prescription_id: string | null
           start_date: string
           updated_at: string | null
           user_id: string
@@ -302,7 +302,7 @@ export type Database = {
           notes?: string | null
           pathology?: string | null
           pharmacy_id?: string | null
-          prescription_id: string
+          prescription_id?: string | null
           start_date: string
           updated_at?: string | null
           user_id: string
@@ -317,7 +317,7 @@ export type Database = {
           notes?: string | null
           pathology?: string | null
           pharmacy_id?: string | null
-          prescription_id?: string
+          prescription_id?: string | null
           start_date?: string
           updated_at?: string | null
           user_id?: string
