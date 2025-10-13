@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, Edit, Search, ArrowLeft } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -23,6 +24,7 @@ interface MedicationCatalog {
 
 const MedicationCatalog = () => {
   const [medications, setMedications] = useState<MedicationCatalog[]>([])
+  const [pathologies, setPathologies] = useState<{ id: string; name: string }[]>([])
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [showDialog, setShowDialog] = useState(false)
@@ -38,7 +40,22 @@ const MedicationCatalog = () => {
 
   useEffect(() => {
     loadMedications()
+    loadPathologies()
   }, [])
+
+  const loadPathologies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("pathologies")
+        .select("id, name")
+        .order("name")
+
+      if (error) throw error
+      setPathologies(data || [])
+    } catch (error) {
+      console.error("Error loading pathologies:", error)
+    }
+  }
 
   const loadMedications = async () => {
     try {
@@ -260,13 +277,18 @@ const MedicationCatalog = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="pathology">Pathologie</Label>
-                <Input
-                  id="pathology"
-                  value={formData.pathology}
-                  onChange={(e) => setFormData({ ...formData, pathology: e.target.value })}
-                  placeholder="Ex: Douleur/Fièvre"
-                  className="bg-surface"
-                />
+                <Select value={formData.pathology} onValueChange={(value) => setFormData({ ...formData, pathology: value })}>
+                  <SelectTrigger className="bg-surface">
+                    <SelectValue placeholder="Sélectionner une pathologie" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pathologies.map((pathology) => (
+                      <SelectItem key={pathology.id} value={pathology.name}>
+                        {pathology.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
