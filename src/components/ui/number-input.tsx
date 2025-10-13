@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Minus, Plus } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
@@ -38,18 +38,7 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
     };
 
     return (
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 shrink-0"
-          onClick={handleDecrement}
-          disabled={disabled || (typeof value === 'number' && value <= min)}
-        >
-          <Minus className="h-4 w-4" />
-        </Button>
-        
+      <div className="flex items-center gap-1">
         <Input
           ref={ref}
           type="number"
@@ -60,16 +49,29 @@ const NumberInput = React.forwardRef<HTMLInputElement, NumberInputProps>(
           {...props}
         />
         
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 shrink-0"
-          onClick={handleIncrement}
-          disabled={disabled || (max !== undefined && typeof value === 'number' && value >= max)}
-        >
-          <Plus className="h-4 w-4" />
-        </Button>
+        <div className="flex flex-col gap-0">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-4 w-6 p-0 hover:bg-muted"
+            onClick={handleIncrement}
+            disabled={disabled || (max !== undefined && typeof value === 'number' && value >= max)}
+          >
+            <ChevronUp className="h-3 w-3" />
+          </Button>
+          
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="h-4 w-6 p-0 hover:bg-muted"
+            onClick={handleDecrement}
+            disabled={disabled || (typeof value === 'number' && value <= min)}
+          >
+            <ChevronDown className="h-3 w-3" />
+          </Button>
+        </div>
       </div>
     );
   }
