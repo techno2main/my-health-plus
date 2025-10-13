@@ -286,39 +286,118 @@ const Index = () => {
             </Button>
           </div>
 
-          <div className="space-y-3">
-            {upcomingIntakes.map((intake) => (
-              <Card key={intake.id} className="p-4 surface-elevated hover:shadow-md transition-shadow">
-                <div className="flex items-center gap-4">
-                  <div className="flex flex-col items-center justify-center min-w-[80px] p-2 rounded-lg bg-primary/10">
-                    <Clock className="h-4 w-4 text-primary mb-1" />
-                    <span className="text-sm font-semibold text-primary">{intake.time}</span>
-                    <span className="text-xs text-muted-foreground">{format(intake.date, "dd/MM")}</span>
-                  </div>
-                  
-                  <div className="flex-1">
-                    <p className="font-medium">{intake.medication}</p>
-                    <p className="text-sm text-muted-foreground">{intake.treatment}</p>
-                  </div>
+          <div className="space-y-6">
+            {/* Today's Section */}
+            {upcomingIntakes.some(intake => {
+              const intakeDate = new Date(intake.date);
+              const today = new Date();
+              intakeDate.setHours(0, 0, 0, 0);
+              today.setHours(0, 0, 0, 0);
+              return intakeDate.getTime() === today.getTime();
+            }) && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Aujourd'hui
+                </h3>
+                {upcomingIntakes
+                  .filter(intake => {
+                    const intakeDate = new Date(intake.date);
+                    const today = new Date();
+                    intakeDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+                    return intakeDate.getTime() === today.getTime();
+                  })
+                  .map((intake) => (
+                    <Card key={intake.id} className="p-4 surface-elevated hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-center justify-center min-w-[80px] p-2 rounded-lg bg-primary/10">
+                          <Clock className="h-4 w-4 text-primary mb-1" />
+                          <span className="text-sm font-semibold text-primary">{intake.time}</span>
+                          <span className="text-xs text-muted-foreground">{format(intake.date, "dd/MM")}</span>
+                        </div>
+                        
+                        <div className="flex-1">
+                          <p className="font-medium">{intake.medication}</p>
+                          <p className="text-sm text-muted-foreground">{intake.treatment}</p>
+                        </div>
 
-                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
-                    <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
-                    <span className={`text-sm font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
-                      {intake.currentStock}
-                    </span>
-                  </div>
-                  
-                  <Button 
-                    size="sm" 
-                    className="gradient-primary"
-                    onClick={() => handleTakeIntake(intake)}
-                    disabled={intake.currentStock === 0}
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
+                          <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
+                          <span className={`text-sm font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
+                            {intake.currentStock}
+                          </span>
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          className="gradient-primary"
+                          onClick={() => handleTakeIntake(intake)}
+                          disabled={intake.currentStock === 0}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+              </div>
+            )}
+
+            {/* Tomorrow's Section */}
+            {upcomingIntakes.some(intake => {
+              const intakeDate = new Date(intake.date);
+              const tomorrow = new Date();
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              intakeDate.setHours(0, 0, 0, 0);
+              tomorrow.setHours(0, 0, 0, 0);
+              return intakeDate.getTime() === tomorrow.getTime();
+            }) && (
+              <div className="space-y-3">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
+                  Demain
+                </h3>
+                {upcomingIntakes
+                  .filter(intake => {
+                    const intakeDate = new Date(intake.date);
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    intakeDate.setHours(0, 0, 0, 0);
+                    tomorrow.setHours(0, 0, 0, 0);
+                    return intakeDate.getTime() === tomorrow.getTime();
+                  })
+                  .map((intake) => (
+                    <Card key={intake.id} className="p-4 surface-elevated hover:shadow-md transition-shadow">
+                      <div className="flex items-center gap-4">
+                        <div className="flex flex-col items-center justify-center min-w-[80px] p-2 rounded-lg bg-primary/10">
+                          <Clock className="h-4 w-4 text-primary mb-1" />
+                          <span className="text-sm font-semibold text-primary">{intake.time}</span>
+                          <span className="text-xs text-muted-foreground">{format(intake.date, "dd/MM")}</span>
+                        </div>
+                        
+                        <div className="flex-1">
+                          <p className="font-medium">{intake.medication}</p>
+                          <p className="text-sm text-muted-foreground">{intake.treatment}</p>
+                        </div>
+
+                        <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
+                          <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
+                          <span className={`text-sm font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
+                            {intake.currentStock}
+                          </span>
+                        </div>
+                        
+                        <Button 
+                          size="sm" 
+                          className="gradient-primary"
+                          onClick={() => handleTakeIntake(intake)}
+                          disabled={intake.currentStock === 0}
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Card>
+                  ))}
+              </div>
+            )}
           </div>
         </section>
 
