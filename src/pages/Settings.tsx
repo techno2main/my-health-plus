@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { useNavigate } from "react-router-dom";
 import { 
   Bell, 
   Moon, 
@@ -10,10 +11,14 @@ import {
   User, 
   Smartphone,
   ChevronRight,
-  LogOut
+  LogOut,
+  Users,
+  FileText,
+  ClipboardList
 } from "lucide-react";
 
 export default function Settings() {
+  const navigate = useNavigate();
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
@@ -22,9 +27,59 @@ export default function Settings() {
           <p className="text-muted-foreground">Gérez vos préférences et votre compte</p>
         </div>
 
+        {/* Navigation rapide */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground">Navigation</h3>
+          
+          <Card className="p-4" onClick={() => navigate("/pros")}>
+            <div className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Users className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Professionnels de santé</h3>
+                  <p className="text-sm text-muted-foreground">Médecins et pharmacies</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </Card>
+
+          <Card className="p-4" onClick={() => navigate("/prescriptions")}>
+            <div className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Ordonnances</h3>
+                  <p className="text-sm text-muted-foreground">Prescriptions médicales</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </Card>
+
+          <Card className="p-4" onClick={() => navigate("/history")}>
+            <div className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <ClipboardList className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Historique</h3>
+                  <p className="text-sm text-muted-foreground">Suivi des prises</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </Card>
+        </div>
+
         {/* Profil */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
+        <Card className="p-4" onClick={() => navigate("/profile")}>
+          <div className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-full bg-primary/10">
                 <User className="h-6 w-6 text-primary" />
@@ -101,8 +156,8 @@ export default function Settings() {
         </Card>
 
         {/* Confidentialité */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
+        <Card className="p-4" onClick={() => navigate("/privacy")}>
+          <div className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-full bg-primary/10">
                 <Shield className="h-6 w-6 text-primary" />
@@ -117,8 +172,8 @@ export default function Settings() {
         </Card>
 
         {/* À propos */}
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
+        <Card className="p-4" onClick={() => navigate("/about")}>
+          <div className="flex items-center justify-between cursor-pointer">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-full bg-primary/10">
                 <Smartphone className="h-6 w-6 text-primary" />
