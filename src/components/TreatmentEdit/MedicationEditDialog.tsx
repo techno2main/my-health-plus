@@ -27,10 +27,11 @@ interface MedicationEditDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   medication: Medication | null;
+  treatmentId: string;
   onSave: () => void;
 }
 
-export function MedicationEditDialog({ open, onOpenChange, medication, onSave }: MedicationEditDialogProps) {
+export function MedicationEditDialog({ open, onOpenChange, medication, treatmentId, onSave }: MedicationEditDialogProps) {
   const [catalog, setCatalog] = useState<CatalogMedication[]>([]);
   const [selectedCatalogId, setSelectedCatalogId] = useState<string>("");
   const [dosage, setDosage] = useState("");
@@ -42,10 +43,18 @@ export function MedicationEditDialog({ open, onOpenChange, medication, onSave }:
   }, []);
 
   useEffect(() => {
-    if (medication && open) {
-      setSelectedCatalogId(medication.catalog_id || "");
-      setDosage(medication.dosage);
-      setTimes(medication.times || []);
+    if (open) {
+      if (medication) {
+        // Mode édition
+        setSelectedCatalogId(medication.catalog_id || "");
+        setDosage(medication.dosage);
+        setTimes(medication.times || []);
+      } else {
+        // Mode ajout
+        setSelectedCatalogId("");
+        setDosage("");
+        setTimes([]);
+      }
     }
   }, [medication, open]);
 
@@ -83,7 +92,7 @@ export function MedicationEditDialog({ open, onOpenChange, medication, onSave }:
   };
 
   const handleSave = async () => {
-    if (!medication || !selectedCatalogId || !dosage || times.length === 0) {
+    if (!selectedCatalogId || !dosage || times.length === 0) {
       toast.error("Veuillez remplir tous les champs");
       return;
     }
@@ -91,31 +100,52 @@ export function MedicationEditDialog({ open, onOpenChange, medication, onSave }:
     const selectedMed = catalog.find(c => c.id === selectedCatalogId);
     if (!selectedMed) return;
 
-    const { error } = await supabase
-      .from("medications")
-      .update({
-        catalog_id: selectedCatalogId,
-        name: selectedMed.name,
-        dosage,
-        times
-      })
-      .eq("id", medication.id);
+    try {
+      if (medication) {
+        // Mode édition
+        const { error } = await supabase
+          .from("medications")
+          .update({
+            catalog_id: selectedCatalogId,
+            name: selectedMed.name,
+            dosage,
+            times
+          })
+          .eq("id", medication.id);
 
-    if (error) {
-      toast.error("Erreur lors de la mise à jour");
-      return;
+        if (error) throw error;
+        toast.success("Médicament mis à jour");
+      } else {
+        // Mode ajout
+        const { error } = await supabase
+          .from("medications")
+          .insert({
+            treatment_id: treatmentId,
+            catalog_id: selectedCatalogId,
+            name: selectedMed.name,
+            dosage,
+            times,
+            current_stock: 0,
+            min_threshold: 10
+          });
+
+        if (error) throw error;
+        toast.success("Médicament ajouté");
+      }
+
+      onSave();
+      onOpenChange(false);
+    } catch (error) {
+      console.error("Error saving medication:", error);
+      toast.error("Erreur lors de l'enregistrement");
     }
-
-    toast.success("Médicament mis à jour");
-    onSave();
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Modifier le médicament</DialogTitle>
+          <DialogTitle>{medication ? "Modifier le médicament" : "Ajouter un médicament"}</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">

@@ -100,6 +100,11 @@ export default function TreatmentEdit() {
     setDialogOpen(true);
   };
 
+  const handleAddMedication = () => {
+    setEditingMedication(null);
+    setDialogOpen(true);
+  };
+
   const handleMedicationSaved = () => {
     loadTreatmentData();
   };
@@ -257,9 +262,9 @@ export default function TreatmentEdit() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Médicaments</h3>
-            <Button size="sm" onClick={() => {
-              toast.info("Fonctionnalité d'ajout de médicament en cours de développement");
-            }}>Ajouter un médicament</Button>
+            <Button size="sm" onClick={handleAddMedication}>
+              Ajouter un médicament
+            </Button>
           </div>
 
           <div className="space-y-3">
@@ -313,6 +318,7 @@ export default function TreatmentEdit() {
           open={dialogOpen}
           onOpenChange={setDialogOpen}
           medication={editingMedication}
+          treatmentId={id!}
           onSave={handleMedicationSaved}
         />
       </div>
