@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/Layout/AppLayout";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,6 +19,7 @@ interface Medication {
   dosage: string;
   times: string[];
   catalog_id?: string;
+  pathology?: string | null;
 }
 
 interface Treatment {
@@ -85,7 +87,30 @@ export default function TreatmentEdit() {
         .eq("treatment_id", id);
 
       if (medsError) throw medsError;
-      setMedications(medsData || []);
+      
+      // Load pathology from catalog for each medication
+      const medsWithPathology = await Promise.all(
+        (medsData || []).map(async (med: any) => {
+          let pathology = null;
+          
+          if (med.catalog_id) {
+            const { data: catalogData } = await supabase
+              .from("medication_catalog")
+              .select("pathology")
+              .eq("id", med.catalog_id)
+              .single();
+            
+            pathology = catalogData?.pathology || null;
+          }
+
+          return {
+            ...med,
+            pathology
+          };
+        })
+      );
+      
+      setMedications(medsWithPathology);
 
     } catch (error) {
       console.error("Error loading treatment:", error);
@@ -274,9 +299,16 @@ export default function TreatmentEdit() {
               medications.map((med) => (
                 <Card key={med.id} className="p-4 bg-surface">
                   <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="font-medium">{med.name}</p>
-                      <p className="text-sm text-muted-foreground">{med.dosage}</p>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="font-medium">{med.name}</p>
+                        {med.pathology && (
+                          <Badge variant="secondary" className="text-xs">
+                            {med.pathology}
+                          </Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">{med.dosage}</p>
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => handleEditMedication(med)}>
                       Modifier
