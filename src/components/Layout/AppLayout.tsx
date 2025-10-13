@@ -1,4 +1,5 @@
 import { ReactNode } from "react"
+import { ScrollToTop } from "@/components/ScrollToTop"
 import { BottomNavigation } from "./BottomNavigation"
 import { cn } from "@/lib/utils"
 
@@ -15,6 +16,7 @@ export function AppLayout({ children, className, showBottomNav = true }: AppLayo
         {children}
       </main>
       {showBottomNav && <BottomNavigation />}
+      <ScrollToTop />
     </div>
   )
 }
