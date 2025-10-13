@@ -134,8 +134,20 @@ const Index = () => {
         })
       })
 
-      // Sort by date/time and take first 10
-      intakes.sort((a, b) => a.date.getTime() - b.date.getTime())
+      // Sort by date first, then by time
+      intakes.sort((a, b) => {
+        const dateA = new Date(a.date)
+        const dateB = new Date(b.date)
+        dateA.setHours(0, 0, 0, 0)
+        dateB.setHours(0, 0, 0, 0)
+        
+        // Compare dates first
+        const dateDiff = dateA.getTime() - dateB.getTime()
+        if (dateDiff !== 0) return dateDiff
+        
+        // If same date, compare times
+        return a.date.getTime() - b.date.getTime()
+      })
       setUpcomingIntakes(intakes.slice(0, 10))
 
       // Process stock alerts
