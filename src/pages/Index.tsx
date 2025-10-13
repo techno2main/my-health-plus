@@ -57,15 +57,14 @@ const Index = () => {
         .select(`
           id,
           name,
+          dosage_amount,
           dosage,
           times,
           current_stock,
           initial_stock,
           min_threshold,
           treatment_id,
-          catalog_id,
-          treatments!inner(name, is_active),
-          medication_catalog(dosage_amount)
+          treatments!inner(name, is_active)
         `)
         .eq("treatments.is_active", true)
 
@@ -106,15 +105,11 @@ const Index = () => {
 
             // Only show if in the future or if it's for today and not taken
             if (scheduledDate >= now) {
-              // Extract dosage from medication name (e.g., "Venlafaxine 225mg" -> "225mg")
-              const dosageMatch = med.name.match(/(\d+(?:\/\d+)?(?:mg|g|ml))/i)
-              const extractedDosage = dosageMatch ? dosageMatch[1] : (med.medication_catalog?.dosage_amount || med.dosage)
-              
               intakes.push({
                 id: `${med.id}-${time}-today`,
                 medicationId: med.id,
                 medication: med.name,
-                dosage: extractedDosage,
+                dosage: med.dosage_amount || med.dosage,
                 time: time,
                 date: scheduledDate,
                 treatment: med.treatments.name,
@@ -130,15 +125,11 @@ const Index = () => {
           const [hours, minutes] = time.split(':')
           tomorrowDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
           
-          // Extract dosage from medication name (e.g., "Venlafaxine 225mg" -> "225mg")
-          const dosageMatch = med.name.match(/(\d+(?:\/\d+)?(?:mg|g|ml))/i)
-          const extractedDosage = dosageMatch ? dosageMatch[1] : (med.medication_catalog?.dosage_amount || med.dosage)
-          
           intakes.push({
             id: `${med.id}-${time}-tomorrow`,
             medicationId: med.id,
             medication: med.name,
-            dosage: extractedDosage,
+            dosage: med.dosage_amount || med.dosage,
             time: time,
             date: tomorrowDate,
             treatment: med.treatments.name,

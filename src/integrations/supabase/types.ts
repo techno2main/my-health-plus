@@ -186,6 +186,7 @@ export type Database = {
           created_at: string | null
           current_stock: number | null
           dosage: string
+          dosage_amount: string | null
           expiry_date: string | null
           id: string
           initial_stock: number | null
@@ -200,6 +201,7 @@ export type Database = {
           created_at?: string | null
           current_stock?: number | null
           dosage: string
+          dosage_amount?: string | null
           expiry_date?: string | null
           id?: string
           initial_stock?: number | null
@@ -214,6 +216,7 @@ export type Database = {
           created_at?: string | null
           current_stock?: number | null
           dosage?: string
+          dosage_amount?: string | null
           expiry_date?: string | null
           id?: string
           initial_stock?: number | null
