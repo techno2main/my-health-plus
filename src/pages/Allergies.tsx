@@ -168,11 +168,11 @@ const Allergies = () => {
           </Button>
           <header className="flex-1 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Allergies</h1>
-              <p className="text-sm text-muted-foreground">{allergies.length} allergie(s) enregistrée(s)</p>
+              <h1 className="text-xl font-bold">Allergies</h1>
+              <p className="text-sm text-muted-foreground">{allergies.length} allergie(s)</p>
             </div>
             <Button className="gradient-primary" onClick={() => openDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-1" />
               Ajouter
             </Button>
           </header>
