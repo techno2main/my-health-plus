@@ -159,11 +159,17 @@ const Calendar = () => {
         `)
         .eq("treatments.is_active", true)
 
+      // Get start and end of selected day
+      const dayStart = new Date(selectedDate)
+      dayStart.setHours(0, 0, 0, 0)
+      const dayEnd = new Date(selectedDate)
+      dayEnd.setHours(23, 59, 59, 999)
+
       const { data: intakes } = await supabase
         .from("medication_intakes")
         .select("*")
-        .gte("scheduled_time", format(selectedDate, "yyyy-MM-dd"))
-        .lt("scheduled_time", format(new Date(selectedDate.getTime() + 86400000), "yyyy-MM-dd"))
+        .gte("scheduled_time", dayStart.toISOString())
+        .lte("scheduled_time", dayEnd.toISOString())
 
       const details: IntakeDetail[] = []
       const now = new Date()
@@ -182,8 +188,6 @@ const Calendar = () => {
           let status: 'taken' | 'missed' | 'upcoming' = 'upcoming'
           if (intake?.status === 'taken') {
             status = 'taken'
-          } else if (scheduledTime < now && !isSameDay(scheduledTime, now)) {
-            status = 'missed'
           } else if (scheduledTime < now) {
             status = 'missed'
           }
