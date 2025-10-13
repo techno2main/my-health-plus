@@ -1,25 +1,114 @@
+import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/Layout/AppLayout"
 import { Card } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Clock, Pill, AlertCircle, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
+
+interface UpcomingIntake {
+  id: string
+  medication: string
+  time: string
+  treatment: string
+}
+
+interface StockAlert {
+  id: string
+  medication: string
+  remaining: number
+  daysLeft: number
+}
 
 const Index = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
   const currentDate = format(new Date(), "EEEE d MMMM yyyy", { locale: fr })
-  
-  // Mock data for demonstration
-  const upcomingIntakes = [
-    { id: 1, medication: "Metformine 850mg", time: "08:00", status: "pending", treatment: "Diabète Type 2" },
-    { id: 2, medication: "Simvastatine 20mg", time: "20:00", status: "pending", treatment: "Cholestérol" },
-  ]
-  
-  const stockAlerts = [
-    { id: 1, medication: "Metformine 850mg", remaining: 5, daysLeft: 2 },
-  ]
+  const [upcomingIntakes, setUpcomingIntakes] = useState<UpcomingIntake[]>([])
+  const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([])
+  const [activeTreatmentsCount, setActiveTreatmentsCount] = useState(0)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadDashboardData()
+  }, [])
+
+  const loadDashboardData = async () => {
+    try {
+      // Load active treatments count
+      const { data: treatments, error: treatmentsError } = await supabase
+        .from("treatments")
+        .select("*")
+        .eq("is_active", true)
+
+      if (treatmentsError) throw treatmentsError
+      setActiveTreatmentsCount(treatments?.length || 0)
+
+      // Load medications with their times
+      const { data: medications, error: medsError } = await supabase
+        .from("medications")
+        .select(`
+          id,
+          name,
+          times,
+          current_stock,
+          initial_stock,
+          min_threshold,
+          treatment_id,
+          treatments!inner(name, is_active)
+        `)
+        .eq("treatments.is_active", true)
+
+      if (medsError) throw medsError
+
+      // Process upcoming intakes for today
+      const now = new Date()
+      const currentTime = format(now, "HH:mm")
+      const intakes: UpcomingIntake[] = []
+
+      medications?.forEach((med: any) => {
+        med.times?.forEach((time: string) => {
+          if (time >= currentTime) {
+            intakes.push({
+              id: `${med.id}-${time}`,
+              medication: med.name,
+              time: time,
+              treatment: med.treatments.name
+            })
+          }
+        })
+      })
+
+      // Sort by time
+      intakes.sort((a, b) => a.time.localeCompare(b.time))
+      setUpcomingIntakes(intakes.slice(0, 5))
+
+      // Process stock alerts
+      const alerts: StockAlert[] = []
+      medications?.forEach((med: any) => {
+        if (med.current_stock <= med.min_threshold) {
+          const dailyConsumption = med.times?.length || 1
+          const daysLeft = Math.floor(med.current_stock / dailyConsumption)
+          
+          alerts.push({
+            id: med.id,
+            medication: med.name,
+            remaining: med.current_stock,
+            daysLeft: daysLeft
+          })
+        }
+      })
+      setStockAlerts(alerts)
+
+    } catch (error) {
+      console.error("Error loading dashboard data:", error)
+      toast.error("Erreur lors du chargement des données")
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <AppLayout>
@@ -40,7 +129,7 @@ const Index = () => {
                 <Pill className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">4</p>
+                <p className="text-2xl font-bold">{activeTreatmentsCount}</p>
                 <p className="text-xs text-muted-foreground">Traitements actifs</p>
               </div>
             </div>

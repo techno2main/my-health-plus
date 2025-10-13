@@ -1,42 +1,79 @@
+import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/Layout/AppLayout"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Pill, Plus, Clock, Calendar } from "lucide-react"
 import { useNavigate } from "react-router-dom"
+import { supabase } from "@/integrations/supabase/client"
+import { toast } from "sonner"
+
+interface Treatment {
+  id: string
+  name: string
+  pathology: string | null
+  start_date: string
+  is_active: boolean
+  medications: Array<{
+    id: string
+    name: string
+    dosage: string
+    times: string[]
+  }>
+}
 
 const Treatments = () => {
-  const navigate = useNavigate();
-  // Mock data
-  const treatments = [
-    {
-      id: 1,
-      name: "Diabète Type 2",
-      medications: [
-        { name: "Metformine 850mg", dosage: "2x/jour", times: ["08:00", "20:00"] }
-      ],
-      status: "active",
-      startDate: "2024-01-15"
-    },
-    {
-      id: 2,
-      name: "Cholestérol",
-      medications: [
-        { name: "Simvastatine 20mg", dosage: "1x/jour", times: ["20:00"] }
-      ],
-      status: "active",
-      startDate: "2024-02-01"
-    },
-    {
-      id: 3,
-      name: "Troubles du sommeil",
-      medications: [
-        { name: "Mélatonine 2mg", dosage: "1x/jour", times: ["21:30"] }
-      ],
-      status: "active",
-      startDate: "2024-03-10"
-    },
-  ]
+  const navigate = useNavigate()
+  const [treatments, setTreatments] = useState<Treatment[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadTreatments()
+  }, [])
+
+  const loadTreatments = async () => {
+    try {
+      const { data: treatmentsData, error: treatmentsError } = await supabase
+        .from("treatments")
+        .select("*")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false })
+
+      if (treatmentsError) throw treatmentsError
+
+      // Load medications for each treatment
+      const treatmentsWithMeds = await Promise.all(
+        (treatmentsData || []).map(async (treatment) => {
+          const { data: medications } = await supabase
+            .from("medications")
+            .select("id, name, dosage, times")
+            .eq("treatment_id", treatment.id)
+
+          return {
+            ...treatment,
+            medications: medications || []
+          }
+        })
+      )
+
+      setTreatments(treatmentsWithMeds)
+    } catch (error) {
+      console.error("Error loading treatments:", error)
+      toast.error("Erreur lors du chargement des traitements")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return (
+      <AppLayout>
+        <div className="container max-w-2xl mx-auto px-4 py-6">
+          <p>Chargement...</p>
+        </div>
+      </AppLayout>
+    )
+  }
 
   return (
     <AppLayout>
@@ -63,7 +100,7 @@ const Treatments = () => {
                   <div className="flex-1">
                     <h3 className="font-semibold text-lg">{treatment.name}</h3>
                     <Badge variant="success" className="mt-1">
-                      {treatment.status === "active" ? "Actif" : "Inactif"}
+                      {treatment.is_active ? "Actif" : "Inactif"}
                     </Badge>
                   </div>
                   <Button variant="ghost" size="sm">
@@ -90,7 +127,7 @@ const Treatments = () => {
                 {/* Metadata */}
                 <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
                   <Calendar className="h-3 w-3" />
-                  <span>Depuis le {new Date(treatment.startDate).toLocaleDateString("fr-FR")}</span>
+                  <span>Depuis le {new Date(treatment.start_date).toLocaleDateString("fr-FR")}</span>
                 </div>
               </div>
             </Card>
