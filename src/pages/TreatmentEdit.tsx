@@ -39,6 +39,16 @@ export default function TreatmentEdit() {
   const [loading, setLoading] = useState(true);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    name: "",
+    pathology: "",
+    startDate: "",
+    endDate: "",
+    isActive: true,
+    notes: ""
+  });
 
   useEffect(() => {
     if (id) {
@@ -57,6 +67,16 @@ export default function TreatmentEdit() {
 
       if (treatmentError) throw treatmentError;
       setTreatment(treatmentData);
+      
+      // Set form data
+      setFormData({
+        name: treatmentData.name,
+        pathology: treatmentData.pathology || "",
+        startDate: treatmentData.start_date,
+        endDate: treatmentData.end_date || "",
+        isActive: treatmentData.is_active,
+        notes: treatmentData.notes || treatmentData.description || ""
+      });
 
       // Load medications for this treatment
       const { data: medsData, error: medsError } = await supabase
@@ -82,6 +102,52 @@ export default function TreatmentEdit() {
 
   const handleMedicationSaved = () => {
     loadTreatmentData();
+  };
+
+  const handleSave = async () => {
+    if (!treatment) return;
+
+    try {
+      const { error } = await supabase
+        .from("treatments")
+        .update({
+          name: formData.name,
+          pathology: formData.pathology || null,
+          start_date: formData.startDate,
+          end_date: formData.endDate || null,
+          is_active: formData.isActive,
+          notes: formData.notes || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", treatment.id);
+
+      if (error) throw error;
+
+      toast.success("Traitement mis à jour avec succès");
+      navigate("/treatments");
+    } catch (error) {
+      console.error("Error updating treatment:", error);
+      toast.error("Erreur lors de la mise à jour du traitement");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!treatment || !confirm("Êtes-vous sûr de vouloir supprimer ce traitement ?")) return;
+
+    try {
+      const { error } = await supabase
+        .from("treatments")
+        .delete()
+        .eq("id", treatment.id);
+
+      if (error) throw error;
+
+      toast.success("Traitement supprimé");
+      navigate("/treatments");
+    } catch (error) {
+      console.error("Error deleting treatment:", error);
+      toast.error("Erreur lors de la suppression du traitement");
+    }
   };
 
   if (loading) {
@@ -125,7 +191,8 @@ export default function TreatmentEdit() {
               <Label htmlFor="name">Nom du traitement</Label>
               <Input 
                 id="name" 
-                defaultValue={treatment.name}
+                value={formData.name}
+                onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="Ex: Traitement Diabète"
               />
             </div>
@@ -134,7 +201,8 @@ export default function TreatmentEdit() {
               <Label htmlFor="pathology">Pathologie</Label>
               <Input 
                 id="pathology" 
-                defaultValue={treatment.pathology || ""}
+                value={formData.pathology}
+                onChange={(e) => setFormData({...formData, pathology: e.target.value})}
                 placeholder="Ex: Diabète Type 2"
               />
             </div>
@@ -145,7 +213,8 @@ export default function TreatmentEdit() {
                 <Input 
                   id="startDate" 
                   type="date" 
-                  defaultValue={treatment.start_date}
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({...formData, startDate: e.target.value})}
                 />
               </div>
               <div className="space-y-2">
@@ -153,7 +222,8 @@ export default function TreatmentEdit() {
                 <Input 
                   id="endDate" 
                   type="date" 
-                  defaultValue={treatment.end_date || ""}
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                 />
               </div>
             </div>
@@ -163,14 +233,19 @@ export default function TreatmentEdit() {
                 <p className="font-medium">Traitement actif</p>
                 <p className="text-sm text-muted-foreground">Afficher dans les traitements en cours</p>
               </Label>
-              <Switch id="isActive" defaultChecked={treatment.is_active} />
+              <Switch 
+                id="isActive" 
+                checked={formData.isActive}
+                onCheckedChange={(checked) => setFormData({...formData, isActive: checked})}
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="notes">Notes</Label>
               <Textarea 
                 id="notes" 
-                defaultValue={treatment.notes || treatment.description || ""}
+                value={formData.notes}
+                onChange={(e) => setFormData({...formData, notes: e.target.value})}
                 placeholder="Ajoutez des notes sur ce traitement..."
                 rows={3}
               />
@@ -220,13 +295,14 @@ export default function TreatmentEdit() {
 
         {/* Actions */}
         <div className="space-y-3">
-          <Button className="w-full">
+          <Button className="w-full" onClick={handleSave}>
             <Save className="mr-2 h-4 w-4" />
             Enregistrer les modifications
           </Button>
           <Button 
             variant="outline" 
             className="w-full border-danger text-danger hover:bg-danger hover:text-white"
+            onClick={handleDelete}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Supprimer le traitement
