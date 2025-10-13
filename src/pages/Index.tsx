@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import { Clock, Pill, AlertCircle, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
+import { useNavigate } from "react-router-dom"
 
 const Index = () => {
+  const navigate = useNavigate();
   const currentDate = format(new Date(), "EEEE d MMMM yyyy", { locale: fr })
   
   // Mock data for demonstration
@@ -81,7 +83,7 @@ const Index = () => {
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold">Prochaines prises</h2>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={() => navigate("/history")}>
               Tout voir
             </Button>
           </div>
@@ -113,11 +115,11 @@ const Index = () => {
         <section className="space-y-3">
           <h3 className="text-sm font-medium text-muted-foreground">Actions rapides</h3>
           <div className="grid grid-cols-2 gap-3">
-            <Button variant="outline" className="h-20 flex-col gap-2">
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate("/treatments/new")}>
               <Pill className="h-5 w-5" />
               <span className="text-sm">Ajouter un traitement</span>
             </Button>
-            <Button variant="outline" className="h-20 flex-col gap-2">
+            <Button variant="outline" className="h-20 flex-col gap-2" onClick={() => navigate("/history")}>
               <Clock className="h-5 w-5" />
               <span className="text-sm">Historique</span>
             </Button>

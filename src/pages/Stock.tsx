@@ -3,8 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Plus, Package } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Stock() {
+  const navigate = useNavigate();
   // Mock data - à remplacer par des vraies données
   const stockItems = [
     {
@@ -57,7 +59,7 @@ export default function Stock() {
             <h1 className="text-3xl font-bold">Stock</h1>
             <p className="text-muted-foreground">Gérez vos stocks de médicaments</p>
           </div>
-          <Button>
+          <Button onClick={() => navigate("/stock/new")}>
             <Plus className="mr-2 h-4 w-4" />
             Ajouter
           </Button>
@@ -112,7 +114,7 @@ export default function Stock() {
               </div>
 
               <div className="flex gap-2 mt-4">
-                <Button variant="outline" size="sm" className="flex-1">
+                <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate("/stock/adjust")}>
                   Ajuster stock
                 </Button>
                 <Button variant="outline" size="sm" className="flex-1">

@@ -3,8 +3,10 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Pill, Plus, Clock, Calendar } from "lucide-react"
+import { useNavigate } from "react-router-dom"
 
 const Treatments = () => {
+  const navigate = useNavigate();
   // Mock data
   const treatments = [
     {
@@ -45,7 +47,7 @@ const Treatments = () => {
             <h1 className="text-2xl font-bold">Mes traitements</h1>
             <p className="text-sm text-muted-foreground">{treatments.length} traitement(s) actif(s)</p>
           </div>
-          <Button className="gradient-primary">
+          <Button className="gradient-primary" onClick={() => navigate("/treatments/new")}>
             <Plus className="h-4 w-4 mr-2" />
             Ajouter
           </Button>

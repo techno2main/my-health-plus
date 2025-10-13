@@ -3,8 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, FileText, Download, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Prescriptions() {
+  const navigate = useNavigate();
   // Mock data - à remplacer par des vraies données
   const prescriptions = [
     {
@@ -57,7 +59,7 @@ export default function Prescriptions() {
             <h1 className="text-3xl font-bold">Ordonnances</h1>
             <p className="text-muted-foreground">Vos prescriptions médicales</p>
           </div>
-          <Button>
+          <Button onClick={() => navigate("/prescriptions/new")}>
             <Plus className="mr-2 h-4 w-4" />
             Ajouter
           </Button>
