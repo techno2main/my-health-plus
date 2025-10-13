@@ -98,6 +98,7 @@ export type Database = {
         Row: {
           color: string | null
           created_at: string | null
+          created_by: string | null
           default_dosage: string | null
           default_times: string[] | null
           description: string | null
@@ -105,6 +106,7 @@ export type Database = {
           form: string | null
           id: string
           initial_stock: number | null
+          is_approved: boolean
           min_threshold: number | null
           name: string
           pathology: string | null
@@ -113,6 +115,7 @@ export type Database = {
         Insert: {
           color?: string | null
           created_at?: string | null
+          created_by?: string | null
           default_dosage?: string | null
           default_times?: string[] | null
           description?: string | null
@@ -120,6 +123,7 @@ export type Database = {
           form?: string | null
           id?: string
           initial_stock?: number | null
+          is_approved?: boolean
           min_threshold?: number | null
           name: string
           pathology?: string | null
@@ -128,6 +132,7 @@ export type Database = {
         Update: {
           color?: string | null
           created_at?: string | null
+          created_by?: string | null
           default_dosage?: string | null
           default_times?: string[] | null
           description?: string | null
@@ -135,6 +140,7 @@ export type Database = {
           form?: string | null
           id?: string
           initial_stock?: number | null
+          is_approved?: boolean
           min_threshold?: number | null
           name?: string
           pathology?: string | null
@@ -282,22 +288,28 @@ export type Database = {
       pathologies: {
         Row: {
           created_at: string | null
+          created_by: string | null
           description: string | null
           id: string
+          is_approved: boolean
           name: string
           updated_at: string | null
         }
         Insert: {
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           id?: string
+          is_approved?: boolean
           name: string
           updated_at?: string | null
         }
         Update: {
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           id?: string
+          is_approved?: boolean
           name?: string
           updated_at?: string | null
         }
