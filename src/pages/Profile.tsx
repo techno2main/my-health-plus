@@ -280,8 +280,8 @@ export default function Profile() {
                 <div className="space-y-2">
                   <Label>IMC</Label>
                   {bmi ? (
-                    <div className={`flex items-center gap-2 h-10 px-3 rounded-md border ${getBMIColor(parseFloat(bmi))} font-semibold`}>
-                      {bmi} - {getBMILabel(parseFloat(bmi))}
+                    <div className={`flex items-center h-10 px-3 rounded-md border ${getBMIColor(parseFloat(bmi))} text-sm font-medium`}>
+                      {bmi}
                     </div>
                   ) : (
                     <div className="h-10 px-3 rounded-md border bg-muted flex items-center text-sm text-muted-foreground">
