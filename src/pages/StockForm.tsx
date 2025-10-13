@@ -148,8 +148,8 @@ export default function StockForm() {
                 value={adjustment}
                 onChange={(e) => setAdjustment(e.target.value)}
                 placeholder="Entrez +10 ou -5"
-                className="bg-surface"
                 required
+                autoFocus
               />
               <p className="text-xs text-muted-foreground">
                 Entrez un nombre positif (+10) ou négatif (-5)
@@ -174,7 +174,6 @@ export default function StockForm() {
                 type="date"
                 value={expiryDate}
                 onChange={(e) => setExpiryDate(e.target.value)}
-                className="bg-surface"
               />
             </div>
 
@@ -186,7 +185,6 @@ export default function StockForm() {
                 value={minThreshold}
                 onChange={(e) => setMinThreshold(e.target.value)}
                 placeholder="10"
-                className="bg-surface"
               />
             </div>
           </Card>
