@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
+import { useUserRole } from "@/hooks/useUserRole"
 
 const ICON_MAP: Record<string, any> = {
   Home, Pill, Package, Calendar, Settings,
@@ -23,6 +24,7 @@ export function BottomNavigation() {
   const [isDragging, setIsDragging] = useState(false)
   const [startX, setStartX] = useState(0)
   const [scrollLeft, setScrollLeft] = useState(0)
+  const { isAdmin } = useUserRole()
 
   const { data: navItems } = useQuery({
     queryKey: ["navigation-items"],
@@ -66,7 +68,15 @@ export function BottomNavigation() {
     setIsDragging(false);
   };
 
-  if (!navItems?.length) return null;
+  // Filter items based on admin status
+  const filteredNavItems = navItems?.filter(item => {
+    if (item.path === '/admin') {
+      return isAdmin;
+    }
+    return true;
+  });
+
+  if (!filteredNavItems?.length) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm pb-safe">
@@ -82,7 +92,7 @@ export function BottomNavigation() {
         onMouseLeave={handleMouseLeave}
       >
         <div className="flex items-center h-16 px-2 gap-2 w-max">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const isActive = location.pathname === item.path
             const Icon = getIconComponent(item.icon)
             

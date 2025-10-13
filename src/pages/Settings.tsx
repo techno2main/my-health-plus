@@ -16,9 +16,7 @@ import {
   ChevronRight,
   LogOut,
   FileText,
-  ClipboardList,
-  Database,
-  Navigation
+  ClipboardList
 } from "lucide-react";
 
 export default function Settings() {
@@ -47,34 +45,19 @@ export default function Settings() {
           subtitle="Gérez vos préférences et votre compte"
         />
 
-        {/* Navigation rapide */}
+        {/* Section Navigation */}
         <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground">Navigation</h3>
-
-          <Card className="p-4" onClick={() => navigate("/settings/navigation")}>
-            <div className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <Navigation className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Menu de navigation</h3>
-                  <p className="text-sm text-muted-foreground">Gérer la barre de navigation</p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Card>
+          <h3 className="text-sm font-medium text-muted-foreground px-1">Navigation</h3>
           
-          <Card className="p-4" onClick={() => navigate("/referentials")}>
+          <Card className="p-4" onClick={() => navigate("/profile")}>
             <div className="flex items-center justify-between cursor-pointer">
               <div className="flex items-center gap-3">
                 <div className="p-3 rounded-full bg-primary/10">
-                  <Database className="h-6 w-6 text-primary" />
+                  <User className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <h3 className="font-semibold">Référentiels</h3>
-                  <p className="text-sm text-muted-foreground">Gérer les données de référence</p>
+                  <h3 className="font-semibold">Profil utilisateur</h3>
+                  <p className="text-sm text-muted-foreground">Gérez vos informations personnelles</p>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
@@ -112,92 +95,81 @@ export default function Settings() {
           </Card>
         </div>
 
-        {/* Profil */}
-        <Card className="p-4" onClick={() => navigate("/profile")}>
-          <div className="flex items-center justify-between cursor-pointer">
+        {/* Section Réglages */}
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground px-1">Réglages</h3>
+
+          {/* Apparence */}
+          <Card className="p-4 space-y-4">
             <div className="flex items-center gap-3">
               <div className="p-3 rounded-full bg-primary/10">
-                <User className="h-6 w-6 text-primary" />
+                <Moon className="h-6 w-6 text-primary" />
               </div>
-              <div>
-                <h3 className="font-semibold">Profil utilisateur</h3>
-                <p className="text-sm text-muted-foreground">Gérez vos informations personnelles</p>
+              <div className="flex-1">
+                <h3 className="font-semibold">Apparence</h3>
+                <p className="text-sm text-muted-foreground">Personnalisez l'interface</p>
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </Card>
 
-        {/* Notifications */}
-        <Card className="p-4" onClick={() => navigate("/notifications")}>
-          <div className="flex items-center justify-between cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Bell className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">Notifications</h3>
-                <p className="text-sm text-muted-foreground">Configurez vos rappels</p>
+            <div className="space-y-4 pl-15">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="dark-mode" className="flex-1">
+                  <p className="font-medium">Mode sombre</p>
+                  <p className="text-sm text-muted-foreground">Thème sombre activé</p>
+                </Label>
+                <Switch id="dark-mode" defaultChecked />
               </div>
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </Card>
+          </Card>
 
-        {/* Apparence */}
-        <Card className="p-4 space-y-4">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="p-3 rounded-full bg-primary/10">
-              <Moon className="h-6 w-6 text-primary" />
+          {/* Notifications */}
+          <Card className="p-4" onClick={() => navigate("/notifications")}>
+            <div className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Bell className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Notifications</h3>
+                  <p className="text-sm text-muted-foreground">Configurez vos rappels</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
-            <div>
-              <h3 className="font-semibold">Apparence</h3>
-              <p className="text-sm text-muted-foreground">Personnalisez l'interface</p>
-            </div>
-          </div>
+          </Card>
 
-          <div className="space-y-4 pl-15">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="dark-mode" className="flex-1">
-                <p className="font-medium">Mode sombre</p>
-                <p className="text-sm text-muted-foreground">Thème sombre activé</p>
-              </Label>
-              <Switch id="dark-mode" defaultChecked />
+          {/* Confidentialité */}
+          <Card className="p-4" onClick={() => navigate("/privacy")}>
+            <div className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Shield className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Confidentialité et sécurité</h3>
+                  <p className="text-sm text-muted-foreground">Protégez vos données</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
-          </div>
-        </Card>
+          </Card>
 
-        {/* Confidentialité */}
-        <Card className="p-4" onClick={() => navigate("/privacy")}>
-          <div className="flex items-center justify-between cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Shield className="h-6 w-6 text-primary" />
+          {/* À propos */}
+          <Card className="p-4" onClick={() => navigate("/about")}>
+            <div className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Smartphone className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">À propos de l'application</h3>
+                  <p className="text-sm text-muted-foreground">Version 1.0.0</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-semibold">Confidentialité et sécurité</h3>
-                <p className="text-sm text-muted-foreground">Protégez vos données</p>
-              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </Card>
-
-        {/* À propos */}
-        <Card className="p-4" onClick={() => navigate("/about")}>
-          <div className="flex items-center justify-between cursor-pointer">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-full bg-primary/10">
-                <Smartphone className="h-6 w-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold">À propos de l'application</h3>
-                <p className="text-sm text-muted-foreground">Version 1.0.0</p>
-              </div>
-            </div>
-            <ChevronRight className="h-5 w-5 text-muted-foreground" />
-          </div>
-        </Card>
+          </Card>
+        </div>
 
         {/* Déconnexion */}
         <Button 
