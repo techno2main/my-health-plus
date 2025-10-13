@@ -123,7 +123,7 @@ const Index = () => {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
-          <Card className="p-4 surface-elevated">
+          <Card className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/treatments")}>
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
                 <Pill className="h-5 w-5 text-primary" />
