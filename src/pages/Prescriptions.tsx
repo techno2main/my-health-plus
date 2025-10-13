@@ -15,6 +15,7 @@ interface Prescription {
   notes: string | null;
   document_url: string | null;
   file_path: string | null;
+  original_filename: string | null;
   prescribing_doctor_id: string | null;
 }
 
@@ -103,7 +104,7 @@ export default function Prescriptions() {
                 .select("id, name, dosage")
                 .eq("treatment_id", treatment.id);
               
-              if (medsData) {
+              if (medsData && medsData.length > 0) {
                 medications.push(...medsData);
               }
             }
@@ -115,7 +116,7 @@ export default function Prescriptions() {
             expiry_date: expiryDate.toISOString(),
             status,
             treatments: treatmentsData || [],
-            medications
+            medications: medications || []
           };
         })
       );
@@ -155,15 +156,18 @@ export default function Prescriptions() {
 
       if (error) throw error;
 
-      // Créer un lien de téléchargement
+      // Créer un lien de téléchargement avec le nom original
       const url = URL.createObjectURL(data);
       const a = document.createElement("a");
       a.href = url;
-      a.download = prescription.file_path.split("/").pop() || "prescription.pdf";
+      // Utiliser le nom de fichier original s'il existe, sinon utiliser le nom du fichier dans le storage
+      a.download = prescription.original_filename || prescription.file_path.split("/").pop() || "prescription.pdf";
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      
+      toast.success("Téléchargement réussi");
     } catch (error) {
       console.error("Error downloading prescription:", error);
       toast.error("Erreur lors du téléchargement");
@@ -179,12 +183,20 @@ export default function Prescriptions() {
     try {
       const { data, error } = await supabase.storage
         .from("prescriptions")
-        .createSignedUrl(prescription.file_path, 60);
+        .createSignedUrl(prescription.file_path, 3600); // 1 heure
 
       if (error) throw error;
 
       if (data?.signedUrl) {
-        window.open(data.signedUrl, "_blank");
+        // Construire l'URL complète
+        const { data: { publicUrl } } = supabase.storage
+          .from("prescriptions")
+          .getPublicUrl("dummy");
+        
+        const baseUrl = publicUrl.replace("/dummy", "");
+        const fullUrl = baseUrl + data.signedUrl;
+        
+        window.open(fullUrl, "_blank");
       }
     } catch (error) {
       console.error("Error viewing prescription:", error);
@@ -269,7 +281,7 @@ export default function Prescriptions() {
                   </div>
                 </div>
 
-                {prescription.medications.length > 0 && (
+                {prescription.medications && prescription.medications.length > 0 && (
                   <div className="mb-4">
                     <p className="text-sm text-muted-foreground mb-2">Médicaments prescrits</p>
                     <div className="flex flex-wrap gap-2">
