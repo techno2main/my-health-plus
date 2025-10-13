@@ -11,10 +11,11 @@ interface Step1InfoProps {
   formData: TreatmentFormData;
   setFormData: (data: TreatmentFormData) => void;
   prescriptions: any[];
+  doctors: any[];
   pharmacies: any[];
 }
 
-export function Step1Info({ formData, setFormData, prescriptions, pharmacies }: Step1InfoProps) {
+export function Step1Info({ formData, setFormData, prescriptions, doctors, pharmacies }: Step1InfoProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -61,7 +62,32 @@ export function Step1Info({ formData, setFormData, prescriptions, pharmacies }: 
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="prescription">Ordonnance de référence</Label>
+          <Label htmlFor="doctor">Médecin prescripteur *</Label>
+          <Select
+            value={formData.prescribingDoctorId}
+            onValueChange={(value) => setFormData({ ...formData, prescribingDoctorId: value })}
+          >
+            <SelectTrigger className="bg-surface">
+              <SelectValue placeholder="Sélectionnez un médecin" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover z-50">
+              {doctors.length === 0 ? (
+                <SelectItem value="none" disabled>
+                  Aucun médecin disponible
+                </SelectItem>
+              ) : (
+                doctors.map((doctor) => (
+                  <SelectItem key={doctor.id} value={doctor.id}>
+                    {doctor.name} {doctor.specialty ? `- ${doctor.specialty}` : ""}
+                  </SelectItem>
+                ))
+              )}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="prescription">Ordonnance de référence (optionnel)</Label>
           <Select
             value={formData.prescriptionId}
             onValueChange={(value) => setFormData({ ...formData, prescriptionId: value })}
@@ -69,12 +95,18 @@ export function Step1Info({ formData, setFormData, prescriptions, pharmacies }: 
             <SelectTrigger className="bg-surface">
               <SelectValue placeholder="Sélectionnez une ordonnance existante" />
             </SelectTrigger>
-            <SelectContent>
-              {prescriptions.map((presc) => (
-                <SelectItem key={presc.id} value={presc.id}>
-                  {new Date(presc.prescription_date).toLocaleDateString('fr-FR')} - {presc.health_professionals?.name || "Médecin"}
+            <SelectContent className="bg-popover z-50">
+              {prescriptions.length === 0 ? (
+                <SelectItem value="none" disabled>
+                  Aucune ordonnance disponible
                 </SelectItem>
-              ))}
+              ) : (
+                prescriptions.map((presc) => (
+                  <SelectItem key={presc.id} value={presc.id}>
+                    {new Date(presc.prescription_date).toLocaleDateString('fr-FR')} - {presc.health_professionals?.name || "Médecin"}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>
@@ -132,7 +164,7 @@ export function Step1Info({ formData, setFormData, prescriptions, pharmacies }: 
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="pharmacy">Pharmacie de délivrance</Label>
+          <Label htmlFor="pharmacy">Pharmacie de délivrance *</Label>
           <Select
             value={formData.pharmacyId}
             onValueChange={(value) => setFormData({ ...formData, pharmacyId: value })}
@@ -140,12 +172,18 @@ export function Step1Info({ formData, setFormData, prescriptions, pharmacies }: 
             <SelectTrigger className="bg-surface">
               <SelectValue placeholder="Sélectionnez une pharmacie" />
             </SelectTrigger>
-            <SelectContent>
-              {pharmacies.map((pharmacy) => (
-                <SelectItem key={pharmacy.id} value={pharmacy.id}>
-                  {pharmacy.name}
+            <SelectContent className="bg-popover z-50">
+              {pharmacies.length === 0 ? (
+                <SelectItem value="none" disabled>
+                  Aucune pharmacie disponible
                 </SelectItem>
-              ))}
+              ) : (
+                pharmacies.map((pharmacy) => (
+                  <SelectItem key={pharmacy.id} value={pharmacy.id}>
+                    {pharmacy.name}
+                  </SelectItem>
+                ))
+              )}
             </SelectContent>
           </Select>
         </div>

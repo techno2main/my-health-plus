@@ -2,6 +2,7 @@ export interface TreatmentFormData {
   // Step 1
   name: string;
   description: string;
+  prescribingDoctorId: string;
   prescriptionId: string;
   prescriptionFile: File | null;
   prescriptionFileName: string;

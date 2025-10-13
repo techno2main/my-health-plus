@@ -20,11 +20,13 @@ export function TreatmentWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
   const [pharmacies, setPharmacies] = useState<any[]>([]);
   
   const [formData, setFormData] = useState<TreatmentFormData>({
     name: "",
     description: "",
+    prescribingDoctorId: "",
     prescriptionId: "",
     prescriptionFile: null,
     prescriptionFileName: "",
@@ -40,7 +42,7 @@ export function TreatmentWizard() {
 
   const loadData = async () => {
     try {
-      const [prescData, pharmacyData] = await Promise.all([
+      const [prescData, doctorData, pharmacyData] = await Promise.all([
         supabase
           .from("prescriptions")
           .select("*, health_professionals(name)")
@@ -48,13 +50,21 @@ export function TreatmentWizard() {
         supabase
           .from("health_professionals")
           .select("*")
-          .eq("type", "pharmacy"),
+          .eq("type", "doctor")
+          .order("name"),
+        supabase
+          .from("health_professionals")
+          .select("*")
+          .eq("type", "pharmacy")
+          .order("name"),
       ]);
 
       if (prescData.error) throw prescData.error;
+      if (doctorData.error) throw doctorData.error;
       if (pharmacyData.error) throw pharmacyData.error;
 
       setPrescriptions(prescData.data || []);
+      setDoctors(doctorData.data || []);
       setPharmacies(pharmacyData.data || []);
     } catch (error) {
       console.error("Error loading data:", error);
@@ -117,6 +127,7 @@ export function TreatmentWizard() {
           .from("prescriptions")
           .insert({
             user_id: user.id,
+            prescribing_doctor_id: formData.prescribingDoctorId || null,
             prescription_date: new Date().toISOString().split('T')[0],
             duration_days: 90,
             file_path: filePath,
@@ -134,7 +145,7 @@ export function TreatmentWizard() {
         .from("treatments")
         .insert({
           user_id: user.id,
-          prescription_id: prescriptionId,
+          prescription_id: prescriptionId || null,
           pharmacy_id: formData.pharmacyId || null,
           name: formData.name,
           description: formData.description,
@@ -210,6 +221,7 @@ export function TreatmentWizard() {
             formData={formData}
             setFormData={setFormData}
             prescriptions={prescriptions}
+            doctors={doctors}
             pharmacies={pharmacies}
           />
         );
