@@ -97,11 +97,24 @@ export default function NotificationSettings() {
           <Card className="p-4 border-danger bg-danger/5">
             <div className="flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-danger mt-0.5" />
-              <div>
+              <div className="flex-1">
                 <p className="font-medium">Notifications bloquées</p>
-                <p className="text-sm text-muted-foreground">
-                  Veuillez autoriser les notifications dans les paramètres de votre navigateur
+                <p className="text-sm text-muted-foreground mb-3">
+                  Les notifications ont été bloquées. Pour les réactiver :
                 </p>
+                <ol className="text-sm text-muted-foreground list-decimal ml-4 space-y-1 mb-3">
+                  <li>Cliquez sur l'icône 🔒 ou ⓘ dans la barre d'adresse</li>
+                  <li>Cherchez "Notifications" dans les paramètres du site</li>
+                  <li>Sélectionnez "Autoriser"</li>
+                  <li>Rechargez cette page</li>
+                </ol>
+                <Button 
+                  variant="outline" 
+                  onClick={() => window.location.reload()}
+                  className="border-danger text-danger hover:bg-danger hover:text-white"
+                >
+                  Recharger la page
+                </Button>
               </div>
             </div>
           </Card>
