@@ -27,7 +27,7 @@ export function BottomNavigation() {
   const savedScrollPos = useRef(0)
   const { isAdmin } = useUserRole()
 
-  // Save scroll position before navigation
+  // Save scroll position (works for both mouse and touch)
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container) return
@@ -36,8 +36,17 @@ export function BottomNavigation() {
       savedScrollPos.current = container.scrollLeft
     }
 
+    const handleTouchEnd = () => {
+      savedScrollPos.current = container.scrollLeft
+    }
+
     container.addEventListener('scroll', handleScroll)
-    return () => container.removeEventListener('scroll', handleScroll)
+    container.addEventListener('touchend', handleTouchEnd)
+    
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+      container.removeEventListener('touchend', handleTouchEnd)
+    }
   }, [])
 
   // Restore scroll position after navigation
@@ -45,12 +54,10 @@ export function BottomNavigation() {
     const container = scrollContainerRef.current
     if (!container) return
 
-    // Small delay to ensure DOM is ready
-    const timer = setTimeout(() => {
+    // Restore position without animation on mobile
+    requestAnimationFrame(() => {
       container.scrollLeft = savedScrollPos.current
-    }, 50)
-
-    return () => clearTimeout(timer)
+    })
   }, [location.pathname])
 
   const { data: navItems } = useQuery({
