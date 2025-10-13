@@ -78,24 +78,24 @@ export function BottomNavigation() {
 
   if (!filteredNavItems?.length) return null;
 
-  const shouldScroll = filteredNavItems.length > 5;
+  const shouldCenterOnDesktop = filteredNavItems.length <= 5;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm pb-safe">
       <div 
         ref={scrollContainerRef}
         className={cn(
-          shouldScroll ? "overflow-x-auto scrollbar-hide" : "overflow-hidden",
-          isDragging && shouldScroll ? "cursor-grabbing" : shouldScroll ? "cursor-grab" : ""
+          "overflow-x-auto scrollbar-hide",
+          isDragging ? "cursor-grabbing" : "cursor-grab"
         )}
-        onMouseDown={shouldScroll ? handleMouseDown : undefined}
-        onMouseMove={shouldScroll ? handleMouseMove : undefined}
-        onMouseUp={shouldScroll ? handleMouseUp : undefined}
-        onMouseLeave={shouldScroll ? handleMouseLeave : undefined}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
       >
         <div className={cn(
           "flex items-center h-16 px-2 gap-2",
-          shouldScroll ? "w-max" : "justify-center max-w-2xl mx-auto"
+          shouldCenterOnDesktop ? "md:justify-center md:max-w-2xl md:mx-auto" : "w-max"
         )}>
           {filteredNavItems.map((item) => {
             const isActive = location.pathname === item.path
