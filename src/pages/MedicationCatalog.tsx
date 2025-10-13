@@ -254,11 +254,11 @@ const MedicationCatalog = () => {
           </Button>
           <header className="flex-1 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold">Référentiel de médicaments</h1>
-              <p className="text-sm text-muted-foreground">{medications.length} médicament(s) dans le référentiel</p>
+              <h1 className="text-xl font-bold">Médicaments</h1>
+              <p className="text-sm text-muted-foreground">{medications.length} médicament(s)</p>
             </div>
             <Button className="gradient-primary" onClick={() => openDialog()}>
-              <Plus className="h-4 w-4 mr-2" />
+              <Plus className="h-4 w-4 mr-1" />
               Ajouter
             </Button>
           </header>
@@ -308,7 +308,7 @@ const MedicationCatalog = () => {
                         </button>
                       )}
                     </div>
-                    <div className="flex gap-1">
+                    <div className="flex gap-0.5">
                       <Button
                         variant="ghost"
                         size="sm"
@@ -338,7 +338,7 @@ const MedicationCatalog = () => {
                   {/* Ligne 3: Posologie */}
                   {med.default_dosage && (
                     <p className="text-sm text-muted-foreground">
-                      <span className="font-medium">Posologie :</span> {med.default_dosage}
+                      {med.default_dosage}
                     </p>
                   )}
 
