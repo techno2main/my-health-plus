@@ -39,7 +39,7 @@ const Treatments = () => {
       const { data: treatmentsData, error: treatmentsError } = await supabase
         .from("treatments")
         .select("*")
-        .eq("is_active", true)
+        .order("is_active", { ascending: false })
         .order("created_at", { ascending: false })
 
       if (treatmentsError) throw treatmentsError
@@ -121,7 +121,9 @@ const Treatments = () => {
           <div className="flex-1 flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">Mes traitements</h1>
-              <p className="text-sm text-muted-foreground">{treatments.length} traitement(s) actif(s)</p>
+              <p className="text-sm text-muted-foreground">
+                {treatments.filter(t => t.is_active).length} traitement(s) actif(s)
+              </p>
             </div>
             <Button className="gradient-primary" onClick={() => navigate("/treatments/new")}>
               <Plus className="h-4 w-4 mr-2" />
@@ -144,10 +146,19 @@ const Treatments = () => {
                   {/* Treatment Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-semibold text-lg">{treatment.name}</h3>
-                      <Badge variant="success" className="mt-1">
-                        {treatment.is_active ? "Actif" : "Inactif"}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-lg">{treatment.name}</h3>
+                        {!treatment.is_active && (
+                          <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                            Archivé
+                          </Badge>
+                        )}
+                      </div>
+                      {treatment.is_active && (
+                        <Badge variant="default" className="mt-1 bg-success text-white">
+                          Actif
+                        </Badge>
+                      )}
                     </div>
                     <Button variant="ghost" size="sm" onClick={() => navigate(`/treatments/${treatment.id}/edit`)}>
                       Modifier
