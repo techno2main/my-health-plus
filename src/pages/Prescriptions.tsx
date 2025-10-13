@@ -183,20 +183,12 @@ export default function Prescriptions() {
     try {
       const { data, error } = await supabase.storage
         .from("prescriptions")
-        .createSignedUrl(prescription.file_path, 3600); // 1 heure
+        .createSignedUrl(prescription.file_path, 3600);
 
       if (error) throw error;
 
       if (data?.signedUrl) {
-        // Construire l'URL complète
-        const { data: { publicUrl } } = supabase.storage
-          .from("prescriptions")
-          .getPublicUrl("dummy");
-        
-        const baseUrl = publicUrl.replace("/dummy", "");
-        const fullUrl = baseUrl + data.signedUrl;
-        
-        window.open(fullUrl, "_blank");
+        window.open(data.signedUrl, "_blank");
       }
     } catch (error) {
       console.error("Error viewing prescription:", error);
