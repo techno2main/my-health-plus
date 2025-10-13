@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { 
-  Trash2, Save, ChevronUp, ChevronDown,
+  Trash2, Save, ChevronUp, ChevronDown, Pencil,
   Home, Pill, Package, Calendar, Settings,
   User, Heart, Bell, Shield, FileText,
   ClipboardList, Users, Database, Smartphone,
@@ -152,18 +152,18 @@ function SortableItem({ item, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, i
 
         <div className="flex gap-2" onPointerDown={(e) => e.stopPropagation()} onTouchStart={(e) => e.stopPropagation()}>
           <Button
-            variant="outline"
-            size="sm"
+            variant="ghost"
+            size="icon"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(item);
             }}
           >
-            Modifier
+            <Pencil className="h-4 w-4" />
           </Button>
           <Button
-            variant="outline"
-            size="sm"
+            variant="ghost"
+            size="icon"
             onClick={(e) => {
               e.stopPropagation();
               if (confirm("Êtes-vous sûr de vouloir supprimer cet item ?")) {
