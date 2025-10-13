@@ -148,6 +148,7 @@ const Calendar = () => {
 
   const loadDayDetails = async () => {
     try {
+      // Get medications from active treatments
       const { data: medications } = await supabase
         .from("medications")
         .select(`
@@ -165,15 +166,16 @@ const Calendar = () => {
       const dayEnd = new Date(selectedDate)
       dayEnd.setHours(23, 59, 59, 999)
 
+      // Get ALL medications (including from inactive treatments) to match intakes
+      const { data: allMedications } = await supabase
+        .from("medications")
+        .select("id, name")
+
       const { data: intakes } = await supabase
         .from("medication_intakes")
         .select("*")
         .gte("scheduled_time", dayStart.toISOString())
         .lte("scheduled_time", dayEnd.toISOString())
-
-      console.log("Selected date:", selectedDate)
-      console.log("Medications:", medications)
-      console.log("Intakes found:", intakes)
 
       const details: IntakeDetail[] = []
       const now = new Date()
@@ -184,20 +186,17 @@ const Calendar = () => {
           const scheduledTime = new Date(selectedDate)
           scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
-          // Find matching intake for this medication and time
+          // Find matching intake by medication name and time (not just ID)
           const intake = intakes?.find((i: any) => {
             const intakeTime = format(new Date(i.scheduled_time), 'HH:mm')
-            const match = i.medication_id === med.id && intakeTime === time
-            if (match) {
-              console.log(`Match found: ${med.name} at ${time}, status: ${i.status}`)
-            }
-            return match
+            const intakeMed = allMedications?.find(m => m.id === i.medication_id)
+            return intakeMed?.name === med.name && intakeTime === time
           })
 
           let status: 'taken' | 'missed' | 'upcoming' = 'upcoming'
           
-          if (intake) {
-            status = intake.status === 'taken' ? 'taken' : 'missed'
+          if (intake?.status === 'taken') {
+            status = 'taken'
           } else if (scheduledTime < now) {
             status = 'missed'
           }
@@ -213,7 +212,6 @@ const Calendar = () => {
       })
 
       details.sort((a, b) => a.time.localeCompare(b.time))
-      console.log("Final details:", details)
       setDayDetails(details)
 
     } catch (error) {
