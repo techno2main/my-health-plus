@@ -285,7 +285,7 @@ export default function Profile() {
                     </div>
                   ) : (
                     <div className="h-10 px-3 rounded-md border bg-muted flex items-center text-sm text-muted-foreground">
-                      Entrez taille et poids
+                      En attente
                     </div>
                   )}
                 </div>
