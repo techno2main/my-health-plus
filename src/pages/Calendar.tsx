@@ -171,6 +171,10 @@ const Calendar = () => {
         .gte("scheduled_time", dayStart.toISOString())
         .lte("scheduled_time", dayEnd.toISOString())
 
+      console.log("Selected date:", selectedDate)
+      console.log("Medications:", medications)
+      console.log("Intakes found:", intakes)
+
       const details: IntakeDetail[] = []
       const now = new Date()
 
@@ -180,14 +184,20 @@ const Calendar = () => {
           const scheduledTime = new Date(selectedDate)
           scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
-          const intake = intakes?.find((i: any) => 
-            i.medication_id === med.id &&
-            format(new Date(i.scheduled_time), 'HH:mm') === time
-          )
+          // Find matching intake for this medication and time
+          const intake = intakes?.find((i: any) => {
+            const intakeTime = format(new Date(i.scheduled_time), 'HH:mm')
+            const match = i.medication_id === med.id && intakeTime === time
+            if (match) {
+              console.log(`Match found: ${med.name} at ${time}, status: ${i.status}`)
+            }
+            return match
+          })
 
           let status: 'taken' | 'missed' | 'upcoming' = 'upcoming'
-          if (intake?.status === 'taken') {
-            status = 'taken'
+          
+          if (intake) {
+            status = intake.status === 'taken' ? 'taken' : 'missed'
           } else if (scheduledTime < now) {
             status = 'missed'
           }
@@ -203,6 +213,7 @@ const Calendar = () => {
       })
 
       details.sort((a, b) => a.time.localeCompare(b.time))
+      console.log("Final details:", details)
       setDayDetails(details)
 
     } catch (error) {
