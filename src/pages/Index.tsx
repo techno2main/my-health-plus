@@ -11,9 +11,12 @@ import { toast } from "sonner"
 
 interface UpcomingIntake {
   id: string
+  medicationId: string
   medication: string
   time: string
   treatment: string
+  currentStock: number
+  minThreshold: number
 }
 
 interface StockAlert {
@@ -73,9 +76,12 @@ const Index = () => {
           if (time >= currentTime) {
             intakes.push({
               id: `${med.id}-${time}`,
+              medicationId: med.id,
               medication: med.name,
               time: time,
-              treatment: med.treatments.name
+              treatment: med.treatments.name,
+              currentStock: med.current_stock || 0,
+              minThreshold: med.min_threshold || 10
             })
           }
         })
@@ -108,6 +114,55 @@ const Index = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleTakeIntake = async (intake: UpcomingIntake) => {
+    try {
+      const now = new Date()
+      const scheduledTime = new Date()
+      const [hours, minutes] = intake.time.split(':')
+      scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+
+      // Create intake record
+      const { error: intakeError } = await supabase
+        .from("medication_intakes")
+        .insert({
+          medication_id: intake.medicationId,
+          scheduled_time: scheduledTime.toISOString(),
+          taken_at: now.toISOString(),
+          status: 'taken'
+        })
+
+      if (intakeError) throw intakeError
+
+      // Update medication stock
+      const { error: stockError } = await supabase
+        .from("medications")
+        .update({
+          current_stock: intake.currentStock - 1
+        })
+        .eq("id", intake.medicationId)
+
+      if (stockError) throw stockError
+
+      toast.success("Prise enregistrée ✓")
+      loadDashboardData() // Reload data
+    } catch (error) {
+      console.error("Error recording intake:", error)
+      toast.error("Erreur lors de l'enregistrement")
+    }
+  }
+
+  const getStockColor = (stock: number, threshold: number) => {
+    if (stock === 0) return "text-danger"
+    if (stock <= threshold) return "text-warning"
+    return "text-success"
+  }
+
+  const getStockBgColor = (stock: number, threshold: number) => {
+    if (stock === 0) return "bg-danger/10"
+    if (stock <= threshold) return "bg-warning/10"
+    return "bg-success/10"
   }
 
   return (
@@ -190,8 +245,20 @@ const Index = () => {
                     <p className="font-medium">{intake.medication}</p>
                     <p className="text-sm text-muted-foreground">{intake.treatment}</p>
                   </div>
+
+                  <div className={`flex items-center gap-1 px-3 py-1 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
+                    <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
+                    <span className={`text-sm font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
+                      {intake.currentStock}
+                    </span>
+                  </div>
                   
-                  <Button size="sm" className="gradient-primary">
+                  <Button 
+                    size="sm" 
+                    className="gradient-primary"
+                    onClick={() => handleTakeIntake(intake)}
+                    disabled={intake.currentStock === 0}
+                  >
                     <CheckCircle2 className="h-4 w-4" />
                   </Button>
                 </div>
