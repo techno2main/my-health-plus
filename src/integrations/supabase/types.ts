@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      allergies: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          severity: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          severity?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          severity?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       health_professionals: {
         Row: {
           address: string | null
@@ -66,27 +93,36 @@ export type Database = {
       }
       medication_catalog: {
         Row: {
+          color: string | null
           created_at: string | null
           default_dosage: string | null
           description: string | null
+          dosage_amount: string | null
+          form: string | null
           id: string
           name: string
           pathology: string | null
           updated_at: string | null
         }
         Insert: {
+          color?: string | null
           created_at?: string | null
           default_dosage?: string | null
           description?: string | null
+          dosage_amount?: string | null
+          form?: string | null
           id?: string
           name: string
           pathology?: string | null
           updated_at?: string | null
         }
         Update: {
+          color?: string | null
           created_at?: string | null
           default_dosage?: string | null
           description?: string | null
+          dosage_amount?: string | null
+          form?: string | null
           id?: string
           name?: string
           pathology?: string | null
@@ -143,6 +179,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      pathologies: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       pharmacy_visits: {
         Row: {
