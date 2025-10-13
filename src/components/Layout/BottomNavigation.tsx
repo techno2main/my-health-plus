@@ -1,8 +1,20 @@
 import { NavLink, useLocation } from "react-router-dom"
-import * as LucideIcons from "lucide-react"
+import { 
+  Home, Pill, Package, Calendar, Settings,
+  User, Heart, Bell, Shield, FileText,
+  ClipboardList, Users, Database, Smartphone,
+  Moon, Sun, Mail, Phone, MapPin, Search
+} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
+
+const ICON_MAP: Record<string, any> = {
+  Home, Pill, Package, Calendar, Settings,
+  User, Heart, Bell, Shield, FileText,
+  ClipboardList, Users, Database, Smartphone,
+  Moon, Sun, Mail, Phone, MapPin, Search
+};
 
 export function BottomNavigation() {
   const location = useLocation()
@@ -22,8 +34,7 @@ export function BottomNavigation() {
   });
 
   const getIconComponent = (iconName: string) => {
-    const IconComponent = (LucideIcons as any)[iconName];
-    return IconComponent || LucideIcons.Home;
+    return ICON_MAP[iconName] || Home;
   };
 
   if (!navItems?.length) return null;

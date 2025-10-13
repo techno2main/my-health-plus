@@ -8,10 +8,22 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Plus, Trash2, GripVertical, Save } from "lucide-react";
+import { 
+  ArrowLeft, Plus, Trash2, GripVertical, Save,
+  Home, Pill, Package, Calendar, Settings,
+  User, Heart, Bell, Shield, FileText,
+  ClipboardList, Users, Database, Smartphone,
+  Moon, Sun, Mail, Phone, MapPin, Search
+} from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import * as LucideIcons from "lucide-react";
+
+const ICON_MAP: Record<string, any> = {
+  Home, Pill, Package, Calendar, Settings,
+  User, Heart, Bell, Shield, FileText,
+  ClipboardList, Users, Database, Smartphone,
+  Moon, Sun, Mail, Phone, MapPin, Search
+};
 
 const iconNames = [
   "Home", "Pill", "Package", "Calendar", "Settings",
@@ -146,8 +158,7 @@ export default function NavigationManager() {
   };
 
   const getIconComponent = (iconName: string) => {
-    const IconComponent = (LucideIcons as any)[iconName];
-    return IconComponent || LucideIcons.Home;
+    return ICON_MAP[iconName] || Home;
   };
 
   return (
