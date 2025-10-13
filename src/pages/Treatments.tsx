@@ -20,6 +20,8 @@ interface Treatment {
     dosage: string
     times: string[]
     pathology: string | null
+    currentStock: number
+    minThreshold: number
   }>
 }
 
@@ -47,14 +49,30 @@ const Treatments = () => {
         (treatmentsData || []).map(async (treatment) => {
           const { data: medications } = await supabase
             .from("medications")
-            .select("id, name, dosage, times")
+            .select(`
+              id, 
+              name, 
+              dosage, 
+              times,
+              current_stock,
+              min_threshold,
+              catalog_id,
+              medication_catalog (
+                pathology
+              )
+            `)
             .eq("treatment_id", treatment.id)
 
           return {
             ...treatment,
-            medications: (medications || []).map(med => ({
-              ...med,
-              pathology: null
+            medications: (medications || []).map((med: any) => ({
+              id: med.id,
+              name: med.name,
+              dosage: med.dosage,
+              times: med.times,
+              pathology: med.medication_catalog?.pathology || null,
+              currentStock: med.current_stock || 0,
+              minThreshold: med.min_threshold || 10
             }))
           }
         })
@@ -68,6 +86,18 @@ const Treatments = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const getStockColor = (stock: number, threshold: number) => {
+    if (stock === 0) return "text-danger"
+    if (stock <= threshold) return "text-warning"
+    return "text-success"
+  }
+
+  const getStockBgColor = (stock: number, threshold: number) => {
+    if (stock === 0) return "bg-danger/10"
+    if (stock <= threshold) return "bg-warning/10"
+    return "bg-success/10"
   }
 
   if (loading) {
@@ -130,13 +160,19 @@ const Treatments = () => {
                       <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                         <Pill className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                         <div className="flex-1">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 flex-wrap">
                             <p className="font-medium text-sm">{med.name}</p>
                             {med.pathology && (
                               <Badge variant="secondary" className="text-xs">
                                 {med.pathology}
                               </Badge>
                             )}
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(med.currentStock, med.minThreshold)}`}>
+                              <Pill className={`h-3 w-3 ${getStockColor(med.currentStock, med.minThreshold)}`} />
+                              <span className={`text-xs font-semibold ${getStockColor(med.currentStock, med.minThreshold)}`}>
+                                {med.currentStock}
+                              </span>
+                            </div>
                           </div>
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                             <Clock className="h-3 w-3" />
