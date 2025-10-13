@@ -1,4 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom"
+import { useRef, useEffect, useState } from "react"
 import { 
   Home, Pill, Package, Calendar, Settings,
   User, Heart, Bell, Shield, FileText,
@@ -18,6 +19,10 @@ const ICON_MAP: Record<string, any> = {
 
 export function BottomNavigation() {
   const location = useLocation()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [startX, setStartX] = useState(0)
+  const [scrollLeft, setScrollLeft] = useState(0)
 
   const { data: navItems } = useQuery({
     queryKey: ["navigation-items"],
@@ -37,15 +42,46 @@ export function BottomNavigation() {
     return ICON_MAP[iconName] || Home;
   };
 
+  // Handle mouse drag to scroll
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!scrollContainerRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
+    setScrollLeft(scrollContainerRef.current.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !scrollContainerRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollContainerRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+  };
+
   if (!navItems?.length) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-card/95 backdrop-blur-sm pb-safe">
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className={cn(
-          "flex items-center h-16 px-2",
-          navItems.length <= 5 ? "justify-around max-w-lg mx-auto" : "gap-2"
-        )}>
+      <div 
+        ref={scrollContainerRef}
+        className={cn(
+          "overflow-x-auto scrollbar-hide",
+          isDragging ? "cursor-grabbing" : "cursor-grab"
+        )}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+      >
+        <div className="flex items-center h-16 px-2 gap-2 w-max">
           {navItems.map((item) => {
             const isActive = location.pathname === item.path
             const Icon = getIconComponent(item.icon)
@@ -55,11 +91,12 @@ export function BottomNavigation() {
                 key={item.id}
                 to={item.path}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-1 px-4 py-2 min-w-[80px] flex-shrink-0 transition-colors",
+                  "flex flex-col items-center justify-center gap-1 px-4 py-2 min-w-[80px] flex-shrink-0 transition-colors select-none",
                   isActive 
                     ? "text-primary" 
                     : "text-muted-foreground hover:text-foreground"
                 )}
+                onDragStart={(e) => e.preventDefault()}
               >
                 <Icon className={cn("h-5 w-5", isActive && "scale-110 transition-transform")} />
                 <span className="text-xs font-medium whitespace-nowrap">{item.name}</span>
