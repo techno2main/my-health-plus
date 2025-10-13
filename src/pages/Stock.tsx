@@ -10,14 +10,18 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Stock() {
   const navigate = useNavigate();
 
-  // Récupération des données depuis la base de données
+  // Récupération des données depuis la base de données (uniquement traitements actifs)
   const { data: medications, isLoading } = useQuery({
-    queryKey: ["medications"],
+    queryKey: ["medications-active"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("medications")
-        .select("*")
-        .order("created_at", { ascending: false });
+        .select(`
+          *,
+          treatments!inner(is_active)
+        `)
+        .eq("treatments.is_active", true)
+        .order("name", { ascending: true });
       
       if (error) throw error;
       return data;
