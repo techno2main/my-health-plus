@@ -141,17 +141,18 @@ export default function StockForm() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="adjustment">Ajustement</Label>
+              <Label htmlFor="adjustment">Ajustement *</Label>
               <Input 
                 id="adjustment" 
                 type="number"
                 value={adjustment}
                 onChange={(e) => setAdjustment(e.target.value)}
-                placeholder="+/- quantité"
+                placeholder="Entrez +10 ou -5"
                 className="bg-surface"
+                required
               />
               <p className="text-xs text-muted-foreground">
-                Utilisez + pour ajouter, - pour retirer
+                Entrez un nombre positif (+10) ou négatif (-5)
               </p>
             </div>
 
