@@ -287,10 +287,15 @@ const MedicationCatalog = () => {
             {filteredMedications.map((med) => (
               <Card key={med.id} className="p-4 surface-elevated hover:shadow-md transition-shadow">
                 <div className="space-y-2">
-                  {/* Ligne 1: Nom + Stock */}
+                  {/* Ligne 1: Nom + Dosage + Stock */}
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 flex-wrap flex-1">
                       <h3 className="font-semibold text-lg">{med.name}</h3>
+                      {med.dosage_amount && (
+                        <span className="text-sm text-muted-foreground">
+                          {med.dosage_amount}
+                        </span>
+                      )}
                       {med.total_stock !== undefined && (
                         <button
                           onClick={() => handleStockClick(med.id)}
