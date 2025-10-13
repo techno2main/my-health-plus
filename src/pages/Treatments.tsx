@@ -56,24 +56,40 @@ const Treatments = () => {
               times,
               current_stock,
               min_threshold,
-              catalog_id,
-              medication_catalog (
-                pathology
-              )
+              catalog_id
             `)
             .eq("treatment_id", treatment.id)
 
+          // Load pathology from catalog for each medication
+          const medsWithPathology = await Promise.all(
+            (medications || []).map(async (med: any) => {
+              let pathology = null;
+              
+              if (med.catalog_id) {
+                const { data: catalogData } = await supabase
+                  .from("medication_catalog")
+                  .select("pathology")
+                  .eq("id", med.catalog_id)
+                  .single();
+                
+                pathology = catalogData?.pathology || null;
+              }
+
+              return {
+                id: med.id,
+                name: med.name,
+                dosage: med.dosage,
+                times: med.times,
+                pathology,
+                currentStock: med.current_stock || 0,
+                minThreshold: med.min_threshold || 10
+              };
+            })
+          );
+
           return {
             ...treatment,
-            medications: (medications || []).map((med: any) => ({
-              id: med.id,
-              name: med.name,
-              dosage: med.dosage,
-              times: med.times,
-              pathology: med.medication_catalog?.pathology || null,
-              currentStock: med.current_stock || 0,
-              minThreshold: med.min_threshold || 10
-            }))
+            medications: medsWithPathology
           }
         })
       )
@@ -146,23 +162,22 @@ const Treatments = () => {
                   {/* Treatment Header */}
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-lg">{treatment.name}</h3>
-                        {!treatment.is_active && (
-                          <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                            Archivé
-                          </Badge>
-                        )}
-                      </div>
-                      {treatment.is_active && (
+                      <h3 className="font-semibold text-lg">{treatment.name}</h3>
+                      {treatment.is_active ? (
                         <Badge variant="default" className="mt-1 bg-success text-white">
                           Actif
                         </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="mt-1 bg-muted text-muted-foreground">
+                          Archivé
+                        </Badge>
                       )}
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/treatments/${treatment.id}/edit`)}>
-                      Modifier
-                    </Button>
+                    {treatment.is_active && (
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/treatments/${treatment.id}/edit`)}>
+                        Modifier
+                      </Button>
+                    )}
                   </div>
 
                   {/* Medications */}
