@@ -19,6 +19,7 @@ interface Treatment {
     name: string
     dosage: string
     times: string[]
+    pathology: string | null
   }>
 }
 
@@ -41,17 +42,32 @@ const Treatments = () => {
 
       if (treatmentsError) throw treatmentsError
 
-      // Load medications for each treatment
+      // Load medications for each treatment with pathology from catalog
       const treatmentsWithMeds = await Promise.all(
         (treatmentsData || []).map(async (treatment) => {
           const { data: medications } = await supabase
             .from("medications")
-            .select("id, name, dosage, times")
+            .select(`
+              id, 
+              name, 
+              dosage, 
+              times,
+              medication_catalog (pathology)
+            `)
             .eq("treatment_id", treatment.id)
+
+          // Transform to include pathology directly
+          const medsWithPathology = (medications || []).map((med: any) => ({
+            id: med.id,
+            name: med.name,
+            dosage: med.dosage,
+            times: med.times,
+            pathology: med.medication_catalog?.pathology || null
+          }))
 
           return {
             ...treatment,
-            medications: medications || []
+            medications: medsWithPathology
           }
         })
       )
@@ -114,7 +130,14 @@ const Treatments = () => {
                     <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                       <Pill className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="font-medium text-sm">{med.name}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-sm">{med.name}</p>
+                          {med.pathology && (
+                            <Badge variant="secondary" className="text-xs">
+                              {med.pathology}
+                            </Badge>
+                          )}
+                        </div>
                         <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
                           <Clock className="h-3 w-3" />
                           <span>{med.times.join(", ")}</span>
