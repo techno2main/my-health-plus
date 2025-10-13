@@ -10,12 +10,14 @@ import { ArrowLeft, Save, Trash2 } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MedicationEditDialog } from "@/components/TreatmentEdit/MedicationEditDialog";
 
 interface Medication {
   id: string;
   name: string;
   dosage: string;
   times: string[];
+  catalog_id?: string;
 }
 
 interface Treatment {
@@ -35,6 +37,8 @@ export default function TreatmentEdit() {
   const [treatment, setTreatment] = useState<Treatment | null>(null);
   const [medications, setMedications] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -57,7 +61,7 @@ export default function TreatmentEdit() {
       // Load medications for this treatment
       const { data: medsData, error: medsError } = await supabase
         .from("medications")
-        .select("id, name, dosage, times")
+        .select("id, name, dosage, times, catalog_id")
         .eq("treatment_id", id);
 
       if (medsError) throw medsError;
@@ -69,6 +73,15 @@ export default function TreatmentEdit() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleEditMedication = (med: Medication) => {
+    setEditingMedication(med);
+    setDialogOpen(true);
+  };
+
+  const handleMedicationSaved = () => {
+    loadTreatmentData();
   };
 
   if (loading) {
@@ -185,9 +198,7 @@ export default function TreatmentEdit() {
                       <p className="font-medium">{med.name}</p>
                       <p className="text-sm text-muted-foreground">{med.dosage}</p>
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => {
-                      toast.info("Fonctionnalité de modification de médicament en cours de développement");
-                    }}>
+                    <Button variant="ghost" size="sm" onClick={() => handleEditMedication(med)}>
                       Modifier
                     </Button>
                   </div>
@@ -221,6 +232,13 @@ export default function TreatmentEdit() {
             Supprimer le traitement
           </Button>
         </div>
+
+        <MedicationEditDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          medication={editingMedication}
+          onSave={handleMedicationSaved}
+        />
       </div>
     </AppLayout>
   );

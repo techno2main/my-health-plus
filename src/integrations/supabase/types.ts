@@ -132,6 +132,7 @@ export type Database = {
       }
       medications: {
         Row: {
+          catalog_id: string | null
           created_at: string | null
           current_stock: number | null
           dosage: string
@@ -145,6 +146,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          catalog_id?: string | null
           created_at?: string | null
           current_stock?: number | null
           dosage: string
@@ -158,6 +160,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          catalog_id?: string | null
           created_at?: string | null
           current_stock?: number | null
           dosage?: string
@@ -171,6 +174,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "medications_catalog_id_fkey"
+            columns: ["catalog_id"]
+            isOneToOne: false
+            referencedRelation: "medication_catalog"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "medications_treatment_id_fkey"
             columns: ["treatment_id"]
