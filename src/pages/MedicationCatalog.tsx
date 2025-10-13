@@ -288,8 +288,8 @@ const MedicationCatalog = () => {
               <Card key={med.id} className="p-4 surface-elevated hover:shadow-md transition-shadow">
                 <div className="space-y-2">
                   {/* Ligne 1: Nom + Dosage + Stock */}
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 flex-wrap flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
                       <h3 className="font-semibold text-lg">{med.name}</h3>
                       {med.dosage_amount && (
                         <span className="text-sm text-muted-foreground">
@@ -308,11 +308,12 @@ const MedicationCatalog = () => {
                         </button>
                       )}
                     </div>
-                    <div className="flex gap-0.5">
+                    <div className="flex items-center shrink-0">
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => openDialog(med)}
+                        className="h-8 w-8 p-0"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -320,6 +321,7 @@ const MedicationCatalog = () => {
                         variant="ghost"
                         size="sm"
                         onClick={() => confirmDelete(med.id)}
+                        className="h-8 w-8 p-0"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
