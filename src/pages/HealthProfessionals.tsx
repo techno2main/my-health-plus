@@ -374,7 +374,7 @@ const HealthProfessionals = () => {
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <DialogTitle>
-                  {editingItem ? `Modifier ${formData.type}` : `Ajouter un ${formData.type}`}
+                  {editingItem ? "Modifier" : "Ajouter"}
                 </DialogTitle>
               </div>
             </DialogHeader>
