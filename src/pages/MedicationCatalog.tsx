@@ -20,6 +20,7 @@ interface MedicationCatalog {
   name: string
   pathology: string | null
   default_dosage: string | null
+  dosage_amount: string | null
   description: string | null
   initial_stock: number
   min_threshold: number
@@ -41,6 +42,7 @@ const MedicationCatalog = () => {
     name: "",
     pathology: "",
     default_dosage: "",
+    dosage_amount: "",
     description: "",
     initial_stock: "0",
     min_threshold: "10",
@@ -115,6 +117,7 @@ const MedicationCatalog = () => {
             name: formData.name,
             pathology: formData.pathology || null,
             default_dosage: formData.default_dosage || null,
+            dosage_amount: formData.dosage_amount || null,
             description: formData.description || null,
             initial_stock: parseInt(formData.initial_stock) || 0,
             min_threshold: parseInt(formData.min_threshold) || 10,
@@ -131,6 +134,7 @@ const MedicationCatalog = () => {
             name: formData.name,
             pathology: formData.pathology || null,
             default_dosage: formData.default_dosage || null,
+            dosage_amount: formData.dosage_amount || null,
             description: formData.description || null,
             initial_stock: parseInt(formData.initial_stock) || 0,
             min_threshold: parseInt(formData.min_threshold) || 10,
@@ -182,6 +186,7 @@ const MedicationCatalog = () => {
         name: med.name,
         pathology: med.pathology || "",
         default_dosage: med.default_dosage || "",
+        dosage_amount: med.dosage_amount || "",
         description: med.description || "",
         initial_stock: String(med.initial_stock || 0),
         min_threshold: String(med.min_threshold || 10),
@@ -193,6 +198,7 @@ const MedicationCatalog = () => {
         name: "", 
         pathology: "", 
         default_dosage: "", 
+        dosage_amount: "",
         description: "",
         initial_stock: "0",
         min_threshold: "10",
@@ -209,6 +215,7 @@ const MedicationCatalog = () => {
       name: "", 
       pathology: "", 
       default_dosage: "", 
+      dosage_amount: "",
       description: "",
       initial_stock: "0",
       min_threshold: "10",
@@ -344,156 +351,181 @@ const MedicationCatalog = () => {
 
         {/* Add/Edit Dialog */}
         <Dialog open={showDialog} onOpenChange={closeDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>
-                {editingMed ? "Modifier le médicament" : "Ajouter un médicament"}
-              </DialogTitle>
+          <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0">
+            <DialogHeader className="px-6 pt-6 pb-4 border-b shrink-0">
+              <div className="flex items-center gap-3">
+                <Button variant="ghost" size="sm" onClick={closeDialog} className="h-8 w-8 p-0">
+                  <ArrowLeft className="h-4 w-4" />
+                </Button>
+                <DialogTitle>
+                  {editingMed ? "Modifier le médicament" : "Ajouter un médicament"}
+                </DialogTitle>
+              </div>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom du médicament *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="Ex: Doliprane 1000mg"
-                  className="bg-surface"
-                />
-              </div>
+            
+            <ScrollArea className="flex-1 px-6">
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nom du médicament *</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Ex: Xigduo"
+                    className="bg-surface"
+                  />
+                </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="pathology">Pathologie</Label>
-                <Select value={formData.pathology} onValueChange={(value) => setFormData({ ...formData, pathology: value })}>
-                  <SelectTrigger className="bg-surface">
-                    <SelectValue placeholder="Sélectionner une pathologie" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {pathologies.map((pathology) => (
-                      <SelectItem key={pathology.id} value={pathology.name}>
-                        {pathology.name}
-                      </SelectItem>
+                <div className="space-y-2">
+                  <Label htmlFor="pathology">Pathologie</Label>
+                  <Select value={formData.pathology} onValueChange={(value) => setFormData({ ...formData, pathology: value })}>
+                    <SelectTrigger className="bg-surface">
+                      <SelectValue placeholder="Sélectionner une pathologie" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-popover z-50">
+                      {pathologies.map((pathology) => (
+                        <SelectItem key={pathology.id} value={pathology.name}>
+                          {pathology.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dosage_amount">Dosage</Label>
+                  <Input
+                    id="dosage_amount"
+                    value={formData.dosage_amount}
+                    onChange={(e) => setFormData({ ...formData, dosage_amount: e.target.value })}
+                    placeholder="Ex: 5mg/1000mg"
+                    className="bg-surface"
+                  />
+                  <p className="text-xs text-muted-foreground">Le dosage unitaire (ex: 225mg, 5mg/1000mg)</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="dosage">Posologie par défaut</Label>
+                  <Input
+                    id="dosage"
+                    value={formData.default_dosage}
+                    onChange={(e) => setFormData({ ...formData, default_dosage: e.target.value })}
+                    placeholder="Ex: 1 comprimé matin et soir"
+                    className="bg-surface"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Input
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Ex: Metformine"
+                    className="bg-surface"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="initial_stock">Stock initial</Label>
+                    <Input
+                      id="initial_stock"
+                      type="number"
+                      min="0"
+                      value={formData.initial_stock}
+                      onChange={(e) => setFormData({ ...formData, initial_stock: e.target.value })}
+                      placeholder="0"
+                      className="bg-surface"
+                      disabled={!!editingMed}
+                    />
+                    <p className="text-xs text-muted-foreground">Stock par défaut lors de l'ajout</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="min_threshold">Seuil minimum</Label>
+                    <Input
+                      id="min_threshold"
+                      type="number"
+                      min="0"
+                      value={formData.min_threshold}
+                      onChange={(e) => setFormData({ ...formData, min_threshold: e.target.value })}
+                      placeholder="10"
+                      className="bg-surface"
+                      disabled={!!editingMed}
+                    />
+                    <p className="text-xs text-muted-foreground">Seuil d'alerte par défaut</p>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Heures de prises par défaut</Label>
+                  <div className="space-y-2">
+                    {formData.default_times.map((time, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Input
+                          type="time"
+                          value={time}
+                          onChange={(e) => {
+                            const newTimes = [...formData.default_times];
+                            newTimes[index] = e.target.value;
+                            setFormData({ ...formData, default_times: newTimes });
+                          }}
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            const newTimes = formData.default_times.filter((_, i) => i !== index);
+                            setFormData({ ...formData, default_times: newTimes });
+                          }}
+                        >
+                          Supprimer
+                        </Button>
+                      </div>
                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dosage">Posologie par défaut</Label>
-                <Input
-                  id="dosage"
-                  value={formData.default_dosage}
-                  onChange={(e) => setFormData({ ...formData, default_dosage: e.target.value })}
-                  placeholder="Ex: 1 comprimé jusqu'à 3 fois par jour"
-                  className="bg-surface"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Input
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  placeholder="Ex: Antalgique et antipyrétique"
-                  className="bg-surface"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="initial_stock">Stock initial</Label>
-                  <Input
-                    id="initial_stock"
-                    type="number"
-                    min="0"
-                    value={formData.initial_stock}
-                    onChange={(e) => setFormData({ ...formData, initial_stock: e.target.value })}
-                    placeholder="0"
-                    className="bg-surface"
-                    disabled={!!editingMed}
-                  />
-                  <p className="text-xs text-muted-foreground">Stock par défaut lors de l'ajout</p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setFormData({ ...formData, default_times: [...formData.default_times, "09:00"] });
+                      }}
+                    >
+                      + Ajouter une heure
+                    </Button>
+                    <p className="text-xs text-muted-foreground">
+                      Ces heures seront pré-remplies automatiquement lors de l'ajout d'un traitement
+                    </p>
+                  </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="min_threshold">Seuil minimum</Label>
-                  <Input
-                    id="min_threshold"
-                    type="number"
-                    min="0"
-                    value={formData.min_threshold}
-                    onChange={(e) => setFormData({ ...formData, min_threshold: e.target.value })}
-                    placeholder="10"
-                    className="bg-surface"
-                    disabled={!!editingMed}
-                  />
-                  <p className="text-xs text-muted-foreground">Seuil d'alerte par défaut</p>
-                </div>
+                {editingMed && editingMed.total_stock !== undefined && (
+                  <div className="p-3 rounded-lg bg-muted/30 border border-primary/20">
+                    <p className="text-sm text-muted-foreground mb-1">Stock actuel total</p>
+                    <button 
+                      onClick={() => handleStockClick(editingMed.id)}
+                      className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
+                    >
+                      <Pill className="h-5 w-5 text-primary" />
+                      <span className="text-2xl font-bold text-primary">{editingMed.total_stock} unités</span>
+                    </button>
+                    <p className="text-xs text-muted-foreground mt-1">Somme de tous les stocks dans vos traitements</p>
+                  </div>
+                )}
               </div>
+            </ScrollArea>
 
-              <div className="space-y-2">
-                <Label>Heures de prises par défaut</Label>
-                <div className="space-y-2">
-                  {formData.default_times.map((time, index) => (
-                    <div key={index} className="flex gap-2">
-                      <Input
-                        type="time"
-                        value={time}
-                        onChange={(e) => {
-                          const newTimes = [...formData.default_times];
-                          newTimes[index] = e.target.value;
-                          setFormData({ ...formData, default_times: newTimes });
-                        }}
-                      />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          const newTimes = formData.default_times.filter((_, i) => i !== index);
-                          setFormData({ ...formData, default_times: newTimes });
-                        }}
-                      >
-                        Supprimer
-                      </Button>
-                    </div>
-                  ))}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setFormData({ ...formData, default_times: [...formData.default_times, "09:00"] });
-                    }}
-                  >
-                    + Ajouter une heure
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Ces heures seront pré-remplies automatiquement lors de l'ajout d'un traitement
-                  </p>
-                </div>
+            <div className="px-6 py-4 border-t shrink-0 bg-background">
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={closeDialog} className="flex-1">
+                  Annuler
+                </Button>
+                <Button onClick={handleSubmit} className="flex-1 gradient-primary">
+                  {editingMed ? "Modifier" : "Ajouter"}
+                </Button>
               </div>
-
-              {editingMed && editingMed.total_stock !== undefined && (
-                <div className="p-3 rounded-lg bg-muted/30 border border-primary/20">
-                  <p className="text-sm text-muted-foreground mb-1">Stock actuel total</p>
-                  <button 
-                    onClick={() => handleStockClick(editingMed.id)}
-                    className="flex items-center gap-2 hover:opacity-80 transition-opacity"
-                  >
-                    <Pill className="h-4 w-4 text-primary" />
-                    <p className="text-lg font-semibold text-primary">{editingMed.total_stock} unités</p>
-                  </button>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Somme de tous les stocks dans vos traitements
-                  </p>
-                </div>
-              )}
-
-              <Button onClick={handleSubmit} className="w-full gradient-primary">
-                {editingMed ? "Modifier" : "Ajouter"}
-              </Button>
             </div>
           </DialogContent>
         </Dialog>
