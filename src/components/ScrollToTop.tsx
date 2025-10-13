@@ -7,8 +7,8 @@ export function ScrollToTop() {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      // Afficher le bouton après 300px de scroll
-      if (window.scrollY > 300) {
+      // Afficher le bouton après 100px de scroll
+      if (window.scrollY > 100) {
         setIsVisible(true)
       } else {
         setIsVisible(false)
