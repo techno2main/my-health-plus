@@ -173,8 +173,8 @@ export default function NavigationManager() {
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold">Gestion de la navigation</h1>
-            <p className="text-muted-foreground">Configurez les items de votre barre de navigation</p>
+            <h1 className="text-3xl font-bold">Navigation</h1>
+            <p className="text-muted-foreground">Configurez la navigation</p>
           </div>
           <Button onClick={() => setIsDialogOpen(true)}>
             <Plus className="h-4 w-4" />
