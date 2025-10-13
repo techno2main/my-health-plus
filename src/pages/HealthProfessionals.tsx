@@ -384,7 +384,7 @@ const HealthProfessionals = () => {
                 />
               </div>
 
-              {formData.type === "medecin" && (
+              {(formData.type === "medecin" || formData.type === "doctor") && (
                 <div className="space-y-2">
                   <Label htmlFor="specialty">Spécialité</Label>
                   <Input
@@ -431,7 +431,7 @@ const HealthProfessionals = () => {
                 />
               </div>
 
-              {formData.type === "medecin" && (
+              {(formData.type === "medecin" || formData.type === "doctor") && (
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="primary"
