@@ -6,10 +6,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Trash2, Edit, Search } from "lucide-react"
+import { Plus, Trash2, Edit, Search, ArrowLeft } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useNavigate } from "react-router-dom"
 
 interface MedicationCatalog {
   id: string
@@ -140,20 +141,26 @@ const MedicationCatalog = () => {
     med.pathology?.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const navigate = useNavigate()
+
   return (
     <AppLayout>
       <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Référentiel de médicaments</h1>
-            <p className="text-sm text-muted-foreground">{medications.length} médicament(s) dans le référentiel</p>
-          </div>
-          <Button className="gradient-primary" onClick={() => openDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-        </header>
+          <header className="flex-1 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Référentiel de médicaments</h1>
+              <p className="text-sm text-muted-foreground">{medications.length} médicament(s) dans le référentiel</p>
+            </div>
+            <Button className="gradient-primary" onClick={() => openDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter
+            </Button>
+          </header>
+        </div>
 
         {/* Search */}
         <div className="relative">

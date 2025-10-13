@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Plus, Trash2, Edit, Search } from "lucide-react"
+import { Plus, Trash2, Edit, Search, ArrowLeft } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { useNavigate } from "react-router-dom"
 
 interface Allergy {
   id: string
@@ -135,6 +136,8 @@ const Allergies = () => {
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  const navigate = useNavigate()
+
   const getSeverityVariant = (severity: string | null) => {
     switch (severity) {
       case "Légère": return "secondary"
@@ -147,16 +150,21 @@ const Allergies = () => {
   return (
     <AppLayout>
       <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <header className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold">Allergies</h1>
-            <p className="text-sm text-muted-foreground">{allergies.length} allergie(s) enregistrée(s)</p>
-          </div>
-          <Button className="gradient-primary" onClick={() => openDialog()}>
-            <Plus className="h-4 w-4 mr-2" />
-            Ajouter
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
           </Button>
-        </header>
+          <header className="flex-1 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold">Allergies</h1>
+              <p className="text-sm text-muted-foreground">{allergies.length} allergie(s) enregistrée(s)</p>
+            </div>
+            <Button className="gradient-primary" onClick={() => openDialog()}>
+              <Plus className="h-4 w-4 mr-2" />
+              Ajouter
+            </Button>
+          </header>
+        </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />

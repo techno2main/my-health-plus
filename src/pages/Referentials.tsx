@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/Layout/AppLayout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { useNavigate } from "react-router-dom"
-import { Users, Stethoscope, AlertCircle, Pill } from "lucide-react"
+import { Users, Stethoscope, AlertCircle, Pill, ArrowLeft } from "lucide-react"
 
 const Referentials = () => {
   const navigate = useNavigate()
@@ -37,10 +37,15 @@ const Referentials = () => {
   return (
     <AppLayout>
       <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <header>
-          <h1 className="text-2xl font-bold">Référentiels</h1>
-          <p className="text-sm text-muted-foreground">Gérez vos référentiels de données</p>
-        </header>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <header>
+            <h1 className="text-2xl font-bold">Référentiels</h1>
+            <p className="text-sm text-muted-foreground">Gérez vos référentiels de données</p>
+          </header>
+        </div>
 
         <div className="grid gap-4 md:grid-cols-2">
           {categories.map((category) => (

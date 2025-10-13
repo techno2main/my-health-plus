@@ -8,11 +8,12 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Plus, Trash2, Edit, Search, Star, Phone, Mail, MapPin } from "lucide-react"
+import { Plus, Trash2, Edit, Search, Star, Phone, Mail, MapPin, ArrowLeft } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useNavigate } from "react-router-dom"
 
 interface HealthProfessional {
   id: string
@@ -135,6 +136,15 @@ const HealthProfessionals = () => {
   }
 
   const openDialog = (type: string, item?: HealthProfessional) => {
+    const typeMap: { [key: string]: string } = {
+      'medecin': 'doctor',
+      'pharmacie': 'pharmacy',
+      'laboratoire': 'laboratory',
+      'doctor': 'doctor',
+      'pharmacy': 'pharmacy',
+      'laboratory': 'laboratory'
+    }
+    
     if (item) {
       setEditingItem(item)
       setFormData({
@@ -148,9 +158,10 @@ const HealthProfessionals = () => {
       })
     } else {
       setEditingItem(null)
+      const mappedType = typeMap[type] || type
       setFormData({
         name: "",
-        type,
+        type: mappedType,
         specialty: "",
         phone: "",
         email: "",
@@ -176,8 +187,18 @@ const HealthProfessionals = () => {
   }
 
   const filterByType = (type: string) => {
+    const typeMap: { [key: string]: string } = {
+      'medecins': 'doctor',
+      'pharmacies': 'pharmacy',
+      'laboratoires': 'laboratory',
+      'doctor': 'doctor',
+      'pharmacy': 'pharmacy',
+      'laboratory': 'laboratory'
+    }
+    const mappedType = typeMap[type] || type
+    
     return professionals.filter(p =>
-      p.type === type &&
+      p.type === mappedType &&
       (p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
        p.specialty?.toLowerCase().includes(searchTerm.toLowerCase()))
     )
@@ -240,13 +261,20 @@ const HealthProfessionals = () => {
     </Card>
   )
 
+  const navigate = useNavigate()
+
   return (
     <AppLayout>
       <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
-        <header>
-          <h1 className="text-2xl font-bold">Professionnels de Santé</h1>
-          <p className="text-sm text-muted-foreground">Médecins, pharmacies et laboratoires</p>
-        </header>
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <header>
+            <h1 className="text-2xl font-bold">Professionnels de Santé</h1>
+            <p className="text-sm text-muted-foreground">Médecins, pharmacies et laboratoires</p>
+          </header>
+        </div>
 
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -272,13 +300,13 @@ const HealthProfessionals = () => {
             </Button>
             {loading ? (
               <p>Chargement...</p>
-            ) : filterByType("medecin").length === 0 ? (
+            ) : filterByType("medecins").length === 0 ? (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground">Aucun médecin trouvé</p>
               </Card>
             ) : (
               <div className="grid gap-4">
-                {filterByType("medecin").map((item) => (
+                {filterByType("medecins").map((item) => (
                   <ProfessionalCard key={item.id} item={item} />
                 ))}
               </div>
@@ -292,13 +320,13 @@ const HealthProfessionals = () => {
             </Button>
             {loading ? (
               <p>Chargement...</p>
-            ) : filterByType("pharmacie").length === 0 ? (
+            ) : filterByType("pharmacies").length === 0 ? (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground">Aucune pharmacie trouvée</p>
               </Card>
             ) : (
               <div className="grid gap-4">
-                {filterByType("pharmacie").map((item) => (
+                {filterByType("pharmacies").map((item) => (
                   <ProfessionalCard key={item.id} item={item} />
                 ))}
               </div>
@@ -312,13 +340,13 @@ const HealthProfessionals = () => {
             </Button>
             {loading ? (
               <p>Chargement...</p>
-            ) : filterByType("laboratoire").length === 0 ? (
+            ) : filterByType("laboratoires").length === 0 ? (
               <Card className="p-8 text-center">
                 <p className="text-muted-foreground">Aucun laboratoire trouvé</p>
               </Card>
             ) : (
               <div className="grid gap-4">
-                {filterByType("laboratoire").map((item) => (
+                {filterByType("laboratoires").map((item) => (
                   <ProfessionalCard key={item.id} item={item} />
                 ))}
               </div>
