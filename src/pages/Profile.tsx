@@ -346,22 +346,6 @@ export default function Profile() {
             <>
               {/* Mode consultation */}
               <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label className="text-muted-foreground">Prénom</Label>
-                    <p className="font-medium mt-1">{firstName || "-"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Nom</Label>
-                    <p className="font-medium mt-1">{lastName || "-"}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <Label className="text-muted-foreground">Email</Label>
-                  <p className="font-medium mt-1">{user?.email || "-"}</p>
-                </div>
-
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <Label className="text-muted-foreground">Date de naissance</Label>
