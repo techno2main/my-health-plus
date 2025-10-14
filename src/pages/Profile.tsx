@@ -135,13 +135,26 @@ export default function Profile() {
 
     setSaving(true);
     try {
+      // Format the date properly
+      let dateOfBirthString = null;
+      if (dateOfBirth) {
+        try {
+          dateOfBirthString = format(dateOfBirth, "yyyy-MM-dd");
+        } catch (e) {
+          console.error("Error formatting date:", e);
+          toast.error("Format de date invalide");
+          setSaving(false);
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("profiles")
         .upsert({
           id: user.id,
           first_name: firstName,
           last_name: lastName,
-          date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
+          date_of_birth: dateOfBirthString,
           blood_type: bloodType,
           height: height ? parseInt(height) : null,
           weight: weight ? parseFloat(weight) : null,
@@ -149,13 +162,16 @@ export default function Profile() {
           updated_at: new Date().toISOString(),
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error:", error);
+        throw error;
+      }
 
       toast.success("Profil mis à jour avec succès");
       setIsEditing(false);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error saving profile:", error);
-      toast.error("Erreur lors de la sauvegarde du profil");
+      toast.error(error?.message || "Erreur lors de la sauvegarde du profil");
     } finally {
       setSaving(false);
     }
