@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/Layout/PageHeader"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Pill, Clock, Calendar, User, FileText, MapPin } from "lucide-react"
+import { Pill, Clock, Calendar, User, Download, MapPin } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -229,26 +229,28 @@ const Treatments = () => {
                     {treatment.medications.map((med, idx) => (
                       <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                         <Pill className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 space-y-1">
                           <div className="flex items-center justify-between gap-2">
-                            <p className="font-medium text-sm">{med.name}</p>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              {med.pathology && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {med.pathology}
-                                </Badge>
-                              )}
-                              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(med.currentStock, med.minThreshold)}`}>
-                                <Pill className={`h-3 w-3 ${getStockColor(med.currentStock, med.minThreshold)}`} />
-                                <span className={`text-xs font-semibold ${getStockColor(med.currentStock, med.minThreshold)}`}>
-                                  {med.currentStock}
-                                </span>
-                              </div>
-                            </div>
+                            <p className="font-medium text-sm">
+                              {med.name} <span className="text-muted-foreground">• {med.dosage}</span>
+                            </p>
+                            {med.pathology && (
+                              <Badge variant="secondary" className="text-xs flex-shrink-0">
+                                {med.pathology}
+                              </Badge>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                            <Clock className="h-3 w-3" />
-                            <span>{med.times.join(", ")}</span>
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <Clock className="h-3 w-3" />
+                              <span>{med.times.join(", ")}</span>
+                            </div>
+                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(med.currentStock, med.minThreshold)}`}>
+                              <Pill className={`h-3 w-3 ${getStockColor(med.currentStock, med.minThreshold)}`} />
+                              <span className={`text-xs font-semibold ${getStockColor(med.currentStock, med.minThreshold)}`}>
+                                {med.currentStock}
+                              </span>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -269,14 +271,13 @@ const Treatments = () => {
                     )}
                     {treatment.prescription?.file_path && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <FileText className="h-3 w-3" />
+                        <Download className="h-3 w-3" />
                         <a 
-                          href={`${supabase.storage.from('prescriptions').getPublicUrl(treatment.prescription.file_path).data.publicUrl}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={supabase.storage.from('prescriptions').getPublicUrl(treatment.prescription.file_path).data.publicUrl}
+                          download
                           className="hover:text-primary underline"
                         >
-                          Voir l'ordonnance
+                          Télécharger l'ordonnance
                         </a>
                       </div>
                     )}
