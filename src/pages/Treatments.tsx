@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/Layout/PageHeader"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Pill, Clock, Calendar } from "lucide-react"
+import { Pill, Clock, Calendar, User, FileText, MapPin } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
@@ -24,6 +24,15 @@ interface Treatment {
     currentStock: number
     minThreshold: number
   }>
+  prescribing_doctor?: {
+    name: string
+  } | null
+  prescription?: {
+    file_path: string | null
+  } | null
+  next_pharmacy_visit?: {
+    visit_date: string
+  } | null
 }
 
 const Treatments = () => {
@@ -39,7 +48,12 @@ const Treatments = () => {
     try {
       const { data: treatmentsData, error: treatmentsError } = await supabase
         .from("treatments")
-        .select("*")
+        .select(`
+          *,
+          prescriptions(file_path),
+          health_professionals!treatments_prescription_id_fkey(name),
+          pharmacy_visits(visit_date, is_completed)
+        `)
         .order("is_active", { ascending: false })
         .order("created_at", { ascending: false })
 
@@ -71,16 +85,23 @@ const Treatments = () => {
                   .from("medication_catalog")
                   .select("pathology")
                   .eq("id", med.catalog_id)
-                  .single();
+                  .maybeSingle();
                 
                 pathology = catalogData?.pathology || null;
               }
+
+              // Sort times in ascending order
+              const sortedTimes = [...(med.times || [])].sort((a, b) => {
+                const [hoursA, minutesA] = a.split(':').map(Number);
+                const [hoursB, minutesB] = b.split(':').map(Number);
+                return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB);
+              });
 
               return {
                 id: med.id,
                 name: med.name,
                 dosage: med.dosage,
-                times: med.times,
+                times: sortedTimes,
                 pathology,
                 currentStock: med.current_stock || 0,
                 minThreshold: med.min_threshold || 10
@@ -88,15 +109,27 @@ const Treatments = () => {
             })
           );
 
+          // Get next pharmacy visit
+          const nextVisit = treatment.pharmacy_visits
+            ?.filter((v: any) => !v.is_completed)
+            ?.sort((a: any, b: any) => new Date(a.visit_date).getTime() - new Date(b.visit_date).getTime())[0];
+
           return {
             ...treatment,
-            medications: medsWithPathology
+            medications: medsWithPathology,
+            prescribing_doctor: Array.isArray(treatment.health_professionals) 
+              ? treatment.health_professionals[0] 
+              : treatment.health_professionals,
+            prescription: Array.isArray(treatment.prescriptions)
+              ? treatment.prescriptions[0]
+              : treatment.prescriptions,
+            next_pharmacy_visit: nextVisit
           }
         })
       )
 
 
-      setTreatments(treatmentsWithMeds)
+      setTreatments(treatmentsWithMeds as Treatment[])
     } catch (error) {
       console.error("Error loading treatments:", error)
       toast.error("Erreur lors du chargement des traitements")
@@ -131,7 +164,7 @@ const Treatments = () => {
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         <PageHeader 
-          title="Mes traitements"
+          title="Traitements"
           subtitle={`${treatments.filter(t => t.is_active).length} traitement(s) actif(s)`}
           showAddButton
           onAdd={() => navigate("/treatments/new")}
@@ -174,19 +207,21 @@ const Treatments = () => {
                     {treatment.medications.map((med, idx) => (
                       <div key={idx} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
                         <Pill className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
                             <p className="font-medium text-sm">{med.name}</p>
-                            {med.pathology && (
-                              <Badge variant="secondary" className="text-xs">
-                                {med.pathology}
-                              </Badge>
-                            )}
-                            <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(med.currentStock, med.minThreshold)}`}>
-                              <Pill className={`h-3 w-3 ${getStockColor(med.currentStock, med.minThreshold)}`} />
-                              <span className={`text-xs font-semibold ${getStockColor(med.currentStock, med.minThreshold)}`}>
-                                {med.currentStock}
-                              </span>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {med.pathology && (
+                                <Badge variant="secondary" className="text-xs">
+                                  {med.pathology}
+                                </Badge>
+                              )}
+                              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(med.currentStock, med.minThreshold)}`}>
+                                <Pill className={`h-3 w-3 ${getStockColor(med.currentStock, med.minThreshold)}`} />
+                                <span className={`text-xs font-semibold ${getStockColor(med.currentStock, med.minThreshold)}`}>
+                                  {med.currentStock}
+                                </span>
+                              </div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
@@ -198,10 +233,37 @@ const Treatments = () => {
                     ))}
                   </div>
 
-                  {/* Metadata */}
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground pt-2 border-t border-border">
-                    <Calendar className="h-3 w-3" />
-                    <span>Depuis le {new Date(treatment.start_date).toLocaleDateString("fr-FR")}</span>
+                  {/* Metadata Footer */}
+                  <div className="pt-2 border-t border-border space-y-1">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <Calendar className="h-3 w-3" />
+                      <span>Depuis le {new Date(treatment.start_date).toLocaleDateString("fr-FR")}</span>
+                    </div>
+                    {treatment.prescribing_doctor && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <User className="h-3 w-3" />
+                        <span>{treatment.prescribing_doctor.name}</span>
+                      </div>
+                    )}
+                    {treatment.prescription?.file_path && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <FileText className="h-3 w-3" />
+                        <a 
+                          href={`${supabase.storage.from('prescriptions').getPublicUrl(treatment.prescription.file_path).data.publicUrl}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="hover:text-primary underline"
+                        >
+                          Voir l'ordonnance
+                        </a>
+                      </div>
+                    )}
+                    {treatment.next_pharmacy_visit && (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <MapPin className="h-3 w-3" />
+                        <span>Prochaine visite : {new Date(treatment.next_pharmacy_visit.visit_date).toLocaleDateString("fr-FR")}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </Card>
