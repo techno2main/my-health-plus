@@ -128,23 +128,21 @@ const Index = () => {
             const scheduledDate = new Date()
             scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
 
-            // Only show if in the future or if it's for today and not taken
-            if (scheduledDate >= now) {
-              const catalogDosage = med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage
-              intakes.push({
-                id: `${med.id}-${time}-today`,
-                medicationId: med.id,
-                medication: med.name,
-                dosage: catalogDosage || med.dosage_amount || med.dosage,
-                time: time,
-                date: scheduledDate,
-                treatment: med.treatments.name,
-                treatmentId: med.treatment_id,
-                pathology: med.medication_catalog?.pathology || "",
-                currentStock: med.current_stock || 0,
-                minThreshold: med.min_threshold || 10
-              })
-            }
+            // Show all of today's intakes that haven't been taken
+            const catalogDosage = med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage
+            intakes.push({
+              id: `${med.id}-${time}-today`,
+              medicationId: med.id,
+              medication: med.name,
+              dosage: catalogDosage || med.dosage_amount || med.dosage,
+              time: time,
+              date: scheduledDate,
+              treatment: med.treatments.name,
+              treatmentId: med.treatment_id,
+              pathology: med.medication_catalog?.pathology || "",
+              currentStock: med.current_stock || 0,
+              minThreshold: med.min_threshold || 10
+            })
           }
 
           // Add tomorrow's first occurrences if we don't have enough today
