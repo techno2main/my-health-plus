@@ -39,6 +39,7 @@ const Index = () => {
   const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([])
   const [activeTreatmentsCount, setActiveTreatmentsCount] = useState(0)
   const [activeTreatmentName, setActiveTreatmentName] = useState("")
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -47,6 +48,20 @@ const Index = () => {
 
   const loadDashboardData = async () => {
     try {
+      // Load user profile for avatar
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("avatar_url")
+          .eq("id", user.id)
+          .single()
+        
+        if (profile?.avatar_url) {
+          setAvatarUrl(profile.avatar_url)
+        }
+      }
+
       // Load active treatments count
       const { data: treatments, error: treatmentsError } = await supabase
         .from("treatments")
@@ -248,9 +263,13 @@ const Index = () => {
               MyHealthPlus
             </h1>
             <Avatar className="h-10 w-10 cursor-pointer" onClick={() => navigate("/profile")}>
-              <AvatarFallback>
-                <User className="h-5 w-5" />
-              </AvatarFallback>
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+              ) : (
+                <AvatarFallback>
+                  <User className="h-5 w-5" />
+                </AvatarFallback>
+              )}
             </Avatar>
           </div>
           <p className="text-sm text-muted-foreground capitalize">{currentDate} • {currentTime}</p>
@@ -323,7 +342,19 @@ const Index = () => {
             }) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Aujourd'hui
+                  Aujourd'hui {upcomingIntakes.find(i => {
+                    const intakeDate = new Date(i.date);
+                    const today = new Date();
+                    intakeDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+                    return intakeDate.getTime() === today.getTime();
+                  })?.treatment && `(${upcomingIntakes.find(i => {
+                    const intakeDate = new Date(i.date);
+                    const today = new Date();
+                    intakeDate.setHours(0, 0, 0, 0);
+                    today.setHours(0, 0, 0, 0);
+                    return intakeDate.getTime() === today.getTime();
+                  })?.treatment})`}
                 </h3>
                 {upcomingIntakes
                   .filter(intake => {
@@ -386,7 +417,21 @@ const Index = () => {
             }) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Demain
+                  Demain {upcomingIntakes.find(i => {
+                    const intakeDate = new Date(i.date);
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    intakeDate.setHours(0, 0, 0, 0);
+                    tomorrow.setHours(0, 0, 0, 0);
+                    return intakeDate.getTime() === tomorrow.getTime();
+                  })?.treatment && `(${upcomingIntakes.find(i => {
+                    const intakeDate = new Date(i.date);
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    intakeDate.setHours(0, 0, 0, 0);
+                    tomorrow.setHours(0, 0, 0, 0);
+                    return intakeDate.getTime() === tomorrow.getTime();
+                  })?.treatment})`}
                 </h3>
                 {upcomingIntakes
                   .filter(intake => {
