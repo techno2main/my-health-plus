@@ -7,13 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ModernDatePicker } from "@/components/ui/modern-date-picker";
 import { Badge } from "@/components/ui/badge";
-import { User, Mail, Save, Camera, Upload } from "lucide-react";
+import { Mail, Save, Camera, Edit } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState, useRef } from "react";
 import { toast } from "sonner";
-import { differenceInYears } from "date-fns";
+import { differenceInYears, format } from "date-fns";
 
 export default function Profile() {
   const navigate = useNavigate();
@@ -22,6 +22,7 @@ export default function Profile() {
   
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
@@ -140,8 +141,7 @@ export default function Profile() {
           id: user.id,
           first_name: firstName,
           last_name: lastName,
-          phone,
-          date_of_birth: dateOfBirth?.toISOString().split("T")[0],
+          date_of_birth: dateOfBirth ? format(dateOfBirth, "yyyy-MM-dd") : null,
           blood_type: bloodType,
           height: height ? parseInt(height) : null,
           weight: weight ? parseFloat(weight) : null,
@@ -152,6 +152,7 @@ export default function Profile() {
       if (error) throw error;
 
       toast.success("Profil mis à jour avec succès");
+      setIsEditing(false);
     } catch (error) {
       console.error("Error saving profile:", error);
       toast.error("Erreur lors de la sauvegarde du profil");
@@ -183,155 +184,231 @@ export default function Profile() {
         />
 
         <Card className="p-6">
-          <div className="flex flex-col items-center mb-6">
+          {/* Avatar et nom - en ligne */}
+          <div className="flex items-center gap-4 mb-6">
             <div className="relative group">
-              <Avatar className="h-20 w-20">
+              <Avatar className="h-16 w-16">
                 <AvatarImage src={avatarUrl} alt="Avatar" />
-                <AvatarFallback className="bg-primary/10">
-                  <User className="h-10 w-10 text-primary" />
+                <AvatarFallback className="bg-primary/10 text-lg font-medium">
+                  {firstName?.[0]}{lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Camera className="h-6 w-6 text-white" />
-              </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleAvatarUpload}
-              />
+              {isEditing && (
+                <>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
+                    <Camera className="h-5 w-5 text-white" />
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleAvatarUpload}
+                  />
+                </>
+              )}
             </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-semibold">{firstName} {lastName}</h2>
+              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            </div>
+            {!isEditing && (
+              <Button variant="outline" onClick={() => setIsEditing(true)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Modifier
+              </Button>
+            )}
           </div>
 
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">Prénom</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input 
-                    id="firstName" 
-                    placeholder="Prénom" 
-                    className="pl-10"
-                    value={firstName}
-                    onChange={(e) => setFirstName(e.target.value)}
+          {isEditing ? (
+            <>
+              {/* Mode édition */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">Prénom</Label>
+                    <Input 
+                      id="firstName" 
+                      placeholder="Prénom" 
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Nom</Label>
+                    <Input 
+                      id="lastName" 
+                      placeholder="Nom" 
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      className="pl-10 bg-muted"
+                      value={user?.email || ""}
+                      disabled
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Label>Date de naissance</Label>
+                    {age !== null && (
+                      <Badge variant="secondary" className="text-xs">
+                        {age} ans
+                      </Badge>
+                    )}
+                  </div>
+                  <ModernDatePicker
+                    value={dateOfBirth}
+                    onChange={setDateOfBirth}
+                    placeholder="Sélectionner la date de naissance"
                   />
                 </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Nom</Label>
-                <Input 
-                  id="lastName" 
-                  placeholder="Nom" 
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  id="email" 
-                  type="email" 
-                  className="pl-10 bg-muted"
-                  value={user?.email || ""}
-                  disabled
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Label>Date de naissance</Label>
-                {age !== null && (
-                  <Badge variant="secondary" className="text-xs">
-                    {age} ans
-                  </Badge>
-                )}
-              </div>
-              <ModernDatePicker
-                value={dateOfBirth}
-                onChange={setDateOfBirth}
-                placeholder="Sélectionner la date de naissance"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="phone">Téléphone</Label>
-              <Input 
-                id="phone" 
-                type="tel" 
-                placeholder="06 12 34 56 78"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="mt-6 pt-6 border-t">
-            <h3 className="font-semibold mb-4">Informations médicales</h3>
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="bloodType">Groupe sanguin</Label>
-                  <Input 
-                    id="bloodType" 
-                    placeholder="A+" 
-                    value={bloodType}
-                    onChange={(e) => setBloodType(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>IMC</Label>
-                  {bmi ? (
-                    <div className={`flex items-center h-10 px-3 rounded-md border ${getBMIColor(parseFloat(bmi))} text-sm font-medium`}>
-                      {bmi}
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="font-semibold mb-4">Informations médicales</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="bloodType">Groupe sanguin</Label>
+                      <Input 
+                        id="bloodType" 
+                        placeholder="A+" 
+                        value={bloodType}
+                        onChange={(e) => setBloodType(e.target.value)}
+                      />
                     </div>
-                  ) : (
-                    <div className="h-10 px-3 rounded-md border bg-muted flex items-center text-sm text-muted-foreground">
-                      En attente
+                    <div className="space-y-2">
+                      <Label>IMC</Label>
+                      {bmi ? (
+                        <div className={`flex items-center h-10 px-3 rounded-md border ${getBMIColor(parseFloat(bmi))} text-sm font-medium`}>
+                          {bmi}
+                        </div>
+                      ) : (
+                        <div className="h-10 px-3 rounded-md border bg-muted flex items-center text-sm text-muted-foreground">
+                          En attente
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="height">Taille (cm)</Label>
+                      <Input 
+                        id="height" 
+                        type="number" 
+                        placeholder="170" 
+                        value={height}
+                        onChange={(e) => setHeight(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="weight">Poids (kg)</Label>
+                      <Input 
+                        id="weight" 
+                        type="number" 
+                        step="0.1"
+                        placeholder="70" 
+                        value={weight}
+                        onChange={(e) => setWeight(e.target.value)}
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="height">Taille (cm)</Label>
-                  <Input 
-                    id="height" 
-                    type="number" 
-                    placeholder="170" 
-                    value={height}
-                    onChange={(e) => setHeight(e.target.value)}
-                  />
+              <div className="flex gap-2 mt-6">
+                <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)} disabled={saving}>
+                  Annuler
+                </Button>
+                <Button className="flex-1" onClick={handleSave} disabled={saving}>
+                  <Save className="mr-2 h-4 w-4" />
+                  {saving ? "Enregistrement..." : "Enregistrer"}
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Mode consultation */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-muted-foreground">Prénom</Label>
+                    <p className="font-medium mt-1">{firstName || "-"}</p>
+                  </div>
+                  <div>
+                    <Label className="text-muted-foreground">Nom</Label>
+                    <p className="font-medium mt-1">{lastName || "-"}</p>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="weight">Poids (kg)</Label>
-                  <Input 
-                    id="weight" 
-                    type="number" 
-                    step="0.1"
-                    placeholder="70" 
-                    value={weight}
-                    onChange={(e) => setWeight(e.target.value)}
-                  />
+
+                <div>
+                  <Label className="text-muted-foreground">Email</Label>
+                  <p className="font-medium mt-1">{user?.email || "-"}</p>
+                </div>
+
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Label className="text-muted-foreground">Date de naissance</Label>
+                    {age !== null && (
+                      <Badge variant="secondary" className="text-xs">
+                        {age} ans
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="font-medium">{dateOfBirth ? format(dateOfBirth, "dd/MM/yyyy") : "-"}</p>
                 </div>
               </div>
-            </div>
-          </div>
 
-          <Button className="w-full mt-6" onClick={handleSave} disabled={saving}>
-            <Save className="mr-2 h-4 w-4" />
-            {saving ? "Enregistrement..." : "Enregistrer les modifications"}
-          </Button>
+              <div className="mt-6 pt-6 border-t">
+                <h3 className="font-semibold mb-4">Informations médicales</h3>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Groupe sanguin</Label>
+                      <p className="font-medium mt-1">{bloodType || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">IMC</Label>
+                      {bmi ? (
+                        <p className={`font-medium mt-1 ${getBMIColor(parseFloat(bmi))}`}>
+                          {bmi} - {getBMILabel(parseFloat(bmi))}
+                        </p>
+                      ) : (
+                        <p className="text-muted-foreground mt-1">-</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-muted-foreground">Taille</Label>
+                      <p className="font-medium mt-1">{height ? `${height} cm` : "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-muted-foreground">Poids</Label>
+                      <p className="font-medium mt-1">{weight ? `${weight} kg` : "-"}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
         </Card>
       </div>
     </AppLayout>
