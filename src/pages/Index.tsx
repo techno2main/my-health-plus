@@ -55,7 +55,7 @@ const Index = () => {
           .from("profiles")
           .select("avatar_url")
           .eq("id", user.id)
-          .single()
+          .maybeSingle()
         
         if (profile?.avatar_url) {
           setAvatarUrl(profile.avatar_url)
@@ -85,7 +85,7 @@ const Index = () => {
           min_threshold,
           treatment_id,
           treatments!inner(name, is_active, pathology),
-          medication_catalog(pathology)
+          medication_catalog(pathology, dosage_amount, default_dosage)
         `)
         .eq("treatments.is_active", true)
       
@@ -130,11 +130,12 @@ const Index = () => {
 
             // Only show if in the future or if it's for today and not taken
             if (scheduledDate >= now) {
+              const catalogDosage = med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage
               intakes.push({
                 id: `${med.id}-${time}-today`,
                 medicationId: med.id,
                 medication: med.name,
-                dosage: med.dosage_amount || med.dosage,
+                dosage: catalogDosage || med.dosage_amount || med.dosage,
                 time: time,
                 date: scheduledDate,
                 treatment: med.treatments.name,
@@ -152,11 +153,12 @@ const Index = () => {
           const [hours, minutes] = time.split(':')
           tomorrowDate.setHours(parseInt(hours), parseInt(minutes), 0, 0)
           
+          const catalogDosage = med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage
           intakes.push({
             id: `${med.id}-${time}-tomorrow`,
             medicationId: med.id,
             medication: med.name,
-            dosage: med.dosage_amount || med.dosage,
+            dosage: catalogDosage || med.dosage_amount || med.dosage,
             time: time,
             date: tomorrowDate,
             treatment: med.treatments.name,
