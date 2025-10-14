@@ -98,10 +98,16 @@ const Calendar = () => {
 
             if (intake?.status === 'taken') {
               dayTaken++
-            } else if (scheduledTime > now) {
-              dayUpcoming++
-            } else {
+            } else if (intake?.status === 'skipped') {
               dayMissed++
+            } else {
+              // No intake record - check if it's in the future
+              if (scheduledTime > now) {
+                dayUpcoming++
+              } else {
+                // Past time with no record = missed
+                dayMissed++
+              }
             }
           })
         })
