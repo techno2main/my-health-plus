@@ -7,7 +7,7 @@ import { NumberInput } from "@/components/ui/number-input";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Bell, Clock, AlertTriangle, Calendar, Pill, Settings2 } from "lucide-react";
-import { useNativeNotifications } from "@/hooks/useNativeNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useState } from "react";
@@ -18,27 +18,27 @@ export default function NotificationSettings() {
     preferences, 
     updatePreferences, 
     isSupported, 
-    hasPermission,
+    permission, 
     requestPermission,
     sendTestNotification 
-  } = useNativeNotifications();
+  } = useNotifications();
   const [showCustomize, setShowCustomize] = useState(false);
 
   const handleTogglePush = async (enabled: boolean) => {
-    if (enabled && !hasPermission) {
+    if (enabled && permission !== "granted") {
       const granted = await requestPermission();
       if (!granted) return;
     }
     updatePreferences({ pushEnabled: enabled });
   };
 
-  const handleTestNotification = async () => {
-    if (!hasPermission) {
+  const handleTestNotification = () => {
+    if (permission !== "granted") {
       toast.error("Veuillez d'abord autoriser les notifications");
       return;
     }
     
-    await sendTestNotification();
+    sendTestNotification();
   };
 
   return (
@@ -54,7 +54,7 @@ export default function NotificationSettings() {
               Configurez vos rappels et alertes
             </p>
           </div>
-          {isSupported && hasPermission && (
+          {isSupported && permission === "granted" && (
             <Button variant="outline" size="sm" onClick={handleTestNotification}>
               Tester
             </Button>
@@ -76,7 +76,7 @@ export default function NotificationSettings() {
           </Card>
         )}
 
-        {isSupported && !hasPermission && (
+        {isSupported && permission === "default" && (
           <Card className="p-4 border-primary bg-primary/5">
             <div className="flex items-start gap-3">
               <Bell className="h-5 w-5 text-primary mt-0.5" />
@@ -93,7 +93,7 @@ export default function NotificationSettings() {
           </Card>
         )}
 
-        {isSupported && hasPermission && (
+        {isSupported && permission === "granted" && (
           <Card className="p-4 border-success bg-success/5">
             <div className="flex items-start gap-3">
               <Bell className="h-5 w-5 text-success mt-0.5" />
@@ -107,6 +107,20 @@ export default function NotificationSettings() {
           </Card>
         )}
 
+
+        {isSupported && permission === "denied" && (
+          <Card className="p-4 border-warning bg-warning/5">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="h-5 w-5 text-warning mt-0.5" />
+              <div className="flex-1">
+                <p className="font-medium">Notifications bloquées</p>
+                <p className="text-sm text-muted-foreground mb-3">
+                  Allez dans les paramètres de votre navigateur pour autoriser les notifications pour ce site.
+                </p>
+              </div>
+            </div>
+          </Card>
+        )}
 
         {/* Global Toggle */}
         <Card className="p-4">
@@ -125,7 +139,7 @@ export default function NotificationSettings() {
             <Switch
               checked={preferences.pushEnabled}
               onCheckedChange={handleTogglePush}
-              disabled={!isSupported}
+              disabled={!isSupported || permission === "denied"}
             />
           </div>
         </Card>

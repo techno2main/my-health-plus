@@ -89,73 +89,39 @@ export const useNotifications = () => {
   };
 
   const showNotification = (title: string, options?: NotificationOptions): boolean => {
-    console.log("=== SHOW NOTIFICATION DEBUG ===");
-    console.log("isSupported:", isSupported);
-    console.log("permission:", permission);
-    console.log("Notification in window:", "Notification" in window);
-    console.log("Notification.permission:", Notification.permission);
-    
-    if (!isSupported) {
-      console.error("Notifications not supported");
-      return false;
-    }
-    
-    if (permission !== "granted") {
-      console.error("Permission not granted:", permission);
+    if (!isSupported || permission !== "granted") {
       return false;
     }
 
     try {
-      console.log("Creating notification with title:", title);
-      const notif = new Notification(title, {
+      new Notification(title, {
         icon: "/icon-192.png",
         badge: "/icon-192.png",
+        requireInteraction: true,
         ...options,
       });
-      
-      notif.onclick = () => {
-        console.log("Notification clicked!");
-        window.focus();
-      };
-      
-      notif.onshow = () => {
-        console.log("Notification shown!");
-      };
-      
-      notif.onerror = (error) => {
-        console.error("Notification error event:", error);
-      };
-      
-      console.log("Notification object created:", notif);
       return true;
     } catch (error) {
-      console.error("Exception creating notification:", error);
+      console.error("Error showing notification:", error);
       return false;
     }
   };
 
   const sendTestNotification = (): boolean => {
-    console.log("=== TEST NOTIFICATION CALLED ===");
-    console.log("Current permission:", permission);
-    console.log("Browser Notification.permission:", Notification.permission);
-    
     if (permission !== "granted") {
-      console.error("Permission not granted in state");
       toast.error("Permission requise pour les notifications");
       return false;
     }
     
     const success = showNotification("💊 Test de notification", {
       body: "Les notifications fonctionnent correctement !",
-      requireInteraction: false,
+      requireInteraction: true,
     });
     
-    console.log("Notification send result:", success);
-    
     if (success) {
-      toast.success("Notification de test envoyée ✓");
+      toast.success("Notification envoyée ! Vérifiez vos notifications");
     } else {
-      toast.error("Erreur lors de l'envoi de la notification");
+      toast.error("Erreur lors de l'envoi");
     }
     
     return success;
