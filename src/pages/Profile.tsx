@@ -176,20 +176,20 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6 pb-24">
         <PageHeader 
           title="Profil utilisateur"
           subtitle="Gérez vos informations personnelles"
           backTo="/settings"
         />
 
-        <Card className="p-6">
+        <Card className="p-4 sm:p-6">
           {/* Avatar et nom - en ligne */}
-          <div className="flex items-center gap-4 mb-6">
-            <div className="relative group">
-              <Avatar className="h-16 w-16">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="relative group shrink-0">
+              <Avatar className="h-14 w-14 sm:h-16 sm:w-16">
                 <AvatarImage src={avatarUrl} alt="Avatar" />
-                <AvatarFallback className="bg-primary/10 text-lg font-medium">
+                <AvatarFallback className="bg-primary/10 text-base sm:text-lg font-medium">
                   {firstName?.[0]}{lastName?.[0]}
                 </AvatarFallback>
               </Avatar>
@@ -211,14 +211,14 @@ export default function Profile() {
                 </>
               )}
             </div>
-            <div className="flex-1">
-              <h2 className="text-xl font-semibold">{firstName} {lastName}</h2>
-              <p className="text-sm text-muted-foreground">{user?.email}</p>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-lg sm:text-xl font-semibold truncate">{firstName} {lastName}</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground truncate">{user?.email}</p>
             </div>
             {!isEditing && (
-              <Button variant="outline" onClick={() => setIsEditing(true)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Modifier
+              <Button variant="outline" size="sm" onClick={() => setIsEditing(true)} className="shrink-0">
+                <Edit className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">Modifier</span>
               </Button>
             )}
           </div>
