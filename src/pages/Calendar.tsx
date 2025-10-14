@@ -25,6 +25,7 @@ interface IntakeDetail {
   medication: string
   dosage: string
   time: string
+  takenAt?: string
   status: 'taken' | 'missed' | 'upcoming'
   treatment: string
 }
@@ -216,6 +217,7 @@ const Calendar = () => {
             medication: med.name,
             dosage: catalogDosage,
             time: time,
+            takenAt: intake?.taken_at ? format(new Date(intake.taken_at), 'HH:mm') : undefined,
             status: status,
             treatment: med.treatments.name
           })
@@ -427,7 +429,12 @@ const Calendar = () => {
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(detail.status)}
-                        <span className="text-sm font-medium">{detail.time}</span>
+                        <span className="text-sm font-medium">
+                          {detail.time}
+                          {detail.takenAt && detail.status === 'taken' && (
+                            <span className="text-xs text-muted-foreground ml-1">({detail.takenAt})</span>
+                          )}
+                        </span>
                       </div>
                       {getStatusBadge(detail.status)}
                     </div>
