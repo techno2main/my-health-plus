@@ -2,7 +2,8 @@ import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/Layout/AppLayout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, Pill, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { Clock, Pill, AlertCircle, CheckCircle2, User } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
@@ -17,6 +18,8 @@ interface UpcomingIntake {
   time: string
   date: Date
   treatment: string
+  treatmentId: string
+  pathology: string
   currentStock: number
   minThreshold: number
 }
@@ -31,9 +34,11 @@ interface StockAlert {
 const Index = () => {
   const navigate = useNavigate()
   const currentDate = format(new Date(), "EEEE d MMMM yyyy", { locale: fr })
+  const currentTime = format(new Date(), "HH:mm")
   const [upcomingIntakes, setUpcomingIntakes] = useState<UpcomingIntake[]>([])
   const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([])
   const [activeTreatmentsCount, setActiveTreatmentsCount] = useState(0)
+  const [activeTreatmentName, setActiveTreatmentName] = useState("")
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -51,7 +56,7 @@ const Index = () => {
       if (treatmentsError) throw treatmentsError
       setActiveTreatmentsCount(treatments?.length || 0)
 
-      // Load medications with their times
+      // Load medications with their times and pathology from catalog
       const { data: medications, error: medsError } = await supabase
         .from("medications")
         .select(`
@@ -64,9 +69,14 @@ const Index = () => {
           initial_stock,
           min_threshold,
           treatment_id,
-          treatments!inner(name, is_active)
+          treatments!inner(name, is_active, pathology),
+          medication_catalog(pathology)
         `)
         .eq("treatments.is_active", true)
+      
+      if (treatments && treatments.length > 0) {
+        setActiveTreatmentName(treatments[0].name)
+      }
 
       if (medsError) throw medsError
 
@@ -113,6 +123,8 @@ const Index = () => {
                 time: time,
                 date: scheduledDate,
                 treatment: med.treatments.name,
+                treatmentId: med.treatment_id,
+                pathology: med.medication_catalog?.pathology || med.treatments.pathology || "",
                 currentStock: med.current_stock || 0,
                 minThreshold: med.min_threshold || 10
               })
@@ -133,6 +145,8 @@ const Index = () => {
             time: time,
             date: tomorrowDate,
             treatment: med.treatments.name,
+            treatmentId: med.treatment_id,
+            pathology: med.medication_catalog?.pathology || med.treatments.pathology || "",
             currentStock: med.current_stock || 0,
             minThreshold: med.min_threshold || 10
           })
@@ -229,10 +243,17 @@ const Index = () => {
       <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         {/* Header */}
         <header className="space-y-2">
-          <h1 className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
-            MyHealthPlus
-          </h1>
-          <p className="text-sm text-muted-foreground capitalize">{currentDate}</p>
+          <div className="flex items-center justify-between">
+            <h1 className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
+              MyHealthPlus
+            </h1>
+            <Avatar className="h-10 w-10 cursor-pointer" onClick={() => navigate("/profile")}>
+              <AvatarFallback>
+                <User className="h-5 w-5" />
+              </AvatarFallback>
+            </Avatar>
+          </div>
+          <p className="text-sm text-muted-foreground capitalize">{currentDate} • {currentTime}</p>
         </header>
 
         {/* Quick Stats */}
@@ -243,8 +264,8 @@ const Index = () => {
                 <Pill className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">{activeTreatmentsCount}</p>
-                <p className="text-xs text-muted-foreground">Traitements actifs</p>
+                <p className="text-2xl font-bold">1</p>
+                <p className="text-xs text-muted-foreground">{activeTreatmentName || "Traitement actif"}</p>
               </div>
             </div>
           </Card>
@@ -302,19 +323,7 @@ const Index = () => {
             }) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Aujourd'hui {upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const today = new Date();
-                    intakeDate.setHours(0, 0, 0, 0);
-                    today.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === today.getTime();
-                  })?.treatment && `(${upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const today = new Date();
-                    intakeDate.setHours(0, 0, 0, 0);
-                    today.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === today.getTime();
-                  })?.treatment})`}
+                  Aujourd'hui
                 </h3>
                 {upcomingIntakes
                   .filter(intake => {
@@ -334,8 +343,13 @@ const Index = () => {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{intake.medication}</p>
-                          <p className="text-xs text-muted-foreground truncate">{intake.dosage}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">{intake.medication}</p>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{intake.dosage}</span>
+                          </div>
+                          {intake.pathology && (
+                            <p className="text-xs text-muted-foreground truncate">{intake.pathology}</p>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
@@ -372,21 +386,7 @@ const Index = () => {
             }) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Demain {upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    intakeDate.setHours(0, 0, 0, 0);
-                    tomorrow.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === tomorrow.getTime();
-                  })?.treatment && `(${upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    intakeDate.setHours(0, 0, 0, 0);
-                    tomorrow.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === tomorrow.getTime();
-                  })?.treatment})`}
+                  Demain
                 </h3>
                 {upcomingIntakes
                   .filter(intake => {
@@ -407,8 +407,13 @@ const Index = () => {
                         </div>
                         
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate">{intake.medication}</p>
-                          <p className="text-xs text-muted-foreground truncate">{intake.dosage}</p>
+                          <div className="flex items-center gap-2">
+                            <p className="text-sm font-medium truncate">{intake.medication}</p>
+                            <span className="text-xs text-muted-foreground flex-shrink-0">{intake.dosage}</span>
+                          </div>
+                          {intake.pathology && (
+                            <p className="text-xs text-muted-foreground truncate">{intake.pathology}</p>
+                          )}
                         </div>
 
                         <div className="flex items-center gap-2 flex-shrink-0">
