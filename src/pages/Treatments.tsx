@@ -48,20 +48,51 @@ const Treatments = () => {
     try {
       const { data: treatmentsData, error: treatmentsError } = await supabase
         .from("treatments")
-        .select(`
-          *,
-          prescriptions(file_path),
-          health_professionals!treatments_prescription_id_fkey(name),
-          pharmacy_visits(visit_date, is_completed)
-        `)
+        .select("*")
         .order("is_active", { ascending: false })
         .order("created_at", { ascending: false })
 
-      if (treatmentsError) throw treatmentsError
+      if (treatmentsError) {
+        console.error("Treatments error:", treatmentsError)
+        throw treatmentsError
+      }
 
       // Load medications for each treatment
       const treatmentsWithMeds = await Promise.all(
-        (treatmentsData || []).map(async (treatment) => {
+        (treatmentsData || []).map(async (treatment: any) => {
+          // Load prescription and prescribing doctor if exists
+          let prescribingDoctor = null
+          let prescription = null
+          
+          if (treatment.prescription_id) {
+            const { data: prescriptionData } = await supabase
+              .from("prescriptions")
+              .select("file_path, prescribing_doctor_id")
+              .eq("id", treatment.prescription_id)
+              .maybeSingle()
+            
+            prescription = prescriptionData
+            
+            // Load prescribing doctor from prescription
+            if (prescriptionData?.prescribing_doctor_id) {
+              const { data: doctorData } = await supabase
+                .from("health_professionals")
+                .select("name")
+                .eq("id", prescriptionData.prescribing_doctor_id)
+                .maybeSingle()
+              prescribingDoctor = doctorData
+            }
+          }
+
+          // Load next pharmacy visit
+          const { data: pharmacyVisits } = await supabase
+            .from("pharmacy_visits")
+            .select("visit_date, is_completed")
+            .eq("treatment_id", treatment.id)
+            .eq("is_completed", false)
+            .order("visit_date", { ascending: true })
+            .limit(1)
+
           const { data: medications } = await supabase
             .from("medications")
             .select(`
@@ -109,21 +140,12 @@ const Treatments = () => {
             })
           );
 
-          // Get next pharmacy visit
-          const nextVisit = treatment.pharmacy_visits
-            ?.filter((v: any) => !v.is_completed)
-            ?.sort((a: any, b: any) => new Date(a.visit_date).getTime() - new Date(b.visit_date).getTime())[0];
-
           return {
             ...treatment,
             medications: medsWithPathology,
-            prescribing_doctor: Array.isArray(treatment.health_professionals) 
-              ? treatment.health_professionals[0] 
-              : treatment.health_professionals,
-            prescription: Array.isArray(treatment.prescriptions)
-              ? treatment.prescriptions[0]
-              : treatment.prescriptions,
-            next_pharmacy_visit: nextVisit
+            prescribing_doctor: prescribingDoctor,
+            prescription: prescription,
+            next_pharmacy_visit: pharmacyVisits && pharmacyVisits.length > 0 ? pharmacyVisits[0] : null
           }
         })
       )
