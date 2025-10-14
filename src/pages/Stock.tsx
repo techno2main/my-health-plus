@@ -19,7 +19,8 @@ export default function Stock() {
         .from("medications")
         .select(`
           *,
-          treatments!inner(is_active)
+          treatments!inner(is_active),
+          medication_catalog(dosage_amount, default_dosage)
         `)
         .eq("treatments.is_active", true)
         .order("name", { ascending: true });
@@ -39,6 +40,7 @@ export default function Stock() {
   const stockItems = medications?.map(med => ({
     ...med,
     medication: med.name,
+    dosage: med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage || "",
     unit: "unités",
     status: getStockStatus(med.current_stock || 0, med.min_threshold || 10)
   })) || [];
@@ -108,13 +110,14 @@ export default function Stock() {
             stockItems.map((item) => (
               <Card key={item.id} className="p-4">
                 <div className="flex items-start justify-between mb-3">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Package className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-2 flex-1">
+                    <Package className="h-4 w-4 text-muted-foreground" />
+                    <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold">{item.medication}</h3>
+                      {item.dosage && <span className="text-xs text-muted-foreground">{item.dosage}</span>}
                     </div>
-                    {getStatusBadge(item.status)}
                   </div>
+                  {getStatusBadge(item.status)}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 text-sm">
