@@ -52,18 +52,6 @@ const Calendar = () => {
       const monthStart = startOfMonth(currentMonth)
       const monthEnd = endOfMonth(currentMonth)
 
-      // Load medications with active treatments
-      const { data: medications } = await supabase
-        .from("medications")
-        .select(`
-          id,
-          name,
-          times,
-          treatment_id,
-          treatments!inner(name, is_active)
-        `)
-        .eq("treatments.is_active", true)
-
       // Load intakes for the month
       const { data: intakes } = await supabase
         .from("medication_intakes")
@@ -71,53 +59,32 @@ const Calendar = () => {
         .gte("scheduled_time", monthStart.toISOString())
         .lte("scheduled_time", monthEnd.toISOString())
 
-      // Process day by day
+      // Process day by day using REAL intakes only
       const daysData: DayIntake[] = []
       const currentDate = new Date(monthStart)
       const now = new Date()
 
       while (currentDate <= monthEnd) {
-        let dayTotal = 0
-        let dayTaken = 0
-        let dayMissed = 0
-        let dayUpcoming = 0
+        const dayIntakes = intakes?.filter((i: any) => 
+          isSameDay(new Date(i.scheduled_time), currentDate)
+        ) || []
 
-        medications?.forEach((med: any) => {
-          med.times?.forEach((time: string) => {
-            const [hours, minutes] = time.split(':')
-            const scheduledTime = new Date(currentDate)
-            scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0)
+        if (dayIntakes.length > 0) {
+          const dayTotal = dayIntakes.length
+          const dayTaken = dayIntakes.filter((i: any) => i.status === 'taken').length
+          const daySkipped = dayIntakes.filter((i: any) => i.status === 'skipped').length
+          
+          // Count upcoming only if scheduled time is in the future
+          const dayUpcoming = dayIntakes.filter((i: any) => {
+            const scheduledTime = new Date(i.scheduled_time)
+            return i.status === 'pending' && scheduledTime > now
+          }).length
 
-            dayTotal++
-
-            const intake = intakes?.find((i: any) => 
-              i.medication_id === med.id &&
-              isSameDay(new Date(i.scheduled_time), currentDate) &&
-              format(new Date(i.scheduled_time), 'HH:mm') === time
-            )
-
-            if (intake?.status === 'taken') {
-              dayTaken++
-            } else if (intake?.status === 'skipped') {
-              dayMissed++
-            } else {
-              // No intake record - check if it's in the future
-              if (scheduledTime > now) {
-                dayUpcoming++
-              } else {
-                // Past time with no record = missed
-                dayMissed++
-              }
-            }
-          })
-        })
-
-        if (dayTotal > 0) {
           daysData.push({
             date: new Date(currentDate),
             total: dayTotal,
             taken: dayTaken,
-            missed: dayMissed,
+            missed: daySkipped,
             upcoming: dayUpcoming
           })
         }
