@@ -359,15 +359,15 @@ const Calendar = () => {
               <div className="flex flex-wrap gap-4 text-xs">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-success" />
-                  <span className="text-muted-foreground">Toutes prises effectuées</span>
+                  <span className="text-muted-foreground">Effectuées</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-danger" />
-                  <span className="text-muted-foreground">Prises manquées</span>
+                  <span className="text-muted-foreground">Manquées</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-primary" />
-                  <span className="text-muted-foreground">Prises à venir</span>
+                  <span className="text-muted-foreground">Prochaines</span>
                 </div>
               </div>
             </div>
