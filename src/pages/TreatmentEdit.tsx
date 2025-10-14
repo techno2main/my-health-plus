@@ -98,7 +98,7 @@ export default function TreatmentEdit() {
               .from("medication_catalog")
               .select("pathology")
               .eq("id", med.catalog_id)
-              .single();
+              .maybeSingle();
             
             pathology = catalogData?.pathology || null;
           }

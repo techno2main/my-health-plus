@@ -140,7 +140,7 @@ const Index = () => {
                 date: scheduledDate,
                 treatment: med.treatments.name,
                 treatmentId: med.treatment_id,
-                pathology: med.medication_catalog?.pathology || med.treatments.pathology || "",
+                pathology: med.medication_catalog?.pathology || "",
                 currentStock: med.current_stock || 0,
                 minThreshold: med.min_threshold || 10
               })
@@ -163,7 +163,7 @@ const Index = () => {
             date: tomorrowDate,
             treatment: med.treatments.name,
             treatmentId: med.treatment_id,
-            pathology: med.medication_catalog?.pathology || med.treatments.pathology || "",
+            pathology: med.medication_catalog?.pathology || "",
             currentStock: med.current_stock || 0,
             minThreshold: med.min_threshold || 10
           })
