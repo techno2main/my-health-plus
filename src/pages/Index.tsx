@@ -3,12 +3,14 @@ import { AppLayout } from "@/components/Layout/AppLayout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Clock, Pill, AlertCircle, CheckCircle2, User } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Clock, Pill, AlertCircle, CheckCircle2, User, Moon, Sun } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { useTheme } from "@/components/theme-provider"
 
 interface UpcomingIntake {
   id: string
@@ -33,6 +35,7 @@ interface StockAlert {
 
 const Index = () => {
   const navigate = useNavigate()
+  const { theme, setTheme } = useTheme()
   const currentDate = format(new Date(), "EEEE d MMMM yyyy", { locale: fr })
   const currentTime = format(new Date(), "HH:mm")
   const [upcomingIntakes, setUpcomingIntakes] = useState<UpcomingIntake[]>([])
@@ -265,15 +268,26 @@ const Index = () => {
             <h1 className="text-3xl font-bold gradient-primary bg-clip-text text-transparent">
               MyHealthPlus
             </h1>
-            <Avatar className="h-10 w-10 cursor-pointer" onClick={() => navigate("/profile")}>
-              {avatarUrl ? (
-                <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-              ) : (
-                <AvatarFallback>
-                  <User className="h-5 w-5" />
-                </AvatarFallback>
-              )}
-            </Avatar>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <Sun className="h-4 w-4 text-muted-foreground" />
+                <Switch
+                  checked={theme === "dark"}
+                  onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                  className="data-[state=checked]:bg-primary"
+                />
+                <Moon className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <Avatar className="h-10 w-10 cursor-pointer" onClick={() => navigate("/profile")}>
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                ) : (
+                  <AvatarFallback>
+                    <User className="h-5 w-5" />
+                  </AvatarFallback>
+                )}
+              </Avatar>
+            </div>
           </div>
           <p className="text-sm text-muted-foreground capitalize">{currentDate} • {currentTime}</p>
         </header>
