@@ -89,7 +89,7 @@ export function Step1Info({ formData, setFormData, prescriptions, doctors, pharm
 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="prescription-date">Date de prescription *</Label>
+            <Label htmlFor="prescription-date">Début *</Label>
             <DateInput
               id="prescription-date"
               value={formData.prescriptionDate}
@@ -99,7 +99,7 @@ export function Step1Info({ formData, setFormData, prescriptions, doctors, pharm
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="duration-days">QSP (Durée en jours) *</Label>
+            <Label htmlFor="duration-days">QSP *</Label>
             <Input
               id="duration-days"
               type="number"
