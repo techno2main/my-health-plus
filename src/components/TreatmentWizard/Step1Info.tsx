@@ -94,7 +94,7 @@ export function Step1Info({ formData, setFormData, prescriptions, doctors, pharm
               id="prescription-date"
               value={formData.prescriptionDate}
               onChange={(date) => setFormData({ ...formData, prescriptionDate: date })}
-              placeholder="Sélectionner la date de prescription"
+              placeholder="Date"
             />
           </div>
 
