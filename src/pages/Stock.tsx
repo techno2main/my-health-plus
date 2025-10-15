@@ -141,13 +141,13 @@ export default function Stock() {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-muted-foreground">Stock actuel</p>
-                    <p className="font-medium text-lg">
+                    <p className="font-medium text-base">
                       {item.current_stock || 0} {item.unit}
                     </p>
                   </div>
                   <div>
                     <p className="text-muted-foreground">Seuil minimum</p>
-                    <p className="font-medium text-lg">
+                    <p className="font-medium text-base">
                       {item.min_threshold || 10} {item.unit}
                     </p>
                   </div>
@@ -163,12 +163,12 @@ export default function Stock() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1" 
+                    className="flex-1 text-xs" 
                     onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
                   >
                     Ajuster stock
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1" onClick={() => navigate(`/stock/${item.id}`)}>
+                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => navigate(`/stock/${item.id}`)}>
                     Détails
                   </Button>
                 </div>
