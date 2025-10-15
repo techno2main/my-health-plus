@@ -114,7 +114,7 @@ export function Step1Info({ formData, setFormData, prescriptions, doctors, pharm
         </div>
 
         <p className="text-xs text-muted-foreground -mt-2">
-          QSP = Quantité Suffisante Pour (durée du traitement en jours)
+          QSP = Quantité Suffisante Pour (en jours)
         </p>
 
         <div className="space-y-2">
