@@ -138,39 +138,47 @@ export default function Stock() {
                   {getStatusBadge(item.status)}
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Stock actuel</p>
-                    <p className="font-medium text-base">
-                      {item.current_stock || 0} {item.unit}
-                    </p>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-muted-foreground">Stock actuel</p>
+                      <p className="font-medium text-base">
+                        {item.current_stock || 0} {item.unit}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-muted-foreground">Seuil minimum</p>
+                      <p className="font-medium text-base">
+                        {item.min_threshold || 10} {item.unit}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-muted-foreground">Seuil minimum</p>
-                    <p className="font-medium text-base">
-                      {item.min_threshold || 10} {item.unit}
-                    </p>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs justify-start pl-4" 
+                      onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
+                    >
+                      Ajuster stock
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs" 
+                      onClick={() => navigate(`/stock/${item.id}`)}
+                    >
+                      Détails
+                    </Button>
                   </div>
+
                   {item.expiry_date && (
-                    <div className="col-span-2">
-                      <p className="text-muted-foreground">Date d'expiration</p>
+                    <div>
+                      <p className="text-muted-foreground text-sm">Date d'expiration</p>
                       <p className="font-medium">{new Date(item.expiry_date).toLocaleDateString('fr-FR')}</p>
                     </div>
                   )}
-                </div>
-
-                <div className="flex gap-2 mt-4">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="text-xs justify-start pl-4" 
-                    onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
-                  >
-                    Ajuster stock
-                  </Button>
-                  <Button variant="outline" size="sm" className="flex-1 text-xs" onClick={() => navigate(`/stock/${item.id}`)}>
-                    Détails
-                  </Button>
                 </div>
               </Card>
             ))
