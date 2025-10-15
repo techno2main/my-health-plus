@@ -142,6 +142,27 @@ const Treatments = () => {
             })
           );
 
+          // Sort medications by earliest time, then alphabetically by name
+          medsWithPathology.sort((a, b) => {
+            // Get earliest time for each medication
+            const getEarliestTime = (times: string[]) => {
+              if (!times || times.length === 0) return 24 * 60; // Put at end if no times
+              const [hours, minutes] = times[0].split(':').map(Number);
+              return hours * 60 + minutes;
+            };
+            
+            const timeA = getEarliestTime(a.times);
+            const timeB = getEarliestTime(b.times);
+            
+            // First sort by time
+            if (timeA !== timeB) {
+              return timeA - timeB;
+            }
+            
+            // Then sort alphabetically by name
+            return a.name.localeCompare(b.name, 'fr');
+          });
+
           return {
             ...treatment,
             medications: medsWithPathology,
