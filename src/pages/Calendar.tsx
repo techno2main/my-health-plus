@@ -322,7 +322,7 @@ const Calendar = () => {
                 </div>
                 <div>
                   <p className="text-2xl font-bold">{observanceRate}%</p>
-                  <p className="text-xs text-muted-foreground">Observance ce mois</p>
+                  <p className="text-xs text-muted-foreground">Observance</p>
                 </div>
               </div>
             </Card>
@@ -351,9 +351,9 @@ const Calendar = () => {
                 <CalendarIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium">Prochaine Visite Pharmacie</p>
+                <p className="text-sm font-medium">Prochain Rechargement</p>
                 <p className="text-xs text-muted-foreground">
-                  {nextPharmacyVisit ? format(nextPharmacyVisit, "d MMMM yyyy", { locale: fr }) : "Aucune planifiée"}
+                  {nextPharmacyVisit ? format(nextPharmacyVisit, "d MMMM yyyy", { locale: fr }) : "Aucun planifié"}
                 </p>
               </div>
             </div>
@@ -366,7 +366,7 @@ const Calendar = () => {
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold">
+                  <h2 className="text-xl font-bold">
                     {format(currentMonth, "yyyy", { locale: fr })}
                   </h2>
                   <p className="text-sm text-muted-foreground">
