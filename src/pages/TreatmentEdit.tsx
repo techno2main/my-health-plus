@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DateInput } from "@/components/ui/date-input";
 import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { ArrowLeft, Save, Trash2, Pencil } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,6 +52,7 @@ export default function TreatmentEdit() {
   const [loading, setLoading] = useState(true);
   const [editingMedication, setEditingMedication] = useState<Medication | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -180,7 +191,7 @@ export default function TreatmentEdit() {
   };
 
   const handleDelete = async () => {
-    if (!treatment || !confirm("Êtes-vous sûr de vouloir supprimer ce traitement ?")) return;
+    if (!treatment) return;
 
     try {
       const { error } = await supabase
@@ -352,12 +363,32 @@ export default function TreatmentEdit() {
           <Button 
             variant="outline" 
             className="w-full border-danger text-danger hover:bg-danger hover:text-white"
-            onClick={handleDelete}
+            onClick={() => setDeleteDialogOpen(true)}
           >
             <Trash2 className="mr-2 h-4 w-4" />
             Supprimer le traitement
           </Button>
         </div>
+
+        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+              <AlertDialogDescription>
+                Êtes-vous sûr de vouloir supprimer ce traitement ? Cette action est irréversible.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Annuler</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                className="bg-danger hover:bg-danger/90"
+              >
+                Supprimer
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <MedicationEditDialog
           open={dialogOpen}
