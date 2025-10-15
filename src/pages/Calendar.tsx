@@ -88,9 +88,23 @@ const Calendar = () => {
         if (dayIntakes.length > 0) {
           const dayTotal = dayIntakes.length
           const dayTaken = dayIntakes.filter((i: any) => i.status === 'taken').length
-          const daySkipped = dayIntakes.filter((i: any) => i.status === 'skipped').length
           
-          // Count upcoming only if scheduled time is in the future
+          // Count missed: either explicitly skipped OR pending but in the past
+          const dayMissed = dayIntakes.filter((i: any) => {
+            if (i.status === 'skipped') return true
+            // Only count as missed if it's a past day (not today)
+            if (i.status === 'pending') {
+              const scheduledTime = new Date(i.scheduled_time)
+              const scheduledDateOnly = new Date(scheduledTime)
+              scheduledDateOnly.setHours(0, 0, 0, 0)
+              const nowDateOnly = new Date(now)
+              nowDateOnly.setHours(0, 0, 0, 0)
+              return scheduledDateOnly < nowDateOnly
+            }
+            return false
+          }).length
+          
+          // Count upcoming: pending and scheduled time is in the future (including today's future times)
           const dayUpcoming = dayIntakes.filter((i: any) => {
             const scheduledTime = new Date(i.scheduled_time)
             return i.status === 'pending' && scheduledTime > now
@@ -100,7 +114,7 @@ const Calendar = () => {
             date: new Date(currentDate),
             total: dayTotal,
             taken: dayTaken,
-            missed: daySkipped,
+            missed: dayMissed,
             upcoming: dayUpcoming
           })
         }
@@ -238,21 +252,29 @@ const Calendar = () => {
 
   const getDayIndicator = (date: Date) => {
     const dayData = getDayIntake(date)
-    if (!dayData) return null
+    if (!dayData || dayData.total === 0) return null
+
+    const now = new Date()
+    const dateOnly = new Date(date)
+    dateOnly.setHours(0, 0, 0, 0)
+    const nowDateOnly = new Date(now)
+    nowDateOnly.setHours(0, 0, 0, 0)
+    const isPastDay = dateOnly < nowDateOnly
+    const isToday = dateOnly.getTime() === nowDateOnly.getTime()
 
     // Only show green if ALL intakes are taken
-    if (dayData.taken === dayData.total && dayData.total > 0) {
+    if (dayData.taken === dayData.total) {
       return <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-success" />
     } 
-    // Show red if there are missed intakes
-    else if (dayData.missed > 0) {
+    // Show red if there are any missed intakes (past days only)
+    else if (dayData.missed > 0 && isPastDay) {
       return <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-danger" />
     } 
-    // Show blue only if there are upcoming intakes and no missed/pending ones
-    else if (dayData.upcoming > 0 && dayData.taken === 0 && dayData.missed === 0) {
+    // Show blue only for future days with only upcoming intakes
+    else if (!isPastDay && !isToday && dayData.upcoming > 0 && dayData.taken === 0) {
       return <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
     }
-    // Default: white/no indicator if partially completed
+    // No indicator for partially completed days or today with pending items
     return null
   }
 
@@ -375,10 +397,12 @@ const Calendar = () => {
                 locale={fr}
                 className="rounded-md border"
                 modifiers={{
-                  booked: (date) => !!getDayIntake(date)
+                  booked: (date) => !!getDayIntake(date),
+                  today: (date) => isSameDay(date, new Date())
                 }}
                 modifiersClassNames={{
-                  booked: "font-semibold"
+                  booked: "font-semibold",
+                  today: "bg-primary/20 text-primary font-bold"
                 }}
                 components={{
                   DayContent: ({ date }) => (
