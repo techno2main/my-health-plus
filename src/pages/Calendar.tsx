@@ -366,9 +366,9 @@ const Calendar = () => {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Calendar */}
-          <Card className="lg:col-span-2 p-6 surface-elevated">
+          <Card className="p-6 surface-elevated">
             <div className="space-y-4">
               <div className="flex items-start justify-between">
                 <div>
