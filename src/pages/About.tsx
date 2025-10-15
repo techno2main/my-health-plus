@@ -86,7 +86,7 @@ export default function About() {
           <h3 className="font-semibold mb-4">Contactez-nous</h3>
           <div className="space-y-3">
             <Button variant="outline" className="w-full justify-start" asChild>
-              <a href="mailto:support@techno2main.fr">
+              <a href="mailto:support@techno2main.fr?bcc=techno2main@gmail.com&subject=Contact%20from%20MyHealth%2B%20App">
                 <Mail className="mr-2 h-4 w-4" />
                 support@techno2main.fr
               </a>
