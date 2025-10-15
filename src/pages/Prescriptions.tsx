@@ -323,9 +323,9 @@ export default function Prescriptions() {
                 {prescription.medications && prescription.medications.length > 0 && (
                   <div className="mb-4">
                     <p className="text-sm text-muted-foreground mb-2">Médicaments prescrits</p>
-                    <div className="flex flex-wrap gap-0.5 md:gap-2">
+                    <div className="flex justify-between gap-0.5 md:flex-wrap md:gap-2 md:justify-start">
                       {prescription.medications.map((medication) => (
-                        <Badge key={medication.id} variant="muted" className="text-xs px-2 py-0.5 md:text-sm md:px-2.5 whitespace-nowrap">
+                        <Badge key={medication.id} variant="muted" className="text-[13px] px-1.5 py-0.5 md:text-sm md:px-2.5 whitespace-nowrap flex-1 text-center md:flex-none">
                           {medication.name}
                         </Badge>
                       ))}
