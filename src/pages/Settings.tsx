@@ -11,12 +11,9 @@ import {
   Bell, 
   Moon, 
   Shield, 
-  User, 
   Smartphone,
   ChevronRight,
-  LogOut,
-  FileText,
-  ClipboardList
+  LogOut
 } from "lucide-react";
 
 export default function Settings() {
@@ -44,56 +41,6 @@ export default function Settings() {
           title="Paramètres"
           subtitle="Gérez vos préférences et votre compte"
         />
-
-        {/* Section Navigation */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium text-muted-foreground px-1">Navigation</h3>
-          
-          <Card className="p-4" onClick={() => navigate("/profile")}>
-            <div className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <User className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Profil utilisateur</h3>
-                  <p className="text-sm text-muted-foreground">Gérez vos informations personnelles</p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Card>
-
-          <Card className="p-4" onClick={() => navigate("/prescriptions")}>
-            <div className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <FileText className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Ordonnances</h3>
-                  <p className="text-sm text-muted-foreground">Prescriptions médicales</p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Card>
-
-          <Card className="p-4" onClick={() => navigate("/history")}>
-            <div className="flex items-center justify-between cursor-pointer">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-primary/10">
-                  <ClipboardList className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Historique</h3>
-                  <p className="text-sm text-muted-foreground">Suivi des prises</p>
-                </div>
-              </div>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </div>
-          </Card>
-        </div>
 
         {/* Section Réglages */}
         <div className="space-y-3">
