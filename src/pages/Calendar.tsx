@@ -342,13 +342,16 @@ const Calendar = () => {
             </Card>
           </div>
 
-          <Card className="p-4 surface-elevated">
+          <Card 
+            className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => navigate('/prescriptions')}
+          >
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
                 <CalendarIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium">Prochaine visite</p>
+                <p className="text-sm font-medium">Prochaine visite pharmacie</p>
                 <p className="text-xs text-muted-foreground">
                   {nextPharmacyVisit ? format(nextPharmacyVisit, "d MMMM yyyy", { locale: fr }) : "Aucune planifiée"}
                 </p>

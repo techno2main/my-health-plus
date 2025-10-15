@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/Layout/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Download } from "lucide-react";
+import { FileText, Download, CheckCircle2, Circle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -20,6 +20,12 @@ interface Prescription {
   prescribing_doctor_id: string | null;
 }
 
+interface RefillVisit {
+  date: string;
+  visitNumber: number;
+  isCompleted: boolean;
+}
+
 interface PrescriptionWithDetails extends Prescription {
   doctor_name: string | null;
   expiry_date: string;
@@ -33,6 +39,7 @@ interface PrescriptionWithDetails extends Prescription {
     name: string;
     dosage: string;
   }>;
+  refillVisits: RefillVisit[];
 }
 
 export default function Prescriptions() {
@@ -111,13 +118,34 @@ export default function Prescriptions() {
             }
           }
 
+          // Charger les visites de pharmacie liées aux traitements
+          const refillVisits: RefillVisit[] = [];
+          if (treatmentsData && treatmentsData.length > 0) {
+            for (const treatment of treatmentsData) {
+              const { data: visitsData } = await supabase
+                .from("pharmacy_visits")
+                .select("visit_date, visit_number, is_completed")
+                .eq("treatment_id", treatment.id)
+                .order("visit_date", { ascending: true });
+              
+              if (visitsData && visitsData.length > 0) {
+                refillVisits.push(...visitsData.map(v => ({
+                  date: v.visit_date,
+                  visitNumber: v.visit_number,
+                  isCompleted: v.is_completed || false
+                })));
+              }
+            }
+          }
+
           return {
             ...presc,
             doctor_name,
             expiry_date: expiryDate.toISOString(),
             status,
             treatments: treatmentsData || [],
-            medications: medications || []
+            medications: medications || [],
+            refillVisits
           };
         })
       );
@@ -257,6 +285,34 @@ export default function Prescriptions() {
                 {prescription.notes && (
                   <div className="mb-4 p-3 rounded-lg bg-muted/30">
                     <p className="text-sm text-muted-foreground">{prescription.notes}</p>
+                  </div>
+                )}
+
+                {prescription.refillVisits && prescription.refillVisits.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-sm font-medium mb-3">Dates de refill</p>
+                    <div className="space-y-2">
+                      {prescription.refillVisits.map((visit, index) => (
+                        <div 
+                          key={index} 
+                          className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                        >
+                          <div className="flex items-center gap-2">
+                            {visit.isCompleted ? (
+                              <CheckCircle2 className="h-4 w-4 text-success" />
+                            ) : (
+                              <Circle className="h-4 w-4 text-muted-foreground" />
+                            )}
+                            <span className="text-sm">
+                              Refill {visit.visitNumber}
+                            </span>
+                          </div>
+                          <span className="text-sm font-medium">
+                            {new Date(visit.date).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
