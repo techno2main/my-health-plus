@@ -17,7 +17,14 @@ CREATE TYPE public.app_role AS ENUM ('admin', 'moderator', 'user');
 CREATE TABLE public.profiles (
   id uuid NOT NULL REFERENCES auth.users ON DELETE CASCADE,
   full_name text,
+  first_name text,
+  last_name text,
   date_of_birth date,
+  phone text,
+  blood_type text,
+  height integer,
+  weight numeric,
+  avatar_url text,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   PRIMARY KEY (id)
@@ -35,6 +42,21 @@ CREATE TABLE public.user_roles (
 );
 
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+
+-- Navigation Items Table
+CREATE TABLE public.navigation_items (
+  id uuid NOT NULL DEFAULT gen_random_uuid(),
+  name text NOT NULL,
+  path text NOT NULL,
+  icon text NOT NULL,
+  position integer NOT NULL,
+  is_active boolean DEFAULT true,
+  created_at timestamp with time zone DEFAULT now(),
+  updated_at timestamp with time zone DEFAULT now(),
+  PRIMARY KEY (id)
+);
+
+ALTER TABLE public.navigation_items ENABLE ROW LEVEL SECURITY;
 
 -- Pathologies Table
 CREATE TABLE public.pathologies (
@@ -201,7 +223,9 @@ ALTER TABLE public.pharmacy_visits ENABLE ROW LEVEL SECURITY;
 -- =====================================================
 
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('prescriptions', 'prescriptions', false)
+VALUES 
+  ('prescriptions', 'prescriptions', false),
+  ('avatars', 'avatars', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
@@ -299,6 +323,23 @@ CREATE POLICY "Admins can update roles"
 CREATE POLICY "Admins can delete roles"
   ON public.user_roles FOR DELETE
   USING (has_role(auth.uid(), 'admin'::app_role));
+
+-- Navigation Items Policies
+CREATE POLICY "Authenticated users can view navigation items"
+  ON public.navigation_items FOR SELECT
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can insert navigation items"
+  ON public.navigation_items FOR INSERT
+  WITH CHECK (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can update navigation items"
+  ON public.navigation_items FOR UPDATE
+  USING (auth.uid() IS NOT NULL);
+
+CREATE POLICY "Authenticated users can delete navigation items"
+  ON public.navigation_items FOR DELETE
+  USING (auth.uid() IS NOT NULL);
 
 -- Pathologies Policies
 CREATE POLICY "Users can view approved pathologies"
@@ -542,20 +583,38 @@ CREATE POLICY "Users can delete their own prescription files"
     AND auth.uid()::text = (storage.foldername(name))[1]
   );
 
+-- Avatars Bucket Policies
+CREATE POLICY "Avatar images are publicly accessible"
+  ON storage.objects FOR SELECT
+  USING (bucket_id = 'avatars');
+
+CREATE POLICY "Users can upload their own avatar"
+  ON storage.objects FOR INSERT
+  WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "Users can update their own avatar"
+  ON storage.objects FOR UPDATE
+  USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+CREATE POLICY "Users can delete their own avatar"
+  ON storage.objects FOR DELETE
+  USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
 -- =====================================================
 -- NOTES
 -- =====================================================
 -- Ce fichier contient la structure complète de votre base de données MyHealth+.
 -- Il inclut :
--- - 11 tables avec leurs colonnes et contraintes
+-- - 12 tables avec leurs colonnes et contraintes
 -- - 1 enum (app_role)
 -- - 3 fonctions (handle_new_user, update_updated_at_column, has_role)
 -- - 1 trigger (on_auth_user_created)
 -- - Toutes les policies RLS pour chaque table
--- - Les policies de stockage pour le bucket prescriptions
+-- - Les policies de stockage pour les buckets prescriptions et avatars
 -- 
 -- Dernière mise à jour : 15/10/2025
--- Ajout de la colonne actual_visit_date dans pharmacy_visits pour enregistrer
--- la date réelle des visites à la pharmacie (peut différer de la date planifiée)
+-- Ajout de la table navigation_items pour la gestion des éléments de navigation
+-- Ajout de colonnes supplémentaires dans la table profiles (first_name, last_name, phone, blood_type, height, weight, avatar_url)
+-- Ajout du bucket avatars avec ses policies
 -- 
 -- Pour exporter également les données, utilisez pg_dump avec l'option --data-only
