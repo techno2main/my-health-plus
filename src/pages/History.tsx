@@ -44,8 +44,7 @@ interface GroupedIntakes {
 export default function History() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const defaultTab = searchParams.get("tab") || "history";
-  const [activeTab, setActiveTab] = useState(defaultTab);
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "history");
   const [loading, setLoading] = useState(true);
   const [historyData, setHistoryData] = useState<GroupedIntakes[]>([]);
   const [stats, setStats] = useState({
@@ -55,6 +54,13 @@ export default function History() {
     adherence7Days: 0,
     adherence30Days: 0
   });
+
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    if (tab) {
+      setActiveTab(tab);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     loadHistory();
@@ -210,10 +216,13 @@ export default function History() {
           subtitle="Suivez vos prises de médicaments"
         />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(value) => {
+          setActiveTab(value);
+          setSearchParams({ tab: value });
+        }} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="history">Historique</TabsTrigger>
-            <TabsTrigger value="stats">Statistiques</TabsTrigger>
+            <TabsTrigger value="statistics">Statistiques</TabsTrigger>
           </TabsList>
 
           <TabsContent value="history" className="space-y-4">
@@ -256,7 +265,7 @@ export default function History() {
             )}
           </TabsContent>
 
-          <TabsContent value="stats" className="space-y-4">
+          <TabsContent value="statistics" className="space-y-4">
             <Card className="p-6">
               <h3 className="font-semibold mb-4">Observance thérapeutique</h3>
               <div className="space-y-4">
