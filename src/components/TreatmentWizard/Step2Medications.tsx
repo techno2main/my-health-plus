@@ -118,24 +118,24 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="flex gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <Button
           type="button"
           variant="outline"
           onClick={() => setShowDialog(true)}
-          className="flex-1"
+          className="w-full"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Ajouter depuis le référentiel
+          Ajouter
         </Button>
         <Button
           type="button"
           variant="outline"
           onClick={() => setShowCustomDialog(true)}
-          className="flex-1"
+          className="w-full"
         >
           <Plus className="h-4 w-4 mr-2" />
-          Créer un médicament
+          Créer
         </Button>
       </div>
 
