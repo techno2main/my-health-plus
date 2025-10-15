@@ -138,8 +138,8 @@ export default function Stock() {
                   {getStatusBadge(item.status)}
                 </div>
 
-                <div className="space-y-4 ml-6">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4 text-sm ml-6">
                     <div>
                       <p className="text-muted-foreground">Stock actuel</p>
                       <p className="font-medium text-base">
@@ -154,11 +154,11 @@ export default function Stock() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-4 ml-6">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs justify-start pl-0" 
+                      className="text-xs justify-start pl-4" 
                       onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
                     >
                       Ajuster stock
@@ -166,7 +166,7 @@ export default function Stock() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs justify-start pl-0" 
+                      className="text-xs justify-start pl-4" 
                       onClick={() => navigate(`/stock/${item.id}`)}
                     >
                       Détails
