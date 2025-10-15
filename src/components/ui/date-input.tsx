@@ -46,7 +46,7 @@ export function DateInput({ value, onChange, placeholder, id, className }: DateI
           )}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "dd/MM/yyyy", { locale: fr }) : <span>{placeholder || "Sélectionner une date"}</span>}
+          {date ? format(date, "dd/MM/yyyy", { locale: fr }) : <span>{placeholder || "Date"}</span>}
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
