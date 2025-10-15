@@ -87,11 +87,11 @@ export default function About() {
           <div className="space-y-3">
             <Button variant="outline" className="w-full justify-start">
               <Mail className="mr-2 h-4 w-4" />
-              support@myhealth-plus.app
+              support@techno2main.fr
             </Button>
             <Button variant="outline" className="w-full justify-start">
               <Globe className="mr-2 h-4 w-4" />
-              www.myhealth-plus.app
+              myhealth+.techno2main.fr
             </Button>
           </div>
         </Card>
