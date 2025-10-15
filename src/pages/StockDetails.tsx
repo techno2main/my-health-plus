@@ -132,35 +132,31 @@ export default function StockDetails() {
             <h3 className="font-semibold">Prévisions</h3>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-surface">
-              <div>
-                <p className="text-sm text-muted-foreground">Prises par jour</p>
-                <p className="font-semibold">{dailyConsumption} prise(s)/jour</p>
-              </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="p-3 rounded-lg bg-surface">
+              <p className="text-sm text-muted-foreground">Prises par jour</p>
+              <p className="font-semibold">{dailyConsumption} prise(s)/jour</p>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-surface">
-              <div>
-                <p className="text-sm text-muted-foreground">Jours restants estimés</p>
-                <p className="font-semibold">{estimatedDaysLeft} jours</p>
-              </div>
+            <div className="p-3 rounded-lg bg-surface">
+              <p className="text-sm text-muted-foreground">Jours restants estimés</p>
+              <p className="font-semibold">{estimatedDaysLeft} jours</p>
             </div>
+          </div>
 
-            {medication.expiry_date && (
-              <div className="flex items-center justify-between p-3 rounded-lg bg-surface">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-muted-foreground" />
-                  <div>
-                    <p className="text-sm text-muted-foreground">Date d'expiration</p>
-                    <p className="font-semibold">
-                      {new Date(medication.expiry_date).toLocaleDateString('fr-FR')}
-                    </p>
-                  </div>
+          {medication.expiry_date && (
+            <div className="p-3 rounded-lg bg-surface">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <p className="text-sm text-muted-foreground">Date d'expiration</p>
+                  <p className="font-semibold">
+                    {new Date(medication.expiry_date).toLocaleDateString('fr-FR')}
+                  </p>
                 </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </Card>
 
 
