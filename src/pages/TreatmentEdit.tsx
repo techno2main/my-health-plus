@@ -45,11 +45,10 @@ export default function TreatmentEdit() {
   // Form state
   const [formData, setFormData] = useState({
     name: "",
-    pathology: "",
+    description: "",
     startDate: "",
     endDate: "",
-    isActive: true,
-    notes: ""
+    isActive: true
   });
 
   useEffect(() => {
@@ -73,11 +72,10 @@ export default function TreatmentEdit() {
       // Set form data
       setFormData({
         name: treatmentData.name,
-        pathology: treatmentData.pathology || "",
+        description: treatmentData.description || treatmentData.pathology || "",
         startDate: treatmentData.start_date,
         endDate: treatmentData.end_date || "",
-        isActive: treatmentData.is_active,
-        notes: treatmentData.notes || treatmentData.description || ""
+        isActive: treatmentData.is_active
       });
 
       // Load medications for this treatment
@@ -142,11 +140,10 @@ export default function TreatmentEdit() {
         .from("treatments")
         .update({
           name: formData.name,
-          pathology: formData.pathology || null,
+          description: formData.description || null,
           start_date: formData.startDate,
           end_date: formData.endDate || null,
           is_active: formData.isActive,
-          notes: formData.notes || null,
           updated_at: new Date().toISOString()
         })
         .eq("id", treatment.id);
@@ -213,27 +210,35 @@ export default function TreatmentEdit() {
           </div>
         </div>
 
-        {/* Informations générales */}
         <Card className="p-6">
-          <h3 className="font-semibold mb-4">Informations générales</h3>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom du traitement</Label>
-              <Input 
-                id="name" 
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                placeholder="Ex: Traitement Diabète"
-              />
+            <div className="flex items-center gap-3">
+              <div className="flex-1 space-y-2">
+                <Label htmlFor="name">Nom du traitement</Label>
+                <Input 
+                  id="name" 
+                  value={formData.name}
+                  onChange={(e) => setFormData({...formData, name: e.target.value})}
+                  placeholder="Ex: Traitement Diabète"
+                />
+              </div>
+              <div className="pt-6">
+                <Switch 
+                  id="isActive" 
+                  checked={formData.isActive}
+                  onCheckedChange={(checked) => setFormData({...formData, isActive: checked})}
+                />
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="pathology">Pathologie</Label>
-              <Input 
-                id="pathology" 
-                value={formData.pathology}
-                onChange={(e) => setFormData({...formData, pathology: e.target.value})}
-                placeholder="Ex: Diabète Type 2"
+              <Label htmlFor="description">Description</Label>
+              <Textarea 
+                id="description" 
+                value={formData.description}
+                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="Ex: Diabète Type 2, Cholestérol..."
+                rows={3}
               />
             </div>
 
@@ -256,29 +261,6 @@ export default function TreatmentEdit() {
                   onChange={(e) => setFormData({...formData, endDate: e.target.value})}
                 />
               </div>
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="isActive" className="flex-1">
-                <p className="font-medium">Traitement actif</p>
-                <p className="text-sm text-muted-foreground">Afficher dans les traitements en cours</p>
-              </Label>
-              <Switch 
-                id="isActive" 
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({...formData, isActive: checked})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea 
-                id="notes" 
-                value={formData.notes}
-                onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                placeholder="Ajoutez des notes sur ce traitement..."
-                rows={3}
-              />
             </div>
           </div>
         </Card>
