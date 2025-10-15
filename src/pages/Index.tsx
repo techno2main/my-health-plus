@@ -249,8 +249,8 @@ const Index = () => {
                 <Pill className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">1</p>
-                <p className="text-xs text-muted-foreground">{activeTreatmentName || "Traitement actif"}</p>
+                <p className="text-2xl font-bold">{activeTreatmentsCount}</p>
+                <p className="text-xs text-muted-foreground">Actif{activeTreatmentsCount > 1 ? 's' : ''}</p>
               </div>
             </div>
           </Card>
@@ -308,67 +308,76 @@ const Index = () => {
             }) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Aujourd'hui {upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const today = new Date();
-                    intakeDate.setHours(0, 0, 0, 0);
-                    today.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === today.getTime();
-                  })?.treatment && `(${upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const today = new Date();
-                    intakeDate.setHours(0, 0, 0, 0);
-                    today.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === today.getTime();
-                  })?.treatment})`}
+                  Aujourd'hui
                 </h3>
-                {upcomingIntakes
-                  .filter(intake => {
+                {(() => {
+                  const todayIntakes = upcomingIntakes.filter(intake => {
                     const intakeDate = new Date(intake.date);
                     const today = new Date();
                     intakeDate.setHours(0, 0, 0, 0);
                     today.setHours(0, 0, 0, 0);
                     return intakeDate.getTime() === today.getTime();
-                  })
-                  .map((intake) => (
-                    <Card key={intake.id} className="p-3 surface-elevated hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-center justify-center min-w-[60px] p-1.5 rounded-lg bg-primary/10">
-                          <Clock className="h-3.5 w-3.5 text-primary mb-0.5" />
-                          <span className="text-xs font-semibold text-primary">{intake.time}</span>
-                          <span className="text-[10px] text-muted-foreground">{format(intake.date, "dd/MM")}</span>
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium truncate">{intake.medication}</p>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{intake.dosage}</span>
-                          </div>
-                          {intake.pathology && (
-                            <p className="text-xs text-muted-foreground truncate">{intake.pathology}</p>
-                          )}
-                        </div>
+                  });
+                  
+                  // Group by treatment
+                  const groupedByTreatment = todayIntakes.reduce((acc, intake) => {
+                    if (!acc[intake.treatmentId]) {
+                      acc[intake.treatmentId] = {
+                        treatment: intake.treatment,
+                        intakes: []
+                      };
+                    }
+                    acc[intake.treatmentId].intakes.push(intake);
+                    return acc;
+                  }, {} as Record<string, { treatment: string; intakes: UpcomingIntake[] }>);
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
-                            <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
-                            <span className={`text-xs font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
-                              {intake.currentStock}
-                            </span>
+                  return Object.entries(groupedByTreatment).map(([treatmentId, group]) => (
+                    <div key={treatmentId} className="space-y-2">
+                      <p className="text-xs font-medium text-primary px-1">
+                        {group.treatment}
+                      </p>
+                      {group.intakes.map((intake) => (
+                        <Card key={intake.id} className="p-3 surface-elevated hover:shadow-md transition-shadow">
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-center justify-center min-w-[60px] p-1.5 rounded-lg bg-primary/10">
+                              <Clock className="h-3.5 w-3.5 text-primary mb-0.5" />
+                              <span className="text-xs font-semibold text-primary">{intake.time}</span>
+                              <span className="text-[10px] text-muted-foreground">{format(intake.date, "dd/MM")}</span>
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium truncate">{intake.medication}</p>
+                                <span className="text-xs text-muted-foreground flex-shrink-0">{intake.dosage}</span>
+                              </div>
+                              {intake.pathology && (
+                                <p className="text-xs text-muted-foreground truncate">{intake.pathology}</p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
+                                <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
+                                <span className={`text-xs font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
+                                  {intake.currentStock}
+                                </span>
+                              </div>
+                              
+                              <Button 
+                                size="sm" 
+                                className="gradient-primary h-8 w-8 p-0"
+                                onClick={() => handleTakeIntake(intake)}
+                                disabled={intake.currentStock === 0}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </div>
-                          
-                          <Button 
-                            size="sm" 
-                            className="gradient-primary h-8 w-8 p-0"
-                            onClick={() => handleTakeIntake(intake)}
-                            disabled={intake.currentStock === 0}
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                        </Card>
+                      ))}
+                    </div>
+                  ));
+                })()}
               </div>
             )}
 
@@ -383,70 +392,77 @@ const Index = () => {
             }) && (
               <div className="space-y-3">
                 <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">
-                  Demain {upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    intakeDate.setHours(0, 0, 0, 0);
-                    tomorrow.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === tomorrow.getTime();
-                  })?.treatment && `(${upcomingIntakes.find(i => {
-                    const intakeDate = new Date(i.date);
-                    const tomorrow = new Date();
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    intakeDate.setHours(0, 0, 0, 0);
-                    tomorrow.setHours(0, 0, 0, 0);
-                    return intakeDate.getTime() === tomorrow.getTime();
-                  })?.treatment})`}
+                  Demain
                 </h3>
-                {upcomingIntakes
-                  .filter(intake => {
+                {(() => {
+                  const tomorrowIntakes = upcomingIntakes.filter(intake => {
                     const intakeDate = new Date(intake.date);
                     const tomorrow = new Date();
                     tomorrow.setDate(tomorrow.getDate() + 1);
                     intakeDate.setHours(0, 0, 0, 0);
                     tomorrow.setHours(0, 0, 0, 0);
                     return intakeDate.getTime() === tomorrow.getTime();
-                  })
-                  .map((intake) => (
-                    <Card key={intake.id} className="p-3 surface-elevated hover:shadow-md transition-shadow">
-                      <div className="flex items-center gap-3">
-                        <div className="flex flex-col items-center justify-center min-w-[60px] p-1.5 rounded-lg bg-primary/10">
-                          <Clock className="h-3.5 w-3.5 text-primary mb-0.5" />
-                          <span className="text-xs font-semibold text-primary">{intake.time}</span>
-                          <span className="text-[10px] text-muted-foreground">{format(intake.date, "dd/MM")}</span>
-                        </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <p className="text-sm font-medium truncate">{intake.medication}</p>
-                            <span className="text-xs text-muted-foreground flex-shrink-0">{intake.dosage}</span>
-                          </div>
-                          {intake.pathology && (
-                            <p className="text-xs text-muted-foreground truncate">{intake.pathology}</p>
-                          )}
-                        </div>
+                  });
+                  
+                  // Group by treatment
+                  const groupedByTreatment = tomorrowIntakes.reduce((acc, intake) => {
+                    if (!acc[intake.treatmentId]) {
+                      acc[intake.treatmentId] = {
+                        treatment: intake.treatment,
+                        intakes: []
+                      };
+                    }
+                    acc[intake.treatmentId].intakes.push(intake);
+                    return acc;
+                  }, {} as Record<string, { treatment: string; intakes: UpcomingIntake[] }>);
 
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
-                            <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
-                            <span className={`text-xs font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
-                              {intake.currentStock}
-                            </span>
+                  return Object.entries(groupedByTreatment).map(([treatmentId, group]) => (
+                    <div key={treatmentId} className="space-y-2">
+                      <p className="text-xs font-medium text-primary px-1">
+                        {group.treatment}
+                      </p>
+                      {group.intakes.map((intake) => (
+                        <Card key={intake.id} className="p-3 surface-elevated hover:shadow-md transition-shadow">
+                          <div className="flex items-center gap-3">
+                            <div className="flex flex-col items-center justify-center min-w-[60px] p-1.5 rounded-lg bg-primary/10">
+                              <Clock className="h-3.5 w-3.5 text-primary mb-0.5" />
+                              <span className="text-xs font-semibold text-primary">{intake.time}</span>
+                              <span className="text-[10px] text-muted-foreground">{format(intake.date, "dd/MM")}</span>
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium truncate">{intake.medication}</p>
+                                <span className="text-xs text-muted-foreground flex-shrink-0">{intake.dosage}</span>
+                              </div>
+                              {intake.pathology && (
+                                <p className="text-xs text-muted-foreground truncate">{intake.pathology}</p>
+                              )}
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(intake.currentStock, intake.minThreshold)}`}>
+                                <Pill className={`h-3 w-3 ${getStockColor(intake.currentStock, intake.minThreshold)}`} />
+                                <span className={`text-xs font-semibold ${getStockColor(intake.currentStock, intake.minThreshold)}`}>
+                                  {intake.currentStock}
+                                </span>
+                              </div>
+                              
+                              <Button 
+                                size="sm" 
+                                className="gradient-primary h-8 w-8 p-0"
+                                onClick={() => handleTakeIntake(intake)}
+                                disabled={intake.currentStock === 0}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </div>
                           </div>
-                          
-                          <Button 
-                            size="sm" 
-                            className="gradient-primary h-8 w-8 p-0"
-                            onClick={() => handleTakeIntake(intake)}
-                            disabled={intake.currentStock === 0}
-                          >
-                            <CheckCircle2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
+                        </Card>
+                      ))}
+                    </div>
+                  ));
+                })()}
               </div>
             )}
           </div>
