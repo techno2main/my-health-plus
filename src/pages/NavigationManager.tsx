@@ -89,14 +89,16 @@ function SortableItem({ item, onEdit, onDelete, onMoveUp, onMoveDown, isFirst, i
       ref={setNodeRef}
       style={style}
       className={cn(
-        "p-4 cursor-move touch-none",
+        "p-4",
         isDragging && "opacity-50 shadow-lg"
       )}
-      {...attributes}
-      {...listeners}
     >
       <div className="flex items-center gap-3">
-        <div className="flex flex-col gap-1">
+        <div 
+          className="flex flex-col gap-1 cursor-move"
+          {...attributes}
+          {...listeners}
+        >
           <Button
             variant="ghost"
             size="sm"
@@ -198,6 +200,8 @@ export default function NavigationManager() {
     useSensor(PointerSensor, {
       activationConstraint: {
         distance: 8,
+        tolerance: 5,
+        delay: 0,
       },
     }),
     useSensor(KeyboardSensor, {
