@@ -11,40 +11,18 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Stock() {
   const navigate = useNavigate();
 
-  // Récupération des données depuis la base de données (uniquement traitements actifs)
+  // Récupération des médicaments depuis le catalogue
   const { data: medications, isLoading } = useQuery({
-    queryKey: ["medications-active"],
+    queryKey: ["medication-catalog-stock"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("medications")
-        .select(`
-          *,
-          treatments!inner(is_active),
-          medication_catalog(dosage_amount, default_dosage)
-        `)
-        .eq("treatments.is_active", true);
+        .from("medication_catalog")
+        .select("*")
+        .order("name");
       
       if (error) throw error;
       
-      // Trier les médicaments par heure de prise la plus tôt, puis par ordre alphabétique
-      const sortedData = data?.map(med => {
-        // Trier les horaires de prise pour chaque médicament
-        const sortedTimes = [...(med.times || [])].sort();
-        return {
-          ...med,
-          times: sortedTimes,
-          earliestTime: sortedTimes[0] || 'ZZ:ZZ' // ZZ:ZZ pour mettre en dernier ceux sans horaire
-        };
-      }).sort((a, b) => {
-        // D'abord par heure la plus tôt
-        if (a.earliestTime !== b.earliestTime) {
-          return a.earliestTime.localeCompare(b.earliestTime);
-        }
-        // Puis par ordre alphabétique du nom
-        return a.name.localeCompare(b.name);
-      });
-      
-      return sortedData;
+      return data;
     },
   });
 
@@ -58,9 +36,10 @@ export default function Stock() {
   const stockItems = medications?.map(med => ({
     ...med,
     medication: med.name,
-    dosage: med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage || "",
+    dosage: med.dosage_amount || med.default_dosage || "",
     unit: "unités",
-    status: getStockStatus(med.current_stock || 0, med.min_threshold || 10)
+    current_stock: med.initial_stock || 0,
+    status: getStockStatus(med.initial_stock || 0, med.min_threshold || 10)
   })) || [];
 
   const lowStockCount = stockItems.filter(item => item.status === "low" || item.status === "critical").length;
@@ -93,9 +72,7 @@ export default function Stock() {
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
         <PageHeader 
           title="Stocks"
-          subtitle="Gérez les stocks"
-          showAddButton
-          onAdd={() => navigate("/stock/new")}
+          subtitle="Vue d'ensemble des médicaments du référentiel"
         />
 
         {/* Alertes */}
@@ -154,31 +131,16 @@ export default function Stock() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 ml-6">
+                  <div className="ml-6">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs justify-start pl-4" 
-                      onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
+                      className="text-xs justify-start pl-4 w-full" 
+                      onClick={() => navigate(`/medications`)}
                     >
-                      Ajuster stock
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-xs justify-start pl-4" 
-                      onClick={() => navigate(`/stock/${item.id}`)}
-                    >
-                      Détails
+                      Modifier dans le référentiel
                     </Button>
                   </div>
-
-                  {item.expiry_date && (
-                    <div>
-                      <p className="text-muted-foreground text-sm">Date d'expiration</p>
-                      <p className="font-medium">{new Date(item.expiry_date).toLocaleDateString('fr-FR')}</p>
-                    </div>
-                  )}
                 </div>
               </Card>
             ))
