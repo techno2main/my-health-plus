@@ -9,7 +9,7 @@ export default function TreatmentForm() {
 
   return (
     <AppLayout>
-      <div className="container max-w-3xl mx-auto px-2 md:px-4 py-6 space-y-6">
+      <div className="container max-w-3xl mx-auto px-3 md:px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate("/")}>
             <ArrowLeft className="h-4 w-4" />

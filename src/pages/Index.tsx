@@ -240,7 +240,7 @@ const Index = () => {
 
   return (
     <AppLayout>
-      <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
           <Card className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/treatments")}>

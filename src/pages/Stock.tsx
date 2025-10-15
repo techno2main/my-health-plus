@@ -81,7 +81,7 @@ export default function Stock() {
   if (isLoading) {
     return (
       <AppLayout>
-        <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6">
+        <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6">
           <p className="text-center text-muted-foreground">Chargement...</p>
         </div>
       </AppLayout>
@@ -90,7 +90,7 @@ export default function Stock() {
 
   return (
     <AppLayout>
-      <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
         <PageHeader 
           title="Stock"
           subtitle="Gérez vos stocks de médicaments"
