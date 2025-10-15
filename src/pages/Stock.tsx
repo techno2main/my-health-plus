@@ -11,13 +11,18 @@ import { supabase } from "@/integrations/supabase/client";
 export default function Stock() {
   const navigate = useNavigate();
 
-  // Récupération des médicaments depuis le catalogue
+  // Récupération des médicaments depuis les traitements actifs
   const { data: medications, isLoading } = useQuery({
-    queryKey: ["medication-catalog-stock"],
+    queryKey: ["medications-active"],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from("medication_catalog")
-        .select("*")
+        .from("medications")
+        .select(`
+          *,
+          treatments!inner(is_active),
+          medication_catalog(dosage_amount, default_dosage)
+        `)
+        .eq("treatments.is_active", true)
         .order("name");
       
       if (error) throw error;
@@ -36,10 +41,9 @@ export default function Stock() {
   const stockItems = medications?.map(med => ({
     ...med,
     medication: med.name,
-    dosage: med.dosage_amount || med.default_dosage || "",
+    dosage: med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage || "",
     unit: "unités",
-    current_stock: med.initial_stock || 0,
-    status: getStockStatus(med.initial_stock || 0, med.min_threshold || 10)
+    status: getStockStatus(med.current_stock || 0, med.min_threshold || 10)
   })) || [];
 
   const lowStockCount = stockItems.filter(item => item.status === "low" || item.status === "critical").length;
@@ -72,7 +76,7 @@ export default function Stock() {
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
         <PageHeader 
           title="Stocks"
-          subtitle="Vue d'ensemble des médicaments du référentiel"
+          subtitle="Gérez les stocks de vos traitements actifs"
         />
 
         {/* Alertes */}
@@ -131,16 +135,31 @@ export default function Stock() {
                     </div>
                   </div>
 
-                  <div className="ml-6">
+                  <div className="grid grid-cols-2 gap-4 ml-6">
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs justify-start pl-4 w-full" 
-                      onClick={() => navigate(`/medications`)}
+                      className="text-xs justify-start pl-4" 
+                      onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
                     >
-                      Modifier dans le référentiel
+                      Ajuster stock
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-xs justify-start pl-4" 
+                      onClick={() => navigate(`/stock/${item.id}`)}
+                    >
+                      Détails
                     </Button>
                   </div>
+
+                  {item.expiry_date && (
+                    <div className="ml-6">
+                      <p className="text-muted-foreground text-sm">Date d'expiration</p>
+                      <p className="font-medium">{new Date(item.expiry_date).toLocaleDateString('fr-FR')}</p>
+                    </div>
+                  )}
                 </div>
               </Card>
             ))
