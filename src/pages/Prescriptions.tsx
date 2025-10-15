@@ -290,7 +290,7 @@ export default function Prescriptions() {
 
                 {prescription.refillVisits && prescription.refillVisits.length > 0 && (
                   <div className="mb-4">
-                    <p className="text-sm font-medium mb-3">Dates de réassort</p>
+                    <p className="text-sm font-medium mb-3">Dates de rechargements</p>
                     <div className="space-y-2">
                       {prescription.refillVisits.map((visit, index) => (
                         <div 
