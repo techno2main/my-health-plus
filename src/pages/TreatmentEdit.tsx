@@ -233,7 +233,7 @@ export default function TreatmentEdit() {
 
         <Card className="p-6">
           <div className="space-y-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-end gap-3">
               <div className="flex-1 space-y-2">
                 <Label htmlFor="name">Nom du traitement</Label>
                 <Input 
@@ -243,7 +243,7 @@ export default function TreatmentEdit() {
                   placeholder="Ex: Traitement Diabète"
                 />
               </div>
-              <div className="self-center">
+              <div className="pb-[5px]">
                 <Switch 
                   id="isActive" 
                   checked={formData.isActive}
