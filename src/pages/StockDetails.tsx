@@ -139,7 +139,7 @@ export default function StockDetails() {
             </div>
 
             <div className="p-3 rounded-lg bg-surface">
-              <p className="text-sm text-muted-foreground">Jours restants estimés</p>
+              <p className="text-sm text-muted-foreground">Jours estimés</p>
               <p className="font-semibold">{estimatedDaysLeft} jours</p>
             </div>
           </div>
