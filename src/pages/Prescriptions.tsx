@@ -22,6 +22,7 @@ interface Prescription {
 
 interface RefillVisit {
   date: string;
+  actualDate: string | null;
   visitNumber: number;
   isCompleted: boolean;
   treatmentId: string;
@@ -125,13 +126,14 @@ export default function Prescriptions() {
             for (const treatment of treatmentsData) {
               const { data: visitsData } = await supabase
                 .from("pharmacy_visits")
-                .select("visit_date, visit_number, is_completed")
+                .select("visit_date, actual_visit_date, visit_number, is_completed")
                 .eq("treatment_id", treatment.id)
                 .order("visit_date", { ascending: true });
               
               if (visitsData && visitsData.length > 0) {
                 refillVisits.push(...visitsData.map(v => ({
                   date: v.visit_date,
+                  actualDate: v.actual_visit_date,
                   visitNumber: v.visit_number,
                   isCompleted: v.is_completed || false,
                   treatmentId: treatment.id
@@ -190,10 +192,16 @@ export default function Prescriptions() {
         return;
       }
 
-      // Basculer le statut
+      // Si on valide, on enregistre la date du jour
+      // Si on annule, on supprime la date réelle
+      const today = new Date().toISOString().split('T')[0];
+      
       const { error: updateError } = await supabase
         .from("pharmacy_visits")
-        .update({ is_completed: !currentStatus })
+        .update({ 
+          is_completed: !currentStatus,
+          actual_visit_date: !currentStatus ? today : null
+        })
         .eq("id", visit.id);
 
       if (updateError) throw updateError;
@@ -349,7 +357,10 @@ export default function Prescriptions() {
                             </span>
                           </div>
                           <span className="text-sm font-medium">
-                            {new Date(visit.date).toLocaleDateString('fr-FR')}
+                            {visit.isCompleted && visit.actualDate
+                              ? new Date(visit.actualDate).toLocaleDateString('fr-FR')
+                              : new Date(visit.date).toLocaleDateString('fr-FR')
+                            }
                           </span>
                         </div>
                       ))}

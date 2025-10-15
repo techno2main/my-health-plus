@@ -317,6 +317,7 @@ export type Database = {
       }
       pharmacy_visits: {
         Row: {
+          actual_visit_date: string | null
           created_at: string | null
           id: string
           is_completed: boolean | null
@@ -328,6 +329,7 @@ export type Database = {
           visit_number: number
         }
         Insert: {
+          actual_visit_date?: string | null
           created_at?: string | null
           id?: string
           is_completed?: boolean | null
@@ -339,6 +341,7 @@ export type Database = {
           visit_number: number
         }
         Update: {
+          actual_visit_date?: string | null
           created_at?: string | null
           id?: string
           is_completed?: boolean | null
