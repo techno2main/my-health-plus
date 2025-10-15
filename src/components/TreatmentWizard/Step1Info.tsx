@@ -87,32 +87,35 @@ export function Step1Info({ formData, setFormData, prescriptions, doctors, pharm
           </Select>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="prescription-date">Date de prescription *</Label>
-          <DateInput
-            id="prescription-date"
-            value={formData.prescriptionDate}
-            onChange={(date) => setFormData({ ...formData, prescriptionDate: date })}
-            placeholder="Sélectionner la date de prescription"
-          />
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="prescription-date">Date de prescription *</Label>
+            <DateInput
+              id="prescription-date"
+              value={formData.prescriptionDate}
+              onChange={(date) => setFormData({ ...formData, prescriptionDate: date })}
+              placeholder="Sélectionner la date de prescription"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="duration-days">QSP (Durée en jours) *</Label>
+            <Input
+              id="duration-days"
+              type="number"
+              value={formData.durationDays}
+              onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
+              placeholder="Ex: 30, 60, 90..."
+              className="bg-surface"
+              required
+              min="1"
+            />
+          </div>
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="duration-days">QSP (Durée en jours) *</Label>
-          <Input
-            id="duration-days"
-            type="number"
-            value={formData.durationDays}
-            onChange={(e) => setFormData({ ...formData, durationDays: e.target.value })}
-            placeholder="Ex: 30, 60, 90..."
-            className="bg-surface"
-            required
-            min="1"
-          />
-          <p className="text-xs text-muted-foreground">
-            Quantité Suffisante Pour (durée du traitement en jours)
-          </p>
-        </div>
+        <p className="text-xs text-muted-foreground -mt-2">
+          QSP = Quantité Suffisante Pour (durée du traitement en jours)
+        </p>
 
         <div className="space-y-2">
           <Label htmlFor="prescription">Ordonnance de référence (optionnel)</Label>
