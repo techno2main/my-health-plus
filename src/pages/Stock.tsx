@@ -138,7 +138,7 @@ export default function Stock() {
                   {getStatusBadge(item.status)}
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-4 ml-6">
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <p className="text-muted-foreground">Stock actuel</p>
