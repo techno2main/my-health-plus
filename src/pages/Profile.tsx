@@ -183,7 +183,7 @@ export default function Profile() {
   if (loading) {
     return (
       <AppLayout>
-        <div className="container max-w-2xl mx-auto px-4 py-6">
+        <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6">
           <div className="text-center">Chargement...</div>
         </div>
       </AppLayout>
@@ -192,7 +192,7 @@ export default function Profile() {
 
   return (
     <AppLayout>
-      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6 pb-24">
+      <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6 space-y-6 pb-24">
         <PageHeader 
           title="Profil utilisateur"
           subtitle="Gérez vos informations personnelles"

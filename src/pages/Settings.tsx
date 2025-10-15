@@ -46,7 +46,7 @@ export default function Settings() {
 
   return (
     <AppLayout>
-      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6 space-y-6">
         <PageHeader 
           title="Paramètres"
           subtitle="Gérez vos préférences et votre compte"

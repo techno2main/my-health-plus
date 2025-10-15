@@ -198,7 +198,7 @@ const Treatments = () => {
   if (loading) {
     return (
       <AppLayout>
-        <div className="container max-w-2xl mx-auto px-4 py-6">
+        <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6">
           <p>Chargement...</p>
         </div>
       </AppLayout>
@@ -207,7 +207,7 @@ const Treatments = () => {
 
   return (
     <AppLayout>
-      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-2 md:px-4 py-6 space-y-6">
         <PageHeader 
           title="Traitements"
           subtitle={`${treatments.filter(t => t.is_active).length} traitement(s) actif(s)`}

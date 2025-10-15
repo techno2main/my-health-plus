@@ -39,8 +39,8 @@ export function AppHeader() {
   }
 
   return (
-    <header className="bg-background border-b border-border px-4 py-4 sticky top-0 z-50">
-      <div className="container max-w-3xl mx-auto space-y-2">
+    <header className="bg-background border-b border-border px-2 md:px-4 py-4 sticky top-0 z-50">
+      <div className="container max-w-3xl mx-auto space-y-2 px-0">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
             MyHealth+
