@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { NativeBiometric, BiometryType } from "capacitor-native-biometric";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -143,22 +144,90 @@ export default function Privacy() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { error } = await supabase
-        .from('user_preferences')
-        .update({ biometric_enabled: enabled })
-        .eq('user_id', user.id);
+      if (enabled) {
+        // Vérifier si la biométrie est disponible sur l'appareil
+        const biometryResult = await NativeBiometric.isAvailable();
+        
+        if (!biometryResult.isAvailable) {
+          toast({
+            title: "Non disponible",
+            description: "Votre appareil ne supporte pas l'authentification biométrique",
+            variant: "destructive",
+          });
+          setPendingBiometricChange(false);
+          return;
+        }
 
-      if (error) throw error;
+        // Demander l'authentification biométrique
+        const verified = await NativeBiometric.verifyIdentity({
+          reason: "Activer l'authentification biométrique",
+          title: "Authentification",
+          subtitle: "Utilisez votre empreinte digitale ou Face ID",
+          description: "Sécurisez l'accès à MyHealth+",
+        })
+          .then(() => true)
+          .catch(() => false);
 
-      setBiometricEnabled(enabled);
-      toast({
-        title: "Succès",
-        description: `Authentification biométrique ${enabled ? 'activée' : 'désactivée'}`,
-      });
+        if (!verified) {
+          toast({
+            title: "Échec",
+            description: "Authentification biométrique non vérifiée",
+            variant: "destructive",
+          });
+          setPendingBiometricChange(false);
+          return;
+        }
+
+        // Enregistrer les credentials pour future utilisation
+        await NativeBiometric.setCredentials({
+          username: user.email || "",
+          password: "biometric_enabled",
+          server: "myhealth.app",
+        });
+
+        // Sauvegarder la préférence
+        const { error } = await supabase
+          .from('user_preferences')
+          .update({ biometric_enabled: enabled })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        setBiometricEnabled(enabled);
+        
+        const biometryTypeText = biometryResult.biometryType === BiometryType.FACE_ID 
+          ? "Face ID" 
+          : "empreinte digitale";
+        
+        toast({
+          title: "Succès",
+          description: `Authentification par ${biometryTypeText} activée`,
+        });
+      } else {
+        // Supprimer les credentials
+        await NativeBiometric.deleteCredentials({
+          server: "myhealth.app",
+        });
+
+        // Sauvegarder la préférence
+        const { error } = await supabase
+          .from('user_preferences')
+          .update({ biometric_enabled: enabled })
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        setBiometricEnabled(enabled);
+        toast({
+          title: "Succès",
+          description: "Authentification biométrique désactivée",
+        });
+      }
     } catch (error: any) {
+      console.error("Biometric error:", error);
       toast({
         title: "Erreur",
-        description: error.message || "Impossible de modifier les préférences",
+        description: error.message || "Impossible de configurer l'authentification biométrique",
         variant: "destructive",
       });
     }
