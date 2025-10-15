@@ -53,12 +53,12 @@ export function Step1Info({ formData, setFormData, prescriptions, doctors, pharm
 
         <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
-          <Textarea
+          <Input
             id="description"
             value={formData.description}
             onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             placeholder="Informations complémentaires sur le traitement..."
-            className="bg-surface min-h-[80px]"
+            className="bg-surface"
           />
         </div>
 
