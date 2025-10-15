@@ -253,12 +253,12 @@ export default function History() {
                 return (
                   <Card key={dayIdx} className="p-4">
                     <div className="flex items-center gap-2 mb-4">
-                      <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                      <h3 className="font-semibold">
+                      <CalendarIcon className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                      <h3 className="font-semibold text-base">
                         {format(day.date, "EEEE d MMMM yyyy", { locale: fr })}
                       </h3>
                       {isToday(day.date) && (
-                        <span className="text-xs text-muted-foreground">Aujourd'hui</span>
+                        <span className="text-xs text-muted-foreground flex-shrink-0">Aujourd'hui</span>
                       )}
                     </div>
 
