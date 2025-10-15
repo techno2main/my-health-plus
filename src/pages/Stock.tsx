@@ -93,7 +93,7 @@ export default function Stock() {
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
         <PageHeader 
           title="Stock"
-          subtitle="Gérez vos stocks de médicaments"
+          subtitle="Gérez les stocks"
           showAddButton
           onAdd={() => navigate("/stock/new")}
         />
