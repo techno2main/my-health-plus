@@ -201,7 +201,7 @@ export function Step1Info({ formData, setFormData, prescriptions, doctors, pharm
             onValueChange={(value) => setFormData({ ...formData, pharmacyId: value })}
           >
             <SelectTrigger className="bg-surface">
-              <SelectValue placeholder="Sélectionnez une pharmacie" />
+              <SelectValue placeholder="Choisir" />
             </SelectTrigger>
             <SelectContent className="bg-popover z-50">
               {pharmacies.length === 0 ? (
