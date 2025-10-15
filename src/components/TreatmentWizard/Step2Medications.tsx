@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Search } from "lucide-react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TreatmentFormData, MedicationItem, CatalogMedication } from "./types";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +17,6 @@ interface Step2MedicationsProps {
 
 export function Step2Medications({ formData, setFormData }: Step2MedicationsProps) {
   const [catalog, setCatalog] = useState<CatalogMedication[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [showDialog, setShowDialog] = useState(false);
   const [showCustomDialog, setShowCustomDialog] = useState(false);
   const [newCustomMed, setNewCustomMed] = useState({ name: "", pathology: "", dosage: "" });
@@ -112,10 +110,6 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
     setFormData({ ...formData, medications: updated });
   };
 
-  const filteredCatalog = catalog.filter((med) =>
-    med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    med.pathology?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -228,58 +222,47 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
         </div>
       )}
 
-      {/* Catalog Sheet */}
-      <Sheet open={showDialog} onOpenChange={setShowDialog}>
-        <SheetContent side="bottom" className="h-[90vh] flex flex-col p-0">
-          <SheetHeader className="px-6 pt-6 pb-4 border-b">
-            <SheetTitle>Référentiel de médicaments</SheetTitle>
-          </SheetHeader>
-          <div className="flex-1 flex flex-col gap-4 px-6 pt-4 min-h-0">
-            <div className="relative">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Rechercher un médicament..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-            <div className="flex-1 -mx-6 px-6 overflow-y-auto">
-              <div className="space-y-3 pb-6">
-                {filteredCatalog.map((med) => (
-                  <Card
-                    key={med.id}
-                    className="p-4 cursor-pointer hover:bg-accent/50 transition-colors active:scale-[0.98]"
-                    onClick={() => addMedicationFromCatalog(med)}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-semibold">{med.name}</h4>
-                          {med.dosage_amount && (
-                            <span className="text-sm text-muted-foreground">{med.dosage_amount}</span>
-                          )}
-                        </div>
-                        {med.pathology && (
-                          <Badge variant="secondary" className="mb-2">
-                            {med.pathology}
-                          </Badge>
-                        )}
-                        {med.description && (
-                          <p className="text-sm text-muted-foreground">
-                            {med.description}
-                          </p>
+      {/* Catalog Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="max-w-lg max-h-[80vh] p-0 gap-0">
+          <DialogHeader className="px-6 py-4 border-b">
+            <DialogTitle>Référentiel de médicaments</DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="h-[calc(80vh-80px)] px-6">
+            <div className="space-y-3 py-4">
+              {catalog.map((med) => (
+                <Card
+                  key={med.id}
+                  className="p-4 cursor-pointer hover:bg-accent/50 transition-colors active:scale-[0.98]"
+                  onClick={() => addMedicationFromCatalog(med)}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="font-semibold">{med.name}</h4>
+                        {med.dosage_amount && (
+                          <span className="text-sm text-muted-foreground">{med.dosage_amount}</span>
                         )}
                       </div>
-                      <Plus className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                      {med.pathology && (
+                        <Badge variant="secondary" className="mb-2">
+                          {med.pathology}
+                        </Badge>
+                      )}
+                      {med.description && (
+                        <p className="text-sm text-muted-foreground">
+                          {med.description}
+                        </p>
+                      )}
                     </div>
-                  </Card>
-                ))}
-              </div>
+                    <Plus className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
+                  </div>
+                </Card>
+              ))}
             </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
 
       {/* Custom Medication Dialog */}
       <Dialog open={showCustomDialog} onOpenChange={setShowCustomDialog}>
