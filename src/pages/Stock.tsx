@@ -92,7 +92,7 @@ export default function Stock() {
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
         <PageHeader 
-          title="Stock"
+          title="Stocks"
           subtitle="Gérez les stocks"
           showAddButton
           onAdd={() => navigate("/stock/new")}
