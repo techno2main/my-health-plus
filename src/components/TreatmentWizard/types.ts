@@ -35,6 +35,7 @@ export interface CatalogMedication {
   name: string;
   pathology: string;
   default_dosage: string;
+  dosage_amount?: string | null;
   description: string;
   default_times?: string[] | null;
 }

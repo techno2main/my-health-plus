@@ -29,7 +29,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
   const loadCatalog = async () => {
     const { data } = await supabase
       .from("medication_catalog")
-      .select("*")
+      .select("id, name, pathology, description, default_dosage, dosage_amount, default_times")
       .order("name");
     if (data) setCatalog(data);
   };
@@ -229,11 +229,11 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
 
       {/* Catalog Dialog */}
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
           <DialogHeader>
             <DialogTitle>Référentiel de médicaments</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="flex-1 flex flex-col gap-4 min-h-0">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
@@ -243,29 +243,34 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
                 className="pl-9"
               />
             </div>
-            <ScrollArea className="h-[400px]">
-              <div className="space-y-2">
+            <ScrollArea className="flex-1 -mx-6 px-6">
+              <div className="space-y-2 pr-4">
                 {filteredCatalog.map((med) => (
                   <Card
                     key={med.id}
-                    className="p-4 cursor-pointer hover:bg-accent/50 transition-colors bg-card border-border"
+                    className="p-4 cursor-pointer hover:bg-accent/50 transition-colors"
                     onClick={() => addMedicationFromCatalog(med)}
                   >
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <h4 className="font-semibold text-foreground">{med.name}</h4>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="font-semibold">{med.name}</h4>
+                          {med.dosage_amount && (
+                            <span className="text-sm text-muted-foreground">{med.dosage_amount}</span>
+                          )}
+                        </div>
                         {med.pathology && (
-                          <Badge variant="secondary" className="mt-1">
+                          <Badge variant="secondary" className="mb-2">
                             {med.pathology}
                           </Badge>
                         )}
                         {med.description && (
-                          <p className="text-sm text-muted-foreground mt-2">
+                          <p className="text-sm text-muted-foreground">
                             {med.description}
                           </p>
                         )}
                       </div>
-                      <Plus className="h-5 w-5 text-primary" />
+                      <Plus className="h-5 w-5 text-primary flex-shrink-0 mt-1" />
                     </div>
                   </Card>
                 ))}
