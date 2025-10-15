@@ -92,9 +92,9 @@ export default function About() {
               </a>
             </Button>
             <Button variant="outline" className="w-full justify-start" asChild>
-              <a href="https://myhealth+.techno2main.fr" target="_blank" rel="noopener noreferrer">
+              <a href="https://web-tad.app/myhealth+" target="_blank" rel="noopener noreferrer">
                 <Globe className="mr-2 h-4 w-4" />
-                myhealth+.techno2main.fr
+                web-tad.app/myhealth+
               </a>
             </Button>
           </div>
