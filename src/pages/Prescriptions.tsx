@@ -24,6 +24,7 @@ interface RefillVisit {
   date: string;
   visitNumber: number;
   isCompleted: boolean;
+  treatmentId: string;
 }
 
 interface PrescriptionWithDetails extends Prescription {
@@ -132,7 +133,8 @@ export default function Prescriptions() {
                 refillVisits.push(...visitsData.map(v => ({
                   date: v.visit_date,
                   visitNumber: v.visit_number,
-                  isCompleted: v.is_completed || false
+                  isCompleted: v.is_completed || false,
+                  treatmentId: treatment.id
                 })));
               }
             }
@@ -169,6 +171,44 @@ export default function Prescriptions() {
         return <Badge variant="danger">Expirée</Badge>;
       default:
         return null;
+    }
+  };
+
+  const handleToggleVisit = async (treatmentId: string, visitNumber: number, currentStatus: boolean) => {
+    try {
+      // Trouver la visite correspondante
+      const { data: visit, error: fetchError } = await supabase
+        .from("pharmacy_visits")
+        .select("id")
+        .eq("treatment_id", treatmentId)
+        .eq("visit_number", visitNumber)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      if (!visit) {
+        toast.error("Visite non trouvée");
+        return;
+      }
+
+      // Basculer le statut
+      const { error: updateError } = await supabase
+        .from("pharmacy_visits")
+        .update({ is_completed: !currentStatus })
+        .eq("id", visit.id);
+
+      if (updateError) throw updateError;
+
+      toast.success(
+        !currentStatus 
+          ? "Rechargement validé ✓" 
+          : "Rechargement annulé"
+      );
+
+      // Recharger les données
+      loadPrescriptions();
+    } catch (error) {
+      console.error("Error updating visit:", error);
+      toast.error("Erreur lors de la mise à jour");
     }
   };
 
@@ -295,7 +335,8 @@ export default function Prescriptions() {
                       {prescription.refillVisits.map((visit, index) => (
                         <div 
                           key={index} 
-                          className="flex items-center justify-between p-2 rounded-lg bg-muted/30"
+                          className="flex items-center justify-between p-2 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                          onClick={() => handleToggleVisit(visit.treatmentId, visit.visitNumber, visit.isCompleted)}
                         >
                           <div className="flex items-center gap-2">
                             {visit.isCompleted ? (
