@@ -158,7 +158,7 @@ export default function Stock() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs justify-start pl-4" 
+                      className="text-xs justify-start pl-0" 
                       onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
                     >
                       Ajuster stock
@@ -166,7 +166,7 @@ export default function Stock() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      className="text-xs justify-start pl-4" 
+                      className="text-xs justify-start pl-0" 
                       onClick={() => navigate(`/stock/${item.id}`)}
                     >
                       Détails
