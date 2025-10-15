@@ -175,7 +175,7 @@ export default function StockForm() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="min-threshold">Seuil d'alerte minimum</Label>
+                <Label htmlFor="min-threshold">Seuil d'alerte</Label>
                 <Input 
                   id="min-threshold" 
                   type="number"
