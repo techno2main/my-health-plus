@@ -309,7 +309,7 @@ export default function Prescriptions() {
                       {new Date(prescription.prescription_date).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
-                  <div className="h-auto w-px bg-border"></div>
+                  <div className="h-auto w-px bg-muted"></div>
                   <div>
                     <p className="text-muted-foreground mb-1">Validité</p>
                     <div className="flex items-baseline gap-2">
