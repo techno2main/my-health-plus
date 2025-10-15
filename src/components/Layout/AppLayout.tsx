@@ -1,17 +1,20 @@
 import { ReactNode } from "react"
 import { ScrollToTop } from "@/components/ScrollToTop"
 import { BottomNavigation } from "./BottomNavigation"
+import { AppHeader } from "./AppHeader"
 import { cn } from "@/lib/utils"
 
 interface AppLayoutProps {
   children: ReactNode
   className?: string
   showBottomNav?: boolean
+  showHeader?: boolean
 }
 
-export function AppLayout({ children, className, showBottomNav = true }: AppLayoutProps) {
+export function AppLayout({ children, className, showBottomNav = true, showHeader = true }: AppLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      {showHeader && <AppHeader />}
       <main className={cn("flex-1 pb-20", className)}>
         {children}
       </main>

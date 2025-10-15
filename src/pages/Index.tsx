@@ -2,15 +2,12 @@ import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/Layout/AppLayout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Switch } from "@/components/ui/switch"
-import { Clock, Pill, AlertCircle, CheckCircle2, User, Moon, Sun } from "lucide-react"
+import { Clock, Pill, AlertCircle, CheckCircle2 } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { useTheme } from "@/components/theme-provider"
 
 interface UpcomingIntake {
   id: string
@@ -35,14 +32,10 @@ interface StockAlert {
 
 const Index = () => {
   const navigate = useNavigate()
-  const { theme, setTheme } = useTheme()
-  const currentDate = format(new Date(), "EEEE d MMMM yyyy", { locale: fr })
-  const currentTime = format(new Date(), "HH:mm")
   const [upcomingIntakes, setUpcomingIntakes] = useState<UpcomingIntake[]>([])
   const [stockAlerts, setStockAlerts] = useState<StockAlert[]>([])
   const [activeTreatmentsCount, setActiveTreatmentsCount] = useState(0)
   const [activeTreatmentName, setActiveTreatmentName] = useState("")
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -51,20 +44,6 @@ const Index = () => {
 
   const loadDashboardData = async () => {
     try {
-      // Load user profile for avatar
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("avatar_url")
-          .eq("id", user.id)
-          .maybeSingle()
-        
-        if (profile?.avatar_url) {
-          setAvatarUrl(profile.avatar_url)
-        }
-      }
-
       // Load active treatments count
       const { data: treatments, error: treatmentsError } = await supabase
         .from("treatments")
@@ -262,36 +241,6 @@ const Index = () => {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
-        {/* Header */}
-        <header className="space-y-2">
-          <div className="flex items-center justify-between">
-            <h1 className="text-2xl font-bold gradient-primary bg-clip-text text-transparent">
-              MyHealthPlus
-            </h1>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <Sun className="h-3.5 w-3.5 text-muted-foreground" />
-                <Switch
-                  checked={theme === "dark"}
-                  onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
-                  className="data-[state=checked]:bg-primary scale-75"
-                />
-                <Moon className="h-3.5 w-3.5 text-muted-foreground" />
-              </div>
-              <Avatar className="h-10 w-10 cursor-pointer" onClick={() => navigate("/profile")}>
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt="Avatar" className="h-full w-full object-cover" />
-                ) : (
-                  <AvatarFallback>
-                    <User className="h-5 w-5" />
-                  </AvatarFallback>
-                )}
-              </Avatar>
-            </div>
-          </div>
-          <p className="text-sm text-muted-foreground capitalize">{currentDate} • {currentTime}</p>
-        </header>
-
         {/* Quick Stats */}
         <div className="grid grid-cols-2 gap-4">
           <Card className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate("/treatments")}>
