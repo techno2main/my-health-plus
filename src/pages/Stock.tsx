@@ -163,7 +163,7 @@ export default function Stock() {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="flex-1 text-xs" 
+                    className="text-xs justify-start pl-4" 
                     onClick={() => navigate(`/stock/adjust?id=${item.id}`)}
                   >
                     Ajuster stock
