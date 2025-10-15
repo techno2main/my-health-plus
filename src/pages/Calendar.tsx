@@ -313,7 +313,7 @@ const Calendar = () => {
         />
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Card className="p-4 surface-elevated">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-success/10">
@@ -328,28 +328,14 @@ const Calendar = () => {
 
           <Card className="p-4 surface-elevated">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <CalendarIcon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm font-medium">Prochaine visite</p>
-                <p className="text-xs text-muted-foreground">
-                  {nextPharmacyVisit ? format(nextPharmacyVisit, "d MMMM yyyy", { locale: fr }) : "Aucune planifiée"}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="p-4 surface-elevated">
-            <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-warning/10">
                 <AlertCircle className="h-5 w-5 text-warning" />
               </div>
               <div>
-                <p className="text-sm font-medium">Prises du jour</p>
-                <p className="text-xs text-muted-foreground">
-                  {dayDetails.filter(d => d.status === 'taken').length}/{dayDetails.length} effectuées
+                <p className="text-2xl font-bold">
+                  {dayDetails.filter(d => d.status === 'taken').length}/{dayDetails.length}
                 </p>
+                <p className="text-xs text-muted-foreground">Prises du jour</p>
               </div>
             </div>
           </Card>
@@ -359,15 +345,21 @@ const Calendar = () => {
           {/* Calendar */}
           <Card className="lg:col-span-2 p-6 surface-elevated">
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-semibold">
-                  {format(currentMonth, "MMMM yyyy", { locale: fr })}
-                </h2>
-                <div className="flex gap-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">
+                    {format(currentMonth, "yyyy", { locale: fr })}
+                  </h2>
+                  <p className="text-sm text-muted-foreground">
+                    {format(currentMonth, "MMMM", { locale: fr })}
+                  </p>
+                </div>
+                <div className="flex gap-1.5">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                    className="h-8 w-8 p-0"
                   >
                     ←
                   </Button>
@@ -375,6 +367,7 @@ const Calendar = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentMonth(new Date())}
+                    className="h-8 px-2 text-xs"
                   >
                     Aujourd'hui
                   </Button>
@@ -382,6 +375,7 @@ const Calendar = () => {
                     variant="outline"
                     size="sm"
                     onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                    className="h-8 w-8 p-0"
                   >
                     →
                   </Button>
