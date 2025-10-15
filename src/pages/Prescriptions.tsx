@@ -385,17 +385,24 @@ export default function Prescriptions() {
                   </div>
                 )}
 
-                <div className="flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="w-full"
-                    onClick={() => handleDownload(prescription)}
-                    disabled={!prescription.file_path}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Télécharger
-                  </Button>
+                <div className="space-y-2">
+                  {prescription.file_path && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      {prescription.original_filename || prescription.file_path.split("/").pop()}
+                    </p>
+                  )}
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                      onClick={() => handleDownload(prescription)}
+                      disabled={!prescription.file_path}
+                    >
+                      <Download className="mr-2 h-4 w-4" />
+                      Télécharger
+                    </Button>
+                  </div>
                 </div>
               </Card>
             ))
