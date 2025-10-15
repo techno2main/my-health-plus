@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Clock, Calendar as CalendarIcon } from "lucide-react";
-import { format, parseISO, startOfDay } from "date-fns";
+import { format, parseISO, startOfDay, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -257,6 +257,9 @@ export default function History() {
                       <h3 className="font-semibold">
                         {format(day.date, "EEEE d MMMM yyyy", { locale: fr })}
                       </h3>
+                      {isToday(day.date) && (
+                        <span className="text-xs text-muted-foreground">Aujourd'hui</span>
+                      )}
                     </div>
 
                     <div className="space-y-4">
