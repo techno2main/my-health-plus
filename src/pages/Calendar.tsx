@@ -313,29 +313,45 @@ const Calendar = () => {
         />
 
         {/* Stats Overview */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="p-4 surface-elevated">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-success/10">
-                <TrendingUp className="h-5 w-5 text-success" />
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <Card className="p-4 surface-elevated">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-success/10">
+                  <TrendingUp className="h-5 w-5 text-success" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{observanceRate}%</p>
+                  <p className="text-xs text-muted-foreground">Observance ce mois</p>
+                </div>
               </div>
-              <div>
-                <p className="text-2xl font-bold">{observanceRate}%</p>
-                <p className="text-xs text-muted-foreground">Observance ce mois</p>
+            </Card>
+
+            <Card className="p-4 surface-elevated">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-warning/10">
+                  <AlertCircle className="h-5 w-5 text-warning" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">
+                    {dayDetails.filter(d => d.status === 'taken').length}/{dayDetails.length}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Prises du jour</p>
+                </div>
               </div>
-            </div>
-          </Card>
+            </Card>
+          </div>
 
           <Card className="p-4 surface-elevated">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-warning/10">
-                <AlertCircle className="h-5 w-5 text-warning" />
+              <div className="p-2 rounded-lg bg-primary/10">
+                <CalendarIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">
-                  {dayDetails.filter(d => d.status === 'taken').length}/{dayDetails.length}
+                <p className="text-sm font-medium">Prochaine visite</p>
+                <p className="text-xs text-muted-foreground">
+                  {nextPharmacyVisit ? format(nextPharmacyVisit, "d MMMM yyyy", { locale: fr }) : "Aucune planifiée"}
                 </p>
-                <p className="text-xs text-muted-foreground">Prises du jour</p>
               </div>
             </div>
           </Card>
