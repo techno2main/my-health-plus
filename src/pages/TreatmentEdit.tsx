@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Trash2 } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Pencil } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ interface Medication {
   id: string;
   name: string;
   dosage: string;
+  dosage_amount?: string | null;
   times: string[];
   catalog_id?: string;
   pathology?: string | null;
@@ -69,19 +70,36 @@ export default function TreatmentEdit() {
       if (treatmentError) throw treatmentError;
       setTreatment(treatmentData);
       
+      // Calculate end date if prescription exists
+      let calculatedEndDate = treatmentData.end_date || "";
+      if (treatmentData.prescription_id && treatmentData.start_date && !treatmentData.end_date) {
+        const { data: prescriptionData } = await supabase
+          .from("prescriptions")
+          .select("duration_days")
+          .eq("id", treatmentData.prescription_id)
+          .maybeSingle();
+        
+        if (prescriptionData?.duration_days) {
+          const startDate = new Date(treatmentData.start_date);
+          const endDate = new Date(startDate);
+          endDate.setDate(endDate.getDate() + prescriptionData.duration_days);
+          calculatedEndDate = endDate.toISOString().split('T')[0];
+        }
+      }
+      
       // Set form data
       setFormData({
         name: treatmentData.name,
         description: treatmentData.description || treatmentData.pathology || "",
         startDate: treatmentData.start_date,
-        endDate: treatmentData.end_date || "",
+        endDate: calculatedEndDate,
         isActive: treatmentData.is_active
       });
 
       // Load medications for this treatment
       const { data: medsData, error: medsError } = await supabase
         .from("medications")
-        .select("id, name, dosage, times, catalog_id")
+        .select("id, name, dosage, dosage_amount, times, catalog_id")
         .eq("treatment_id", id);
 
       if (medsError) throw medsError;
@@ -269,8 +287,8 @@ export default function TreatmentEdit() {
         <Card className="p-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Médicaments</h3>
-            <Button size="sm" onClick={handleAddMedication}>
-              Ajouter un médicament
+            <Button size="icon" variant="default" onClick={handleAddMedication}>
+              +
             </Button>
           </div>
 
@@ -280,25 +298,38 @@ export default function TreatmentEdit() {
             ) : (
               medications.map((med) => (
                 <Card key={med.id} className="p-4 bg-surface">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <p className="font-medium">{med.name}</p>
-                        {med.pathology && (
-                          <Badge variant="secondary" className="text-xs">
-                            {med.pathology}
-                          </Badge>
-                        )}
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">{med.dosage}</p>
+                  {/* Ligne 1: Nom + Dosage + Pathologie Badge */}
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">{med.name}</p>
+                      {med.dosage_amount && (
+                        <span className="text-sm text-muted-foreground">{med.dosage_amount}</span>
+                      )}
                     </div>
-                    <Button variant="ghost" size="sm" onClick={() => handleEditMedication(med)}>
-                      Modifier
+                    {med.pathology && (
+                      <Badge variant="secondary" className="text-xs">
+                        {med.pathology}
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  {/* Ligne 2: Posologie + Icône Edit */}
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm text-muted-foreground">{med.dosage}</p>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8"
+                      onClick={() => handleEditMedication(med)}
+                    >
+                      <Pencil className="h-4 w-4" />
                     </Button>
                   </div>
-                  <div>
-                    <p className="text-sm text-muted-foreground mb-2">Horaires de prise</p>
-                    <div className="flex flex-wrap gap-2">
+                  
+                  {/* Ligne 3: Horaires de prise + Pastilles */}
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm text-muted-foreground">Horaires de prise</p>
+                    <div className="flex flex-wrap gap-2 justify-end">
                       {med.times.map((time, idx) => (
                         <span key={idx} className="px-3 py-1 rounded-full bg-primary/10 text-sm font-medium">
                           {time}
