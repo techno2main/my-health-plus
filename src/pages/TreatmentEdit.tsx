@@ -278,27 +278,28 @@ export default function TreatmentEdit() {
 
         <Card className="p-6">
           <div className="space-y-4">
-            <div className="flex items-end gap-3">
-              <div className="flex-1 space-y-2">
+            <div className="flex items-center gap-3">
+              <div className="flex-1">
                 <Label htmlFor="name">Nom du traitement</Label>
-                <Input 
-                  id="name" 
-                  value={formData.name}
-                  onChange={(e) => setFormData({...formData, name: e.target.value})}
-                  placeholder="Ex: Traitement Diabète"
-                />
-                {qspDays && (
-                  <p className="text-xs text-muted-foreground">
-                    QSP : {qspDays} jours
-                  </p>
-                )}
-              </div>
-              <div className="pb-[5px]">
-                <Switch 
-                  id="isActive" 
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) => setFormData({...formData, isActive: checked})}
-                />
+                <div className="flex items-center gap-2">
+                  <Input 
+                    id="name" 
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="Ex: Traitement Diabète"
+                    className="flex-1"
+                  />
+                  {qspDays && (
+                    <span className="text-xs text-muted-foreground whitespace-nowrap">
+                      QSP : {Math.round(qspDays / 30)} mois
+                    </span>
+                  )}
+                  <Switch 
+                    id="isActive" 
+                    checked={formData.isActive}
+                    onCheckedChange={(checked) => setFormData({...formData, isActive: checked})}
+                  />
+                </div>
               </div>
             </div>
 
