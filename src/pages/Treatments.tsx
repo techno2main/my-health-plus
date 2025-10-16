@@ -16,6 +16,7 @@ interface Treatment {
   start_date: string
   end_date: string | null
   is_active: boolean
+  qsp_days?: number | null
   medications: Array<{
     id: string
     name: string
@@ -68,7 +69,7 @@ const Treatments = () => {
           if (treatment.prescription_id) {
             const { data: prescriptionData } = await supabase
               .from("prescriptions")
-              .select("file_path, prescribing_doctor_id")
+              .select("file_path, prescribing_doctor_id, duration_days")
               .eq("id", treatment.prescription_id)
               .maybeSingle()
             
@@ -83,6 +84,27 @@ const Treatments = () => {
                 .maybeSingle()
               prescribingDoctor = doctorData
             }
+          }
+
+          // Calculate QSP in days
+          let qspDays: number | null = null
+          if (treatment.prescription_id) {
+            const { data: prescriptionData } = await supabase
+              .from("prescriptions")
+              .select("duration_days")
+              .eq("id", treatment.prescription_id)
+              .maybeSingle()
+            
+            if (prescriptionData?.duration_days) {
+              qspDays = prescriptionData.duration_days
+            }
+          }
+          
+          // If no prescription QSP, calculate from existing dates
+          if (!qspDays && treatment.start_date && treatment.end_date) {
+            const startDate = new Date(treatment.start_date)
+            const endDate = new Date(treatment.end_date)
+            qspDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
           }
 
           // Load next pharmacy visit
@@ -169,7 +191,8 @@ const Treatments = () => {
             medications: medsWithPathology,
             prescribing_doctor: prescribingDoctor,
             prescription: prescription,
-            next_pharmacy_visit: pharmacyVisits && pharmacyVisits.length > 0 ? pharmacyVisits[0] : null
+            next_pharmacy_visit: pharmacyVisits && pharmacyVisits.length > 0 ? pharmacyVisits[0] : null,
+            qsp_days: qspDays
           }
         })
       )
@@ -285,7 +308,12 @@ const Treatments = () => {
                   <div className="pt-2 border-t border-border space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      <span>Depuis le {new Date(treatment.start_date).toLocaleDateString("fr-FR")}</span>
+                      <span>
+                        Depuis le {new Date(treatment.start_date).toLocaleDateString("fr-FR")}
+                        {treatment.qsp_days && (
+                          <> • QSP : {Math.round(treatment.qsp_days / 30)} mois</>
+                        )}
+                      </span>
                     </div>
                     {treatment.prescribing_doctor && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
