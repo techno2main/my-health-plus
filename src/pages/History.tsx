@@ -38,7 +38,8 @@ interface GroupedIntakes {
     dosage: string;
     status: string;
     takenAt?: string;
-    scheduledTime?: string;
+    scheduledTimestamp?: string;
+    takenAtTimestamp?: string;
     treatment: string;
     treatmentId: string;
   }[];
@@ -51,7 +52,7 @@ export default function History() {
   const [loading, setLoading] = useState(true);
   const [historyData, setHistoryData] = useState<GroupedIntakes[]>([]);
   const [stats, setStats] = useState({
-    taken: 0,
+    takenOnTime: 0,
     skipped: 0,
     lateIntakes: 0,
     adherence7Days: 0,
@@ -115,7 +116,8 @@ export default function History() {
           dosage: dosage,
           status: intake.status,
           takenAt: intake.taken_at ? format(parseISO(intake.taken_at), 'HH:mm') : undefined,
-          scheduledTime: intake.scheduled_time,
+          scheduledTimestamp: intake.scheduled_time,
+          takenAtTimestamp: intake.taken_at,
           treatment: intake.medications?.treatments?.name || 'Traitement inconnu',
           treatmentId: intake.medications?.treatment_id || ''
         });
@@ -142,18 +144,23 @@ export default function History() {
         (i.status === 'taken' || i.status === 'skipped')
       );
 
-      const taken = (intakesData || []).filter(i => i.status === 'taken').length;
+      // Calculer les prises à l'heure (≤1min de retard)
+      const takenOnTime = (intakesData || []).filter(i => {
+        if (i.status !== 'taken' || !i.taken_at) return false;
+        const scheduledTime = new Date(i.scheduled_time);
+        const takenTime = new Date(i.taken_at);
+        const differenceMinutes = (takenTime.getTime() - scheduledTime.getTime()) / (1000 * 60);
+        return differenceMinutes <= 1;
+      }).length;
+
       const skipped = (intakesData || []).filter(i => i.status === 'skipped').length;
       
       // Count late intakes (taken but more than 1 minute late)
       const lateIntakes = (intakesData || []).filter(i => {
         if (i.status !== 'taken' || !i.taken_at) return false;
-        
         const scheduledTime = new Date(i.scheduled_time);
         const takenTime = new Date(i.taken_at);
-        const differenceMs = takenTime.getTime() - scheduledTime.getTime();
-        const differenceMinutes = differenceMs / (1000 * 60);
-        
+        const differenceMinutes = (takenTime.getTime() - scheduledTime.getTime()) / (1000 * 60);
         return differenceMinutes > 1;
       }).length;
       
@@ -164,7 +171,7 @@ export default function History() {
       const total30 = intakes30Days.length;
       
       setStats({
-        taken,
+        takenOnTime,
         skipped,
         lateIntakes,
         adherence7Days: total7 > 0 ? Math.round((taken7 / total7) * 100) : 0,
@@ -193,19 +200,31 @@ export default function History() {
     }
   };
 
-  const getStatusBadge = (status: string, scheduledTime?: string, takenAt?: string) => {
-    if (status === "taken" && scheduledTime && takenAt) {
-      const scheduled = new Date(scheduledTime);
-      const taken = new Date(takenAt);
-      const differenceMs = taken.getTime() - scheduled.getTime();
-      const differenceMinutes = differenceMs / (1000 * 60);
+  const getStatusBadge = (status: string, scheduledTimestamp?: string, takenAtTimestamp?: string) => {
+    if (status === "taken" && scheduledTimestamp && takenAtTimestamp) {
+      const scheduled = new Date(scheduledTimestamp);
+      const taken = new Date(takenAtTimestamp);
+      const differenceMinutes = (taken.getTime() - scheduled.getTime()) / (1000 * 60);
       
+      // À l'heure (≤1min)
       if (differenceMinutes <= 1) {
         return <Badge variant="success">Pris</Badge>;
-      } else if (differenceMinutes <= 30) {
-        return <Badge variant="warning">Pris</Badge>;
-      } else {
-        return <Badge variant="danger">Pris</Badge>;
+      }
+      // Léger retard (1-15min)
+      else if (differenceMinutes <= 15) {
+        return <Badge className="bg-yellow-500/20 text-yellow-600 border-yellow-500/30">Pris</Badge>;
+      }
+      // Retard modéré (15-30min)
+      else if (differenceMinutes <= 30) {
+        return <Badge className="bg-yellow-600/20 text-yellow-700 border-yellow-600/30">Pris</Badge>;
+      }
+      // Retard important (30-60min)
+      else if (differenceMinutes <= 60) {
+        return <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30">Pris</Badge>;
+      }
+      // Très grand retard (>60min)
+      else {
+        return <Badge className="bg-orange-600/20 text-orange-700 border-orange-600/30">Pris</Badge>;
       }
     }
     
@@ -213,7 +232,7 @@ export default function History() {
       case "taken":
         return <Badge variant="success">Pris</Badge>;
       case "skipped":
-        return <Badge variant="danger">Oublié</Badge>;
+        return <Badge variant="danger">Manqué</Badge>;
       case "pending":
         return <Badge variant="warning">À venir</Badge>;
       default:
@@ -301,7 +320,7 @@ export default function History() {
                                     </p>
                                   </div>
                                 </div>
-                                {getStatusBadge(intake.status, intake.scheduledTime, intake.takenAt)}
+                                {getStatusBadge(intake.status, intake.scheduledTimestamp, intake.takenAtTimestamp)}
                               </div>
                             ))}
                           </div>
@@ -354,13 +373,13 @@ export default function History() {
                   onClick={() => setActiveTab("history")}
                 >
                   <p className="text-sm text-muted-foreground mb-1">Prises à l'heure</p>
-                  <p className="text-3xl font-bold text-success">{stats.taken}</p>
+                  <p className="text-3xl font-bold text-success">{stats.takenOnTime}</p>
                 </div>
                 <div 
                   className="p-4 rounded-lg bg-danger/10 cursor-pointer hover:bg-danger/20 transition-colors" 
                   onClick={() => setActiveTab("history")}
                 >
-                  <p className="text-sm text-muted-foreground mb-1">Prises oubliées</p>
+                  <p className="text-sm text-muted-foreground mb-1">Prises manquées</p>
                   <p className="text-3xl font-bold text-danger">{stats.skipped}</p>
                 </div>
                 <div 
