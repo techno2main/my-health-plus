@@ -304,7 +304,7 @@ const Index = () => {
               </div>
               <div>
                 <p className="text-2xl font-bold">{adherenceStats.adherence7Days}%</p>
-                <p className="text-xs text-muted-foreground">Observance 7j</p>
+                <p className="text-xs text-muted-foreground">Observance</p>
               </div>
             </div>
           </Card>

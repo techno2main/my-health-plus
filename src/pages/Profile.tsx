@@ -367,7 +367,7 @@ export default function Profile() {
                     <Label className="text-muted-foreground">Date de naissance</Label>
                     <p className="font-medium mt-1">{dateOfBirth ? format(dateOfBirth, "dd/MM/yyyy") : "-"}</p>
                   </div>
-                  <div className="flex items-end justify-end">
+                  <div className="flex items-end justify-start">
                     {age !== null && (
                       <Badge variant="secondary" className="text-sm px-3 py-1">
                         {age} ans
