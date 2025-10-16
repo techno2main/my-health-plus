@@ -308,13 +308,13 @@ const Treatments = () => {
                     {treatment.next_pharmacy_visit && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <MapPin className="h-3 w-3" />
-                        <span>Visite pharmacie ⚕️ : {new Date(treatment.next_pharmacy_visit.visit_date).toLocaleDateString("fr-FR")}</span>
+                        <span>Prochain rechargement 🧪 : {new Date(treatment.next_pharmacy_visit.visit_date).toLocaleDateString("fr-FR")}</span>
                       </div>
                     )}
                     {treatment.end_date && (
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <User className="h-3 w-3" />
-                        <span>Prochaine visite médecin 🩺 : {new Date(treatment.end_date).toLocaleDateString("fr-FR")}</span>
+                        <span>Prochaine visite 🩺 : {new Date(treatment.end_date).toLocaleDateString("fr-FR")}</span>
                       </div>
                     )}
                   </div>
