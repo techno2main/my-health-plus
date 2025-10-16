@@ -73,7 +73,7 @@ export default function Prescriptions() {
           // Calculer la date d'expiration
           const prescDate = new Date(presc.prescription_date);
           const expiryDate = new Date(prescDate);
-          expiryDate.setDate(expiryDate.getDate() + presc.duration_days - 1);
+          expiryDate.setDate(expiryDate.getDate() + presc.duration_days);
 
           // Déterminer le statut
           const now = new Date();

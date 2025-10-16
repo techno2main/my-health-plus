@@ -110,7 +110,7 @@ export default function TreatmentEdit() {
       if (durationDays && treatmentData.start_date) {
         const startDate = new Date(treatmentData.start_date);
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + durationDays - 1);
+        endDate.setDate(endDate.getDate() + durationDays);
         calculatedEndDate = endDate.toISOString().split('T')[0];
       }
       
@@ -176,7 +176,7 @@ export default function TreatmentEdit() {
       if (qspDays && newStartDate) {
         const startDate = new Date(newStartDate);
         const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + qspDays - 1);
+        endDate.setDate(endDate.getDate() + qspDays);
         updated.endDate = endDate.toISOString().split('T')[0];
       }
       
