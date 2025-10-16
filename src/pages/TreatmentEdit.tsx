@@ -287,6 +287,11 @@ export default function TreatmentEdit() {
                   onChange={(e) => setFormData({...formData, name: e.target.value})}
                   placeholder="Ex: Traitement Diabète"
                 />
+                {qspDays && (
+                  <p className="text-xs text-muted-foreground">
+                    QSP : {qspDays} jours
+                  </p>
+                )}
               </div>
               <div className="pb-[5px]">
                 <Switch 
