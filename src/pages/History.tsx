@@ -216,13 +216,13 @@ export default function History() {
       if (differenceMinutes <= 30) {
         return <Badge variant="success">Pris</Badge>;
       }
-      // Jaune : entre 30min et 1h après
+      // Jaune pâle : entre 30min et 1h après
       else if (differenceMinutes <= 60) {
-        return <Badge variant="warning">Pris</Badge>;
+        return <Badge className="bg-yellow-100 text-foreground border-yellow-200 dark:bg-yellow-950 dark:border-yellow-900">Pris</Badge>;
       }
-      // Orange : plus d'1h après
+      // Jaune foncé : plus d'1h après
       else {
-        return <Badge className="bg-orange-500/20 text-orange-600 border-orange-500/30">Pris</Badge>;
+        return <Badge className="bg-yellow-200 text-foreground border-yellow-300 dark:bg-yellow-900 dark:border-yellow-800">Pris</Badge>;
       }
     }
     
