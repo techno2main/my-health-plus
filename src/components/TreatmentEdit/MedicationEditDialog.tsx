@@ -193,7 +193,7 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
             </div>
 
             <div className="space-y-2">
-              <Label>Horaires de prise</Label>
+              <Label>{times.length === 1 ? "Horaire de prise" : "Horaires de prise"}</Label>
               <div className="flex gap-2">
                 <Input 
                   type="time"

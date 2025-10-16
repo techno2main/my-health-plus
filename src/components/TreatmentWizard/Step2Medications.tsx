@@ -195,7 +195,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
               </div>
 
               <div className="space-y-2">
-                <Label>Horaires de prise</Label>
+                <Label>{med.times.length === 1 ? "Horaire de prise" : "Horaires de prise"}</Label>
                 <div className="grid gap-2">
                   {med.times.map((time, timeIndex) => (
                     <Input
