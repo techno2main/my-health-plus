@@ -308,10 +308,10 @@ const Treatments = () => {
                   <div className="pt-2 border-t border-border space-y-1">
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      <span>
-                        Depuis le {new Date(treatment.start_date).toLocaleDateString("fr-FR")}
+                      <span className="whitespace-nowrap">
+                        Début : {new Date(treatment.start_date).toLocaleDateString("fr-FR")}
                         {treatment.qsp_days && (
-                          <> • QSP : {Math.round(treatment.qsp_days / 30)} mois</>
+                          <span className="text-[10px]"> (QSP {Math.round(treatment.qsp_days / 30)} mois)</span>
                         )}
                         {treatment.end_date && (
                           <> • Fin : {new Date(treatment.end_date).toLocaleDateString("fr-FR")}</>
