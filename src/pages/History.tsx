@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Clock, Calendar as CalendarIcon } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Calendar as CalendarIcon, List, ClockAlert } from "lucide-react";
 import { format, parseISO, startOfDay, isToday } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
@@ -217,45 +217,53 @@ export default function History() {
                   variant={filterStatus === "all" ? "default" : "outline"} 
                   size="sm"
                   onClick={() => setFilterStatus("all")}
-                  className="h-8 text-xs px-2 relative"
+                  className="h-10 w-full relative"
                 >
-                  Tous
-                  <span className="ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground">
-                    {stats.takenOnTime + stats.lateIntakes + stats.skipped}
-                  </span>
+                  <List className="h-5 w-5" />
+                  {(stats.takenOnTime + stats.lateIntakes + stats.skipped) > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full bg-primary text-primary-foreground border-2 border-background">
+                      {stats.takenOnTime + stats.lateIntakes + stats.skipped}
+                    </span>
+                  )}
                 </Button>
                 <Button 
                   variant={filterStatus === "ontime" ? "default" : "outline"} 
                   size="sm"
                   onClick={() => setFilterStatus("ontime")}
-                  className={`h-8 text-xs px-2 relative ${filterStatus === "ontime" ? "" : "border-success/50 text-success hover:bg-success/10"}`}
+                  className={`h-10 w-full relative ${filterStatus === "ontime" ? "" : "border-success/50 text-success hover:bg-success/10"}`}
                 >
-                  À l'heure
-                  <span className={`ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full ${filterStatus === "ontime" ? "bg-primary-foreground text-primary" : "bg-success text-white"}`}>
-                    {stats.takenOnTime}
-                  </span>
+                  <CheckCircle2 className="h-5 w-5" />
+                  {stats.takenOnTime > 0 && (
+                    <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full border-2 border-background ${filterStatus === "ontime" ? "bg-primary-foreground text-primary" : "bg-success text-white"}`}>
+                      {stats.takenOnTime}
+                    </span>
+                  )}
                 </Button>
                 <Button 
                   variant={filterStatus === "late" ? "default" : "outline"} 
                   size="sm"
                   onClick={() => setFilterStatus("late")}
-                  className={`h-8 text-xs px-2 relative ${filterStatus === "late" ? "" : "border-warning/50 text-warning hover:bg-warning/10"}`}
+                  className={`h-10 w-full relative ${filterStatus === "late" ? "" : "border-warning/50 text-warning hover:bg-warning/10"}`}
                 >
-                  Retard
-                  <span className={`ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full ${filterStatus === "late" ? "bg-primary-foreground text-primary" : "bg-warning text-white"}`}>
-                    {stats.lateIntakes}
-                  </span>
+                  <ClockAlert className="h-5 w-5" />
+                  {stats.lateIntakes > 0 && (
+                    <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full border-2 border-background ${filterStatus === "late" ? "bg-primary-foreground text-primary" : "bg-warning text-white"}`}>
+                      {stats.lateIntakes}
+                    </span>
+                  )}
                 </Button>
                 <Button 
                   variant={filterStatus === "missed" ? "default" : "outline"} 
                   size="sm"
                   onClick={() => setFilterStatus("missed")}
-                  className={`h-8 text-xs px-2 relative ${filterStatus === "missed" ? "" : "border-danger/50 text-danger hover:bg-danger/10"}`}
+                  className={`h-10 w-full relative ${filterStatus === "missed" ? "" : "border-danger/50 text-danger hover:bg-danger/10"}`}
                 >
-                  Manquées
-                  <span className={`ml-1.5 inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full ${filterStatus === "missed" ? "bg-primary-foreground text-primary" : "bg-danger text-white"}`}>
-                    {stats.skipped}
-                  </span>
+                  <XCircle className="h-5 w-5" />
+                  {stats.skipped > 0 && (
+                    <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 text-[10px] font-bold rounded-full border-2 border-background ${filterStatus === "missed" ? "bg-primary-foreground text-primary" : "bg-danger text-white"}`}>
+                      {stats.skipped}
+                    </span>
+                  )}
                 </Button>
               </div>
             </Card>
