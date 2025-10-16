@@ -11,6 +11,7 @@ import { format, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+
 interface DayIntake {
   date: Date;
   total: number;
@@ -18,6 +19,7 @@ interface DayIntake {
   missed: number;
   upcoming: number;
 }
+
 interface IntakeDetail {
   id: string;
   medication: string;
@@ -27,6 +29,7 @@ interface IntakeDetail {
   status: 'taken' | 'missed' | 'upcoming';
   treatment: string;
 }
+
 const Calendar = () => {
   const navigate = useNavigate();
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -37,12 +40,15 @@ const Calendar = () => {
   const [nextPharmacyVisit, setNextPharmacyVisit] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [treatmentStartDate, setTreatmentStartDate] = useState<Date | null>(null);
+
   useEffect(() => {
     loadMonthData();
   }, [currentMonth]);
+
   useEffect(() => {
     loadDayDetails();
   }, [selectedDate]);
+
   const loadMonthData = async () => {
     try {
       setLoading(true);
@@ -50,26 +56,35 @@ const Calendar = () => {
       const monthEnd = endOfMonth(currentMonth);
 
       // Load active treatment start date
-      const {
-        data: activeTreatment
-      } = await supabase.from("treatments").select("start_date").eq("is_active", true).order("start_date", {
-        ascending: true
-      }).limit(1).maybeSingle();
+      const { data: activeTreatment } = await supabase
+        .from("treatments")
+        .select("start_date")
+        .eq("is_active", true)
+        .order("start_date", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
       if (activeTreatment?.start_date) {
         setTreatmentStartDate(new Date(activeTreatment.start_date));
       }
 
       // Load intakes for the month
-      const {
-        data: intakes
-      } = await supabase.from("medication_intakes").select("*").gte("scheduled_time", monthStart.toISOString()).lte("scheduled_time", monthEnd.toISOString());
+      const { data: intakes } = await supabase
+        .from("medication_intakes")
+        .select("*")
+        .gte("scheduled_time", monthStart.toISOString())
+        .lte("scheduled_time", monthEnd.toISOString());
 
       // Process day by day using REAL intakes only
       const daysData: DayIntake[] = [];
       const currentDate = new Date(monthStart);
       const now = new Date();
+
       while (currentDate <= monthEnd) {
-        const dayIntakes = intakes?.filter((i: any) => isSameDay(new Date(i.scheduled_time), currentDate)) || [];
+        const dayIntakes = intakes?.filter((i: any) =>
+          isSameDay(new Date(i.scheduled_time), currentDate)
+        ) || [];
+
         if (dayIntakes.length > 0) {
           const dayTotal = dayIntakes.length;
           const dayTaken = dayIntakes.filter((i: any) => i.status === 'taken').length;
@@ -94,6 +109,7 @@ const Calendar = () => {
             const scheduledTime = new Date(i.scheduled_time);
             return i.status === 'pending' && scheduledTime > now;
           }).length;
+
           daysData.push({
             date: new Date(currentDate),
             total: dayTotal,
@@ -102,24 +118,30 @@ const Calendar = () => {
             upcoming: dayUpcoming
           });
         }
+
         currentDate.setDate(currentDate.getDate() + 1);
       }
+
       setMonthIntakes(daysData);
 
       // Calculate observance rate for the month
       const totalPast = daysData.reduce((sum, day) => sum + day.taken + day.missed, 0);
       const totalTaken = daysData.reduce((sum, day) => sum + day.taken, 0);
-      setObservanceRate(totalPast > 0 ? Math.round(totalTaken / totalPast * 100) : 100);
+      setObservanceRate(totalPast > 0 ? Math.round((totalTaken / totalPast) * 100) : 100);
 
       // Load next pharmacy visit
-      const {
-        data: visits
-      } = await supabase.from("pharmacy_visits").select("visit_date").gte("visit_date", format(now, "yyyy-MM-dd")).eq("is_completed", false).order("visit_date", {
-        ascending: true
-      }).limit(1);
+      const { data: visits } = await supabase
+        .from("pharmacy_visits")
+        .select("visit_date")
+        .gte("visit_date", format(now, "yyyy-MM-dd"))
+        .eq("is_completed", false)
+        .order("visit_date", { ascending: true })
+        .limit(1);
+
       if (visits && visits.length > 0) {
         setNextPharmacyVisit(new Date(visits[0].visit_date));
       }
+
     } catch (error) {
       console.error("Error loading month data:", error);
       toast.error("Erreur lors du chargement du calendrier");
@@ -127,6 +149,7 @@ const Calendar = () => {
       setLoading(false);
     }
   };
+
   const loadDayDetails = async () => {
     try {
       // Check if selected date is before treatment start (compare only dates, not times)
@@ -135,6 +158,7 @@ const Calendar = () => {
         selectedDateOnly.setHours(0, 0, 0, 0);
         const treatmentStartDateOnly = new Date(treatmentStartDate);
         treatmentStartDateOnly.setHours(0, 0, 0, 0);
+
         if (selectedDateOnly < treatmentStartDateOnly) {
           setDayDetails([]);
           return;
@@ -142,9 +166,9 @@ const Calendar = () => {
       }
 
       // Get medications from active treatments
-      const {
-        data: medications
-      } = await supabase.from("medications").select(`
+      const { data: medications } = await supabase
+        .from("medications")
+        .select(`
           id,
           name,
           times,
@@ -152,7 +176,8 @@ const Calendar = () => {
           catalog_id,
           treatments!inner(name, is_active),
           medication_catalog(dosage_amount, default_dosage)
-        `).eq("treatments.is_active", true);
+        `)
+        .eq("treatments.is_active", true);
 
       // Get start and end of selected day
       const dayStart = new Date(selectedDate);
@@ -161,14 +186,19 @@ const Calendar = () => {
       dayEnd.setHours(23, 59, 59, 999);
 
       // Get ALL medications (including from inactive treatments) to match intakes
-      const {
-        data: allMedications
-      } = await supabase.from("medications").select("id, name");
-      const {
-        data: intakes
-      } = await supabase.from("medication_intakes").select("*").gte("scheduled_time", dayStart.toISOString()).lte("scheduled_time", dayEnd.toISOString());
+      const { data: allMedications } = await supabase
+        .from("medications")
+        .select("id, name");
+
+      const { data: intakes } = await supabase
+        .from("medication_intakes")
+        .select("*")
+        .gte("scheduled_time", dayStart.toISOString())
+        .lte("scheduled_time", dayEnd.toISOString());
+
       const details: IntakeDetail[] = [];
       const now = new Date();
+
       medications?.forEach((med: any) => {
         med.times?.forEach((time: string) => {
           const [hours, minutes] = time.split(':');
@@ -181,6 +211,7 @@ const Calendar = () => {
             const intakeMed = allMedications?.find(m => m.id === i.medication_id);
             return intakeMed?.name === med.name && intakeTime === time;
           });
+
           let status: 'taken' | 'missed' | 'upcoming' = 'upcoming';
           if (intake?.status === 'taken') {
             status = 'taken';
@@ -191,7 +222,10 @@ const Calendar = () => {
             // For today, if time passed but not taken, still show as upcoming
             status = 'upcoming';
           }
-          const catalogDosage = med.medication_catalog?.dosage_amount || med.medication_catalog?.default_dosage || "";
+
+          const catalogDosage = med.medication_catalog?.dosage_amount || 
+                                med.medication_catalog?.default_dosage || "";
+
           details.push({
             id: intake?.id || `${med.id}-${time}`,
             medication: med.name,
@@ -203,23 +237,29 @@ const Calendar = () => {
           });
         });
       });
+
       details.sort((a, b) => a.time.localeCompare(b.time));
       setDayDetails(details);
+
     } catch (error) {
       console.error("Error loading day details:", error);
     }
   };
+
   const getDayIntake = (date: Date) => {
     return monthIntakes.find(intake => isSameDay(intake.date, date));
   };
+
   const getDayIndicator = (date: Date) => {
     const dayData = getDayIntake(date);
     if (!dayData || dayData.total === 0) return null;
+
     const now = new Date();
     const dateOnly = new Date(date);
     dateOnly.setHours(0, 0, 0, 0);
     const nowDateOnly = new Date(now);
     nowDateOnly.setHours(0, 0, 0, 0);
+
     const isPastDay = dateOnly < nowDateOnly;
     const isToday = dateOnly.getTime() === nowDateOnly.getTime();
 
@@ -238,6 +278,7 @@ const Calendar = () => {
     // No indicator for partially completed days or today with pending items
     return null;
   };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'taken':
@@ -250,6 +291,7 @@ const Calendar = () => {
         return null;
     }
   };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'taken':
@@ -262,9 +304,14 @@ const Calendar = () => {
         return null;
     }
   };
-  return <AppLayout>
+
+  return (
+    <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
-        <PageHeader title="Calendrier" subtitle="Suivi détaillé des prises" />
+        <PageHeader 
+          title="Calendrier" 
+          subtitle="Suivi détaillé des prises"
+        />
 
         {/* Stats Overview */}
         <div className="space-y-4">
@@ -302,11 +349,13 @@ const Calendar = () => {
                 <CalendarIcon className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-medium">Prochain rechargement en Pharmacie</p>
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  Prochain rechargement <span className="text-white">⚕️</span>
+                </p>
                 <p className="text-xs text-muted-foreground">
-                  {nextPharmacyVisit ? format(nextPharmacyVisit, "d MMMM yyyy", {
-                  locale: fr
-                }) : "Aucun planifié"}
+                  {nextPharmacyVisit 
+                    ? format(nextPharmacyVisit, "d MMMM yyyy", { locale: fr }) 
+                    : "Aucun planifié"}
                 </p>
               </div>
             </div>
@@ -320,43 +369,65 @@ const Calendar = () => {
               <div className="flex items-start justify-between">
                 <div>
                   <h2 className="text-xl font-bold">
-                    {format(currentMonth, "yyyy", {
-                    locale: fr
-                  })}
+                    {format(currentMonth, "yyyy", { locale: fr })}
                   </h2>
                   <p className="text-sm text-muted-foreground">
-                    {format(currentMonth, "MMMM", {
-                    locale: fr
-                  })}
+                    {format(currentMonth, "MMMM", { locale: fr })}
                   </p>
                 </div>
                 <div className="flex gap-1.5">
-                  <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))} className="h-8 w-8 p-0">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                    className="h-8 w-8 p-0"
+                  >
                     ←
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())} className="h-8 px-2 text-xs">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentMonth(new Date())}
+                    className="h-8 px-2 text-xs"
+                  >
                     Aujourd'hui
                   </Button>
-                  <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))} className="h-8 w-8 p-0">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                    className="h-8 w-8 p-0"
+                  >
                     →
                   </Button>
                 </div>
               </div>
 
-              <CalendarComponent mode="single" selected={selectedDate} onSelect={date => date && setSelectedDate(date)} month={currentMonth} onMonthChange={setCurrentMonth} locale={fr} className="rounded-md border" modifiers={{
-              booked: date => !!getDayIntake(date),
-              today: date => isSameDay(date, new Date())
-            }} modifiersClassNames={{
-              booked: "font-semibold",
-              today: "bg-primary/20 text-primary font-bold"
-            }} components={{
-              DayContent: ({
-                date
-              }) => <div className="relative w-full h-full flex items-center justify-center">
+              <CalendarComponent
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                month={currentMonth}
+                onMonthChange={setCurrentMonth}
+                locale={fr}
+                className="rounded-md border"
+                modifiers={{
+                  booked: (date) => !!getDayIntake(date),
+                  today: (date) => isSameDay(date, new Date())
+                }}
+                modifiersClassNames={{
+                  booked: "font-semibold",
+                  today: "bg-primary/20 text-primary font-bold"
+                }}
+                components={{
+                  DayContent: ({ date }) => (
+                    <div className="relative w-full h-full flex items-center justify-center">
                       {format(date, "d")}
                       {getDayIndicator(date)}
                     </div>
-            }} />
+                  )
+                }}
+              />
 
               {/* Legend */}
               <div className="flex flex-wrap gap-4 text-xs">
@@ -379,43 +450,57 @@ const Calendar = () => {
           {/* Day Details */}
           <Card className="p-6 surface-elevated">
             <h3 className="text-lg font-semibold mb-4">
-              {format(selectedDate, "d MMMM yyyy", {
-              locale: fr
-            })}
+              {format(selectedDate, "d MMMM yyyy", { locale: fr })}
             </h3>
             
             {treatmentStartDate && (() => {
-            const selectedDateOnly = new Date(selectedDate);
-            selectedDateOnly.setHours(0, 0, 0, 0);
-            const treatmentStartDateOnly = new Date(treatmentStartDate);
-            treatmentStartDateOnly.setHours(0, 0, 0, 0);
-            return selectedDateOnly < treatmentStartDateOnly;
-          })() ? <p className="text-sm text-muted-foreground text-center py-8">
+              const selectedDateOnly = new Date(selectedDate);
+              selectedDateOnly.setHours(0, 0, 0, 0);
+              const treatmentStartDateOnly = new Date(treatmentStartDate);
+              treatmentStartDateOnly.setHours(0, 0, 0, 0);
+              return selectedDateOnly < treatmentStartDateOnly;
+            })() ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
                 Aucun traitement à cette date
-              </p> : dayDetails.length === 0 ? <p className="text-sm text-muted-foreground text-center py-8">
+              </p>
+            ) : dayDetails.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">
                 Aucune prise planifiée
-              </p> : <div className="space-y-3">
-                {dayDetails.map(detail => <div key={detail.id} className="p-3 rounded-lg border bg-card hover:shadow-sm transition-shadow">
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {dayDetails.map((detail) => (
+                  <div key={detail.id} className="p-3 rounded-lg border bg-card hover:shadow-sm transition-shadow">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex items-center gap-2">
                         {getStatusIcon(detail.status)}
                         <span className="text-sm font-medium">
                           {detail.time}
-                          {detail.takenAt && detail.status === 'taken' && <span className="text-xs text-muted-foreground ml-1">({detail.takenAt})</span>}
+                          {detail.takenAt && detail.status === 'taken' && (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              ({detail.takenAt})
+                            </span>
+                          )}
                         </span>
                       </div>
                       {getStatusBadge(detail.status)}
                     </div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium">{detail.medication}</p>
-                      {detail.dosage && <span className="text-xs text-muted-foreground">{detail.dosage}</span>}
+                      {detail.dosage && (
+                        <span className="text-xs text-muted-foreground">{detail.dosage}</span>
+                      )}
                     </div>
-                    <p className="text-xs text-muted-foreground">{detail.treatment}</p>
-                  </div>)}
-              </div>}
+                    <p className="text-xs text-muted-foreground mt-1">{detail.treatment}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </Card>
         </div>
       </div>
-    </AppLayout>;
+    </AppLayout>
+  );
 };
+
 export default Calendar;
