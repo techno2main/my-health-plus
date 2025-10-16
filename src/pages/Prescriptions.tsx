@@ -373,7 +373,12 @@ export default function Prescriptions() {
                               </span>
                             </div>
                             <div className="text-right space-y-0.5">
-                              {visit.isCompleted && visit.actualDate ? (
+                              {visit.visitNumber === 1 ? (
+                                // Pour le rechargement initial, afficher uniquement la date (sans "Prévu:")
+                                <p className="text-sm font-medium">
+                                  {new Date(visit.actualDate || visit.date).toLocaleDateString('fr-FR')}
+                                </p>
+                              ) : visit.isCompleted && visit.actualDate ? (
                                 <>
                                   <p className="text-sm font-medium">
                                     {new Date(visit.actualDate).toLocaleDateString('fr-FR')}
