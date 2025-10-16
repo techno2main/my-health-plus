@@ -43,6 +43,8 @@ interface GroupedIntakes {
     takenAtTimestamp?: string;
     treatment: string;
     treatmentId: string;
+    treatmentQspDays?: number | null;
+    treatmentEndDate?: string | null;
   }[];
 }
 
@@ -81,13 +83,47 @@ export default function History() {
             catalog_id,
             treatment_id,
             medication_catalog(dosage_amount, default_dosage),
-            treatments(name)
+            treatments(name, start_date, end_date, prescription_id)
           )
         `)
         .order("scheduled_time", { ascending: false })
         .limit(100);
 
       if (error) throw error;
+
+      // Get unique treatment IDs and calculate QSP for each
+      const treatmentIds = [...new Set((intakesData || []).map((i: any) => i.medications?.treatment_id).filter(Boolean))];
+      const treatmentsQspMap = new Map();
+      
+      for (const treatmentId of treatmentIds) {
+        const treatment = (intakesData || []).find((i: any) => i.medications?.treatment_id === treatmentId)?.medications?.treatments;
+        if (treatment) {
+          let qspDays: number | null = null;
+          
+          if (treatment.prescription_id) {
+            const { data: prescriptionData } = await supabase
+              .from("prescriptions")
+              .select("duration_days")
+              .eq("id", treatment.prescription_id)
+              .maybeSingle();
+            
+            if (prescriptionData?.duration_days) {
+              qspDays = prescriptionData.duration_days;
+            }
+          }
+          
+          if (!qspDays && treatment.start_date && treatment.end_date) {
+            const startDate = new Date(treatment.start_date);
+            const endDate = new Date(treatment.end_date);
+            qspDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+          }
+          
+          treatmentsQspMap.set(treatmentId, {
+            qsp_days: qspDays,
+            end_date: treatment.end_date
+          });
+        }
+      }
 
       // Group by date
       const grouped = (intakesData || []).reduce((acc: Record<string, GroupedIntakes>, intake: any) => {
@@ -105,6 +141,9 @@ export default function History() {
                        intake.medications?.medication_catalog?.default_dosage || 
                        "";
         
+        const treatmentId = intake.medications?.treatment_id || '';
+        const treatmentInfo = treatmentsQspMap.get(treatmentId);
+        
         acc[dateKey].intakes.push({
           id: intake.id,
           time: format(parseISO(intake.scheduled_time), 'HH:mm'),
@@ -115,7 +154,9 @@ export default function History() {
           scheduledTimestamp: intake.scheduled_time,
           takenAtTimestamp: intake.taken_at,
           treatment: intake.medications?.treatments?.name || 'Traitement inconnu',
-          treatmentId: intake.medications?.treatment_id || ''
+          treatmentId: treatmentId,
+          treatmentQspDays: treatmentInfo?.qsp_days || null,
+          treatmentEndDate: treatmentInfo?.end_date || null
         });
 
         return acc;
@@ -279,12 +320,14 @@ export default function History() {
                   if (!acc[intake.treatmentId]) {
                     acc[intake.treatmentId] = {
                       treatment: intake.treatment,
+                      qspDays: intake.treatmentQspDays,
+                      endDate: intake.treatmentEndDate,
                       intakes: []
                     };
                   }
                   acc[intake.treatmentId].intakes.push(intake);
                   return acc;
-                }, {} as Record<string, { treatment: string; intakes: typeof day.intakes }>);
+                }, {} as Record<string, { treatment: string; qspDays?: number | null; endDate?: string | null; intakes: typeof day.intakes }>);
 
                 // Filter intakes based on selected filter
                 const shouldShowIntake = (intake: any) => {
@@ -319,11 +362,13 @@ export default function History() {
                   if (filteredIntakes.length > 0) {
                     acc[treatmentId] = {
                       treatment: group.treatment,
+                      qspDays: group.qspDays,
+                      endDate: group.endDate,
                       intakes: filteredIntakes
                     };
                   }
                   return acc;
-                }, {} as Record<string, { treatment: string; intakes: typeof day.intakes }>);
+                }, {} as Record<string, { treatment: string; qspDays?: number | null; endDate?: string | null; intakes: typeof day.intakes }>);
 
                 // Skip this day if no intakes match the filter
                 if (Object.keys(filteredTreatments).length === 0) {
@@ -345,9 +390,15 @@ export default function History() {
                     <div className="space-y-4">
                       {Object.entries(filteredTreatments).map(([treatmentId, group]) => (
                         <div key={treatmentId} className="space-y-2">
-                          <p className="text-xs font-medium text-primary px-1">
-                            {group.treatment}
-                          </p>
+                          <div className="flex items-baseline gap-2 px-1">
+                            <p className="text-xs font-medium text-primary">
+                              {group.treatment}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              {group.qspDays && `QSP : ${Math.round(group.qspDays / 30)} mois`}
+                              {group.endDate && ` • Fin : ${new Date(group.endDate).toLocaleDateString("fr-FR")}`}
+                            </p>
+                          </div>
                           <div className="space-y-2">
                             {group.intakes.map((intake) => (
                               <div key={intake.id} className="flex items-center justify-between p-3 rounded-lg bg-surface">
