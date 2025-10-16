@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { CheckCircle2, XCircle, Clock, AlertCircle, TrendingUp, Calendar as CalendarIcon } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, AlertCircle, TrendingUp, Calendar as CalendarIcon, Stethoscope } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -38,6 +38,7 @@ const Calendar = () => {
   const [dayDetails, setDayDetails] = useState<IntakeDetail[]>([]);
   const [observanceRate, setObservanceRate] = useState(0);
   const [nextPharmacyVisit, setNextPharmacyVisit] = useState<Date | null>(null);
+  const [nextDoctorVisit, setNextDoctorVisit] = useState<Date | null>(null);
   const [loading, setLoading] = useState(true);
   const [treatmentStartDate, setTreatmentStartDate] = useState<Date | null>(null);
 
@@ -55,10 +56,10 @@ const Calendar = () => {
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
 
-      // Load active treatment start date
+      // Load active treatment start date and end date
       const { data: activeTreatment } = await supabase
         .from("treatments")
-        .select("start_date")
+        .select("start_date, end_date")
         .eq("is_active", true)
         .order("start_date", { ascending: true })
         .limit(1)
@@ -66,6 +67,10 @@ const Calendar = () => {
 
       if (activeTreatment?.start_date) {
         setTreatmentStartDate(new Date(activeTreatment.start_date));
+      }
+      
+      if (activeTreatment?.end_date) {
+        setNextDoctorVisit(new Date(activeTreatment.end_date));
       }
 
       // Load intakes for the month
@@ -252,11 +257,32 @@ const Calendar = () => {
 
   const getDayIndicator = (date: Date) => {
     const dayData = getDayIntake(date);
+    
+    // Check for special dates
+    const dateOnly = new Date(date);
+    dateOnly.setHours(0, 0, 0, 0);
+    
+    // Check if it's pharmacy visit
+    if (nextPharmacyVisit) {
+      const pharmacyDate = new Date(nextPharmacyVisit);
+      pharmacyDate.setHours(0, 0, 0, 0);
+      if (dateOnly.getTime() === pharmacyDate.getTime()) {
+        return <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px]">⚕️</div>;
+      }
+    }
+    
+    // Check if it's doctor visit
+    if (nextDoctorVisit) {
+      const doctorDate = new Date(nextDoctorVisit);
+      doctorDate.setHours(0, 0, 0, 0);
+      if (dateOnly.getTime() === doctorDate.getTime()) {
+        return <div className="absolute bottom-1 left-1/2 -translate-x-1/2 text-[10px]">🩺</div>;
+      }
+    }
+    
     if (!dayData || dayData.total === 0) return null;
 
     const now = new Date();
-    const dateOnly = new Date(date);
-    dateOnly.setHours(0, 0, 0, 0);
     const nowDateOnly = new Date(now);
     nowDateOnly.setHours(0, 0, 0, 0);
 
@@ -360,6 +386,24 @@ const Calendar = () => {
               </div>
             </div>
           </Card>
+
+          <Card className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-success/10">
+                <Stethoscope className="h-5 w-5 text-success" />
+              </div>
+              <div>
+                <p className="text-sm font-medium flex items-center gap-1.5">
+                  Prochaine visite <span className="text-white">🩺</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {nextDoctorVisit 
+                    ? format(nextDoctorVisit, "d MMMM yyyy", { locale: fr }) 
+                    : "Aucune planifiée"}
+                </p>
+              </div>
+            </div>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr] gap-6">
@@ -442,6 +486,14 @@ const Calendar = () => {
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-primary" />
                   <span className="text-muted-foreground">Prochaines</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>⚕️</span>
+                  <span className="text-muted-foreground">Pharmacie</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span>🩺</span>
+                  <span className="text-muted-foreground">Visite</span>
                 </div>
               </div>
             </div>
