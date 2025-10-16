@@ -187,6 +187,11 @@ export default function History() {
     }
   };
 
+  const handleFilterClick = (filter: string) => {
+    setFilterStatus(filter);
+    setActiveTab("history");
+    setSearchParams({ tab: "history" });
+  };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -444,21 +449,21 @@ export default function History() {
               <div className="grid grid-cols-2 gap-4">
                 <div 
                   className="p-4 rounded-lg bg-success/10 cursor-pointer hover:bg-success/20 transition-colors" 
-                  onClick={() => setActiveTab("history")}
+                  onClick={() => handleFilterClick("ontime")}
                 >
                   <p className="text-sm text-muted-foreground mb-1">Prises à l'heure</p>
                   <p className="text-3xl font-bold text-success">{stats.takenOnTime}</p>
                 </div>
                 <div 
                   className="p-4 rounded-lg bg-danger/10 cursor-pointer hover:bg-danger/20 transition-colors" 
-                  onClick={() => setActiveTab("history")}
+                  onClick={() => handleFilterClick("missed")}
                 >
                   <p className="text-sm text-muted-foreground mb-1">Prises manquées</p>
                   <p className="text-3xl font-bold text-danger">{stats.skipped}</p>
                 </div>
                 <div 
                   className="p-4 rounded-lg bg-warning/10 cursor-pointer hover:bg-warning/20 transition-colors col-span-2" 
-                  onClick={() => setActiveTab("history")}
+                  onClick={() => handleFilterClick("late")}
                 >
                   <p className="text-sm text-muted-foreground mb-1">Prises en retard</p>
                   <p className="text-3xl font-bold text-warning">{stats.lateIntakes}</p>
