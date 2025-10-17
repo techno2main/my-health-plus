@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { useAdherenceStats } from "@/hooks/useAdherenceStats"
+import { formatToFrenchTime, convertFrenchToUTC } from "../lib/dateUtils"
 
 interface UpcomingIntake {
   id: string
@@ -130,7 +131,7 @@ const Index = () => {
         (takenIntakes || []).map((intake: any) => {
           const scheduledDate = new Date(intake.scheduled_time)
           const date = format(scheduledDate, "yyyy-MM-dd")
-          const time = format(scheduledDate, "HH:mm")
+          const time = formatToFrenchTime(intake.scheduled_time, "HH:mm")
           return `${intake.medication_id}-${date}-${time}`
         })
       )
@@ -244,7 +245,7 @@ const Index = () => {
         .insert({
           medication_id: intake.medicationId,
           scheduled_time: intake.date.toISOString(),
-          taken_at: new Date().toISOString(),
+          taken_at: convertFrenchToUTC(new Date()).toISOString(),
           status: 'taken'
         })
 

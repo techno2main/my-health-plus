@@ -8,7 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Clock, Calendar as CalendarIcon, List, ClockAlert } from "lucide-react";
 import { format, parseISO, startOfDay, isToday } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr } from 'date-fns/locale';
+import { formatToFrenchTime } from '../lib/dateUtils';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAdherenceStats } from "@/hooks/useAdherenceStats";
@@ -146,11 +147,11 @@ export default function History() {
         
         acc[dateKey].intakes.push({
           id: intake.id,
-          time: format(parseISO(intake.scheduled_time), 'HH:mm'),
+          time: formatToFrenchTime(intake.scheduled_time, 'HH:mm'),
           medication: intake.medications?.name || 'Médicament inconnu',
           dosage: dosage,
           status: intake.status,
-          takenAt: intake.taken_at ? format(parseISO(intake.taken_at), 'HH:mm') : undefined,
+          takenAt: intake.taken_at ? formatToFrenchTime(intake.taken_at, 'HH:mm') : undefined,
           scheduledTimestamp: intake.scheduled_time,
           takenAtTimestamp: intake.taken_at,
           treatment: intake.medications?.treatments?.name || 'Traitement inconnu',
