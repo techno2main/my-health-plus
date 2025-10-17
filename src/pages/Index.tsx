@@ -2,7 +2,8 @@ import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/Layout/AppLayout"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Clock, Pill, AlertCircle, CheckCircle2 } from "lucide-react"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog"
+import { Clock, Pill, AlertCircle, CheckCircle2, X } from "lucide-react"
 import { format } from "date-fns"
 import { fr } from "date-fns/locale"
 import { useNavigate } from "react-router-dom"
@@ -41,6 +42,9 @@ const Index = () => {
   const [activeTreatmentsCount, setActiveTreatmentsCount] = useState(0)
   const [activeTreatmentName, setActiveTreatmentName] = useState("")
   const [loading, setLoading] = useState(true)
+  // States for confirmation dialog
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false)
+  const [selectedIntake, setSelectedIntake] = useState<UpcomingIntake | null>(null)
   const { stats: adherenceStats } = useAdherenceStats()
 
   useEffect(() => {
@@ -237,14 +241,21 @@ const Index = () => {
     }
   }
 
-  const handleTakeIntake = async (intake: UpcomingIntake) => {
+  const handleTakeIntake = (intake: UpcomingIntake) => {
+    setSelectedIntake(intake)
+    setShowConfirmDialog(true)
+  }
+
+  const confirmTakeIntake = async () => {
+    if (!selectedIntake) return
+
     try {
       // Create intake record
       const { error: intakeError } = await supabase
         .from("medication_intakes")
         .insert({
-          medication_id: intake.medicationId,
-          scheduled_time: intake.date.toISOString(),
+          medication_id: selectedIntake.medicationId,
+          scheduled_time: selectedIntake.date.toISOString(),
           taken_at: convertFrenchToUTC(new Date()).toISOString(),
           status: 'taken'
         })
@@ -255,18 +266,25 @@ const Index = () => {
       const { error: stockError } = await supabase
         .from("medications")
         .update({
-          current_stock: intake.currentStock - 1
+          current_stock: selectedIntake.currentStock - 1
         })
-        .eq("id", intake.medicationId)
+        .eq("id", selectedIntake.medicationId)
 
       if (stockError) throw stockError
 
       toast.success("Prise enregistrée ✓")
+      setShowConfirmDialog(false)
+      setSelectedIntake(null)
       loadDashboardData() // Reload data
     } catch (error) {
       console.error("Error recording intake:", error)
       toast.error("Erreur lors de l'enregistrement")
     }
+  }
+
+  const cancelTakeIntake = () => {
+    setShowConfirmDialog(false)
+    setSelectedIntake(null)
   }
 
   const getStockColor = (stock: number, threshold: number) => {
@@ -542,6 +560,72 @@ const Index = () => {
           </div>
         </section>
       </div>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pill className="h-5 w-5 text-primary" />
+              Confirmer la prise
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground">
+              Voulez-vous confirmer la prise de ce médicament ?
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedIntake && (
+            <div className="space-y-4">
+              <div className="bg-card border rounded-lg p-4 space-y-2">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-lg">{selectedIntake.medication}</h4>
+                  <span className="text-sm font-medium text-muted-foreground">{selectedIntake.dosage}</span>
+                </div>
+                <div className="flex items-center justify-between text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>Prévu à {selectedIntake.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4" />
+                    <span>Maintenant : {format(new Date(), 'HH:mm', { locale: fr })}</span>
+                  </div>
+                </div>
+                {selectedIntake.pathology && (
+                  <p className="text-sm text-muted-foreground">
+                    Traitement : {selectedIntake.pathology}
+                  </p>
+                )}
+                <div className="flex items-center gap-2">
+                  <Pill className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm">
+                    Stock actuel : <span className="font-medium">{selectedIntake.currentStock}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter className="flex flex-row gap-3 sm:gap-2">
+            <Button 
+              variant="outline" 
+              onClick={cancelTakeIntake}
+              className="flex-1"
+            >
+              <X className="h-4 w-4 mr-2" />
+              Annuler
+            </Button>
+            <Button 
+              onClick={confirmTakeIntake}
+              className="flex-1 gradient-primary"
+              disabled={selectedIntake?.currentStock === 0}
+            >
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              Valider
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   )
 }

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus, Trash2, Edit, Search, ArrowLeft } from "lucide-react"
@@ -368,6 +368,12 @@ const MedicationCatalog = () => {
                   {editingMed ? "Modifier" : "Ajouter"}
                 </DialogTitle>
               </div>
+              <DialogDescription className="text-muted-foreground">
+                {editingMed 
+                  ? "Modifiez les informations du médicament dans le référentiel"
+                  : "Ajoutez un nouveau médicament au référentiel"
+                }
+              </DialogDescription>
             </DialogHeader>
             
             <ScrollArea className="flex-1 px-6">

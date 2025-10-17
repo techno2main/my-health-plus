@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { TreatmentFormData, MedicationItem, CatalogMedication } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -168,6 +168,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
                 <div className="space-y-2">
                   <Label>Nombre de prises/jour</Label>
                   <Input
+                    id={`takes-per-day-${index}`}
                     type="number"
                     min="1"
                     value={med.takesPerDay}
@@ -186,6 +187,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
                 <div className="space-y-2">
                   <Label>Unités par prise</Label>
                   <Input
+                    id={`units-per-take-${index}`}
                     type="number"
                     min="1"
                     value={med.unitsPerTake}
@@ -199,7 +201,8 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
                 <div className="grid gap-2">
                   {med.times.map((time, timeIndex) => (
                     <Input
-                      key={timeIndex}
+                      key={`time-${index}-${timeIndex}`}
+                      id={`time-${index}-${timeIndex}`}
                       type="time"
                       value={time}
                       onChange={(e) => updateTimeSlot(index, timeIndex, e.target.value)}
@@ -211,6 +214,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
               <div className="space-y-2">
                 <Label>Posologie détaillée</Label>
                 <Input
+                  id={`dosage-${index}`}
                   value={med.dosage}
                   onChange={(e) => updateMedication(index, { dosage: e.target.value })}
                   placeholder="Ex: 1 comprimé matin et soir"
@@ -227,6 +231,9 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
         <DialogContent className="max-w-lg max-h-[80vh] p-0 gap-0">
           <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>Référentiel de médicaments</DialogTitle>
+            <DialogDescription>
+              Sélectionnez un médicament dans le catalogue ou créez-en un nouveau.
+            </DialogDescription>
           </DialogHeader>
           <ScrollArea className="h-[calc(80vh-80px)] px-6">
             <div className="space-y-3 py-4">
@@ -269,11 +276,15 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Créer un nouveau médicament</DialogTitle>
+            <DialogDescription>
+              Ajoutez un médicament personnalisé qui ne figure pas dans le catalogue.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
               <Label>Nom du médicament *</Label>
               <Input
+                id="custom-med-name"
                 value={newCustomMed.name}
                 onChange={(e) => setNewCustomMed({ ...newCustomMed, name: e.target.value })}
                 placeholder="Ex: Metformine 850mg"
@@ -282,6 +293,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
             <div className="space-y-2">
               <Label>Pathologie</Label>
               <Input
+                id="custom-med-pathology"
                 value={newCustomMed.pathology}
                 onChange={(e) => setNewCustomMed({ ...newCustomMed, pathology: e.target.value })}
                 placeholder="Ex: Diabète"
@@ -290,6 +302,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
             <div className="space-y-2">
               <Label>Posologie par défaut</Label>
               <Input
+                id="custom-med-dosage"
                 value={newCustomMed.dosage}
                 onChange={(e) => setNewCustomMed({ ...newCustomMed, dosage: e.target.value })}
                 placeholder="Ex: 1 comprimé matin et soir"

@@ -149,6 +149,7 @@ export function Step3Stocks({ formData, setFormData }: Step3StocksProps) {
                 <div className="space-y-2">
                   <Label>Seuil d'alerte</Label>
                   <Input
+                    id={`threshold-${index}`}
                     type="number"
                     min="0"
                     value={med.minThreshold}

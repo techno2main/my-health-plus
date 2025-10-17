@@ -24,6 +24,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   DndContext,
@@ -465,6 +466,9 @@ export default function NavigationManager() {
               <DialogTitle>
                 {editingId ? "Modifier" : "Ajouter"}
               </DialogTitle>
+              <DialogDescription>
+                {editingId ? "Modifier les paramètres de cet élément de navigation" : "Ajouter un nouvel élément au menu de navigation"}
+              </DialogDescription>
             </div>
           </DialogHeader>
 

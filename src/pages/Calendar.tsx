@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { CheckCircle2, XCircle, Clock, AlertCircle, TrendingUp, Calendar as CalendarIcon, Stethoscope, Pill } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, AlertCircle, TrendingUp, Calendar as CalendarIcon, Stethoscope, Pill, ClockAlert } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format, startOfMonth, endOfMonth, isSameDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -28,6 +28,8 @@ interface IntakeDetail {
   takenAt?: string;
   status: 'taken' | 'missed' | 'upcoming';
   treatment: string;
+  scheduledTimestamp?: string;
+  takenAtTimestamp?: string;
 }
 
 const Calendar = () => {
@@ -245,7 +247,9 @@ const Calendar = () => {
             time: time,
             takenAt: intake?.taken_at ? format(new Date(intake.taken_at), 'HH:mm') : undefined,
             status: status,
-            treatment: med.treatments.name
+            treatment: med.treatments.name,
+            scheduledTimestamp: scheduledTime.toISOString(),
+            takenAtTimestamp: intake?.taken_at || undefined
           });
         });
       });
@@ -313,26 +317,37 @@ const Calendar = () => {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'taken':
-        return <CheckCircle2 className="h-4 w-4 text-success" />;
-      case 'missed':
-        return <XCircle className="h-4 w-4 text-danger" />;
-      case 'upcoming':
-        return <Clock className="h-4 w-4 text-primary" />;
-      default:
-        return null;
-    }
+    // Toujours afficher l'icône pilule blanche, peu importe le statut
+    return <Pill className="h-4 w-4 text-white" />;
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, scheduledTimestamp?: string, takenAtTimestamp?: string) => {
+    if (status === 'taken' && scheduledTimestamp && takenAtTimestamp) {
+      const scheduled = new Date(scheduledTimestamp);
+      const taken = new Date(takenAtTimestamp);
+      const differenceMinutes = (taken.getTime() - scheduled.getTime()) / (1000 * 60);
+      
+      // Vert : avant l'heure ou jusqu'à 30min après (à l'heure)
+      if (differenceMinutes <= 30) {
+        return <CheckCircle2 className="h-6 w-6 text-success" />;
+      }
+      // Jaune : entre 30min et 1h après (léger retard)
+      else if (differenceMinutes <= 60) {
+        return <ClockAlert className="h-6 w-6 text-yellow-500" />;
+      }
+      // Jaune foncé : plus d'1h après (gros retard)
+      else {
+        return <ClockAlert className="h-6 w-6 text-yellow-600" />;
+      }
+    }
+    
     switch (status) {
       case 'taken':
-        return <Badge variant="success" className="text-xs">Pris</Badge>;
+        return <CheckCircle2 className="h-6 w-6 text-success" />;
       case 'missed':
-        return <Badge variant="danger" className="text-xs">Manqué</Badge>;
+        return <XCircle className="h-6 w-6 text-danger" />;
       case 'upcoming':
-        return <Badge className="text-xs">À venir</Badge>;
+        return <Clock className="h-6 w-6 text-warning" />;
       default:
         return null;
     }
@@ -544,7 +559,7 @@ const Calendar = () => {
                           )}
                         </span>
                       </div>
-                      {getStatusBadge(detail.status)}
+                      {getStatusBadge(detail.status, detail.scheduledTimestamp, detail.takenAtTimestamp)}
                     </div>
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium">{detail.medication}</p>

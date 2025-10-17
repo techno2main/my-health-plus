@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Trash2, Edit, Search, Star, Phone, Mail, MapPin, ArrowLeft } from "lucide-react"
@@ -377,6 +377,9 @@ const HealthProfessionals = () => {
                   {editingItem ? "Modifier" : "Ajouter"}
                 </DialogTitle>
               </div>
+              <DialogDescription className="text-muted-foreground">
+                {editingItem ? "Modifiez les informations du professionnel de santé" : "Ajoutez un nouveau professionnel de santé"}
+              </DialogDescription>
             </DialogHeader>
             
             <ScrollArea className="flex-1 px-6">

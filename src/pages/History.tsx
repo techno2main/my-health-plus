@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, XCircle, Clock, Calendar as CalendarIcon, List, ClockAlert } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Calendar as CalendarIcon, List, ClockAlert, Pill } from "lucide-react";
 import { format, parseISO, startOfDay, isToday } from "date-fns";
 import { fr } from 'date-fns/locale';
 import { formatToFrenchTime } from '../lib/dateUtils';
@@ -180,16 +180,8 @@ export default function History() {
   };
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "taken":
-        return <CheckCircle2 className="h-5 w-5 text-success" />;
-      case "skipped":
-        return <XCircle className="h-5 w-5 text-danger" />;
-      case "pending":
-        return <Clock className="h-5 w-5 text-warning" />;
-      default:
-        return null;
-    }
+    // Toujours afficher l'icône pilule blanche, peu importe le statut
+    return <Pill className="h-5 w-5 text-white" />;
   };
 
   const getStatusBadge = (status: string, scheduledTimestamp?: string, takenAtTimestamp?: string) => {
@@ -198,27 +190,27 @@ export default function History() {
       const taken = new Date(takenAtTimestamp);
       const differenceMinutes = (taken.getTime() - scheduled.getTime()) / (1000 * 60);
       
-      // Vert : avant l'heure ou jusqu'à 30min après
+      // Vert : avant l'heure ou jusqu'à 30min après (à l'heure)
       if (differenceMinutes <= 30) {
-        return <Badge variant="success">Pris</Badge>;
+        return <CheckCircle2 className="h-6 w-6 text-success" />;
       }
-      // Jaune pâle : entre 30min et 1h après
+      // Jaune : entre 30min et 1h après (léger retard)
       else if (differenceMinutes <= 60) {
-        return <Badge className="bg-yellow-50 text-gray-900 border-yellow-200 dark:bg-yellow-500/20 dark:text-yellow-100 dark:border-yellow-500/40">Pris</Badge>;
+        return <ClockAlert className="h-6 w-6 text-yellow-500" />;
       }
-      // Jaune foncé : plus d'1h après
+      // Jaune foncé : plus d'1h après (gros retard)
       else {
-        return <Badge className="bg-yellow-300 text-gray-900 border-yellow-400 dark:bg-yellow-500/40 dark:text-yellow-100 dark:border-yellow-500/60">Pris</Badge>;
+        return <ClockAlert className="h-6 w-6 text-yellow-600" />;
       }
     }
     
     switch (status) {
       case "taken":
-        return <Badge variant="success">Pris</Badge>;
+        return <CheckCircle2 className="h-6 w-6 text-success" />;
       case "skipped":
-        return <Badge variant="danger">Manqué</Badge>;
+        return <XCircle className="h-6 w-6 text-danger" />;
       case "pending":
-        return <Badge variant="warning">À venir</Badge>;
+        return <Clock className="h-6 w-6 text-warning" />;
       default:
         return null;
     }

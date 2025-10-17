@@ -329,10 +329,11 @@ const Treatments = () => {
                         <Download className="h-3 w-3" />
                         <a 
                           href={supabase.storage.from('prescriptions').getPublicUrl(treatment.prescription.file_path).data.publicUrl}
-                          download
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="hover:text-primary underline"
                         >
-                          Télécharger l'ordonnance
+                          Voir l'ordonnance
                         </a>
                       </div>
                     )}
