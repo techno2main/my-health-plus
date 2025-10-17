@@ -19,7 +19,7 @@ ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Admins can view all roles"
   ON public.user_roles FOR SELECT
-  USING (has_role(auth.uid(), 'admin'::app_role));
+  USING (has_role(auth.uid(), 'admin'));
 
 CREATE POLICY "Users can view their own roles"
   ON public.user_roles FOR SELECT
@@ -27,17 +27,16 @@ CREATE POLICY "Users can view their own roles"
 
 CREATE POLICY "Admins can insert roles"
   ON public.user_roles FOR INSERT
-  WITH CHECK (has_role(auth.uid(), 'admin'::app_role));
+  WITH CHECK (has_role(auth.uid(), 'admin'));
 
 CREATE POLICY "Admins can update roles"
   ON public.user_roles FOR UPDATE
-  USING (has_role(auth.uid(), 'admin'::app_role));
+  USING (has_role(auth.uid(), 'admin'));
 
 CREATE POLICY "Admins can delete roles"
   ON public.user_roles FOR DELETE
-  USING (has_role(auth.uid(), 'admin'::app_role));
+  USING (has_role(auth.uid(), 'admin'));
 
--- DONNÉES: Vos 2 rôles admin
+-- DONNÉES: Rôle admin Tyson Nomansa uniquement
 INSERT INTO public.user_roles VALUES
-('cbea0950-1087-4326-a9e8-f4224aadf3fd', 'b59171b2-0716-4e1e-a68d-7267ab15a603', 'admin', '2025-10-13 21:55:32.021956+00'),
-('3d9a32f2-6c68-4ebb-9cb7-af7c0e6b2112', '634b0b48-e193-4827-983b-a0f7d2f1b068', 'admin', '2025-10-13 22:01:20.408837+00');
+('3d9a32f2-6c68-4ebb-9cb7-af7c0e6b2112', '40f221e1-3fcb-4b03-b9b2-5bf8142a37cb', 'admin', '2025-10-13 22:01:20.408837+00');

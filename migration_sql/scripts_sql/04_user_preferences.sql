@@ -32,6 +32,6 @@ CREATE POLICY "Users can insert own preferences"
 CREATE TRIGGER update_user_preferences_updated_at BEFORE UPDATE ON public.user_preferences
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- DONNÉES: Vos préférences (biométrie activée)
+-- DONNÉES: Préférences Tyson Nomansa (biométrie activée)
 INSERT INTO public.user_preferences VALUES
-('239fb453-1f32-4db9-83e8-979e950d5c96', '634b0b48-e193-4827-983b-a0f7d2f1b068', true, false, '2025-10-15 21:56:39.334379+00', '2025-10-15 21:59:58.438219+00');
+('239fb453-1f32-4db9-83e8-979e950d5c96', '40f221e1-3fcb-4b03-b9b2-5bf8142a37cb', true, false, '2025-10-15 21:56:39.334379+00', '2025-10-15 21:59:58.438219+00');

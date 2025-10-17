@@ -17,21 +17,21 @@ CREATE TABLE public.allergies (
 -- RLS POLICIES
 ALTER TABLE public.allergies ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own allergies"
+CREATE POLICY "Users can view all allergies"
   ON public.allergies FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (true);
 
-CREATE POLICY "Users can add own allergies"
+CREATE POLICY "Admins can add allergies"
   ON public.allergies FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Users can update own allergies"
+CREATE POLICY "Admins can update allergies"
   ON public.allergies FOR UPDATE
-  USING (auth.uid() = user_id);
+  USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Users can delete own allergies"
+CREATE POLICY "Admins can delete allergies"
   ON public.allergies FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (has_role(auth.uid(), 'admin'));
 
 -- TRIGGER pour mise à jour automatique
 CREATE TRIGGER update_allergies_updated_at BEFORE UPDATE ON public.allergies

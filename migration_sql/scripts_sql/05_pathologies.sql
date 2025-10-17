@@ -19,7 +19,7 @@ ALTER TABLE public.pathologies ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view approved pathologies"
   ON public.pathologies FOR SELECT
-  USING (((is_approved = true) OR (created_by = auth.uid()) OR has_role(auth.uid(), 'admin'::app_role)));
+  USING (((is_approved = true) OR (created_by = auth.uid()) OR has_role(auth.uid(), 'admin')));
 
 CREATE POLICY "Authenticated users can create pathologies"
   ON public.pathologies FOR INSERT
@@ -27,11 +27,11 @@ CREATE POLICY "Authenticated users can create pathologies"
 
 CREATE POLICY "Admins can update pathologies"
   ON public.pathologies FOR UPDATE
-  USING (has_role(auth.uid(), 'admin'::app_role));
+  USING (has_role(auth.uid(), 'admin'));
 
 CREATE POLICY "Admins can delete pathologies"
   ON public.pathologies FOR DELETE
-  USING (has_role(auth.uid(), 'admin'::app_role));
+  USING (has_role(auth.uid(), 'admin'));
 
 -- TRIGGER pour mise à jour automatique
 CREATE TRIGGER update_pathologies_updated_at BEFORE UPDATE ON public.pathologies

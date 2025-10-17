@@ -38,7 +38,6 @@ CREATE POLICY "Users can insert own profile"
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON public.profiles
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
--- DONNÉES: Vos 2 profils complets
+-- DONNÉES: Profil Tyson Nomansa uniquement
 INSERT INTO public.profiles VALUES
-('b59171b2-0716-4e1e-a68d-7267ab15a603', 'T2 TAD', NULL, '2025-10-13 13:05:04.68745+00', '2025-10-13 13:05:04.68745+00', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-('634b0b48-e193-4827-983b-a0f7d2f1b068', NULL, '1970-12-12', '2025-10-13 13:07:34.677164+00', '2025-10-15 18:33:01.226572+00', 'Tyson', 'Nomansa', '0666101212', 'A+', 177, 78.10, 'https://phnydcqronyofqroptkf.supabase.co/storage/v1/object/public/avatars/634b0b48-e193-4827-983b-a0f7d2f1b068/avatar.jpg?t=1760391310651');
+('40f221e1-3fcb-4b03-b9b2-5bf8142a37cb', NULL, '1970-12-12', '2025-10-13 13:07:34.677164+00', '2025-10-15 18:33:01.226572+00', 'Tyson', 'Nomansa', '0666101212', 'A+', 177, 78.10, NULL);

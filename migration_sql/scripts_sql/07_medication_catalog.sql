@@ -27,7 +27,7 @@ ALTER TABLE public.medication_catalog ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view approved medications"
   ON public.medication_catalog FOR SELECT
-  USING (((is_approved = true) OR (created_by = auth.uid()) OR has_role(auth.uid(), 'admin'::app_role)));
+  USING (((is_approved = true) OR (created_by = auth.uid()) OR has_role(auth.uid(), 'admin')));
 
 CREATE POLICY "Authenticated users can create medications"
   ON public.medication_catalog FOR INSERT
@@ -35,11 +35,11 @@ CREATE POLICY "Authenticated users can create medications"
 
 CREATE POLICY "Admins can update medications"
   ON public.medication_catalog FOR UPDATE
-  USING (has_role(auth.uid(), 'admin'::app_role));
+  USING (has_role(auth.uid(), 'admin'));
 
-CREATE POLICY "Admins can delete medications"
+CREATE POLICY "Admins can delete medication catalog"
   ON public.medication_catalog FOR DELETE
-  USING (has_role(auth.uid(), 'admin'::app_role));
+  USING (has_role(auth.uid(), 'admin'));
 
 -- TRIGGER pour mise à jour automatique
 CREATE TRIGGER update_medication_catalog_updated_at BEFORE UPDATE ON public.medication_catalog

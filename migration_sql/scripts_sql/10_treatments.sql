@@ -45,4 +45,4 @@ CREATE TRIGGER update_treatments_updated_at BEFORE UPDATE ON public.treatments
 
 -- DONNÉES: Votre traitement DT2-CHL
 INSERT INTO public.treatments VALUES
-('b9e3808d-c8ee-45bb-8c25-fa83aa94eb0b', '634b0b48-e193-4827-983b-a0f7d2f1b068', '9de5ad44-925e-40bf-8916-f0935b190356', '90969f97-f2c9-476b-979b-c97b3813cab5', 'DT2-CHL', 'Diabète Type 2, Cholestérol', '2025-10-07', '2026-01-05', 'Ordonnance du 8 septembre 2025', true, '2025-10-13 16:34:33.198177+00', '2025-10-16 18:00:30.899187+00', 'Ordonnance du 8 septembre 2025');
+('b9e3808d-c8ee-45bb-8c25-fa83aa94eb0b', '40f221e1-3fcb-4b03-b9b2-5bf8142a37cb', '9de5ad44-925e-40bf-8916-f0935b190356', '90969f97-f2c9-476b-979b-c97b3813cab5', 'DT2-CHL', 'Diabète Type 2, Cholestérol', '2025-10-07', '2026-01-05', 'Ordonnance du 8 septembre 2025', true, '2025-10-13 16:34:33.198177+00', '2025-10-16 18:00:30.899187+00', 'Ordonnance du 8 septembre 2025');
