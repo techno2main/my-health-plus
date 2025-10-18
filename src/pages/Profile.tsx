@@ -198,7 +198,7 @@ export default function Profile() {
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6 pb-24">
         <PageHeader 
           title="Profil utilisateur"
-          subtitle="Gérez vos informations personnelles"
+          subtitle="Gérer vos informations"
           backTo="/"
         />
 
