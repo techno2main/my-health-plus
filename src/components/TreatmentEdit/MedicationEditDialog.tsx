@@ -4,10 +4,67 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
+import { TimeSelect } from "@/components/ui/time-select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { X, ArrowLeft } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+
+// Fonctions utilitaires pour la détection automatique des prises
+const detectTakesFromDosage = (dosage: string): { count: number; moments: string[] } => {
+  const text = dosage.toLowerCase().trim();
+  
+  // 1. Priorité aux indications numériques explicites
+  const numericMatch = text.match(/(\d+)\s*(fois|x)\s*(par\s*jour|\/jour)/i);
+  if (numericMatch) return { count: parseInt(numericMatch[1]), moments: [] };
+  
+  // 2. Détection par moments de la journée
+  const moments = [];
+  if (/matin|matinée|lever|réveil/i.test(text)) moments.push('matin');
+  if (/midi|déjeuner/i.test(text)) moments.push('midi');
+  if (/après.midi|après midi|aprem|apm/i.test(text)) moments.push('apres-midi');
+  if (/soir|soirée/i.test(text)) moments.push('soir');
+  if (/coucher/i.test(text)) moments.push('coucher');
+  if (/nuit|nocturne/i.test(text)) moments.push('nuit');
+  
+  if (moments.length > 0) return { count: moments.length, moments };
+  
+  // 3. Détection par conjonctions
+  if (/ et | puis | avec /i.test(text)) {
+    return { count: text.split(/ et | puis | avec /i).length, moments: [] };
+  }
+  
+  // 4. Par défaut : 1 prise
+  return { count: 1, moments: [] };
+};
+
+const getDefaultTimes = (numberOfTakes: number, detectedMoments: string[] = []): string[] => {
+  // Si des moments spécifiques ont été détectés, les utiliser
+  if (detectedMoments.length > 0) {
+    const timeMap: { [key: string]: string } = {
+      'matin': '09:30',      // 06:00-11:59 → 09:30
+      'midi': '12:30',       // 12:00-12:59 → 12:30
+      'apres-midi': '16:00', // 13:00-18:59 → 16:00
+      'soir': '19:30',       // 19:00-22:00 → 19:30
+      'coucher': '22:30',    // 22:01-23:59 → 22:30
+      'nuit': '03:00'        // 00:00-05:59 → 03:00
+    };
+    
+    return detectedMoments.map(moment => timeMap[moment] || '09:30');
+  }
+  
+  // Sinon, utiliser la répartition par défaut
+  switch(numberOfTakes) {
+    case 1: return ['09:30'];
+    case 2: return ['09:30', '19:30'];
+    case 3: return ['09:30', '12:30', '19:30'];
+    case 4: return ['09:30', '12:30', '16:00', '19:30'];
+    default: return Array(numberOfTakes).fill(0).map((_, i) => {
+      const hour = 9 + (i * 12 / numberOfTakes);
+      return `${Math.floor(hour).toString().padStart(2, '0')}:30`;
+    });
+  }
+};
 
 interface CatalogMedication {
   id: string;
@@ -40,7 +97,6 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
   const [selectedCatalogId, setSelectedCatalogId] = useState<string>("");
   const [dosage, setDosage] = useState("");
   const [times, setTimes] = useState<string[]>([]);
-  const [newTime, setNewTime] = useState("");
 
   useEffect(() => {
     loadCatalog();
@@ -79,20 +135,12 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
   const handleCatalogChange = (catalogId: string) => {
     setSelectedCatalogId(catalogId);
     const selected = catalog.find(c => c.id === catalogId);
-    if (selected) {
+    if (selected && selected.default_dosage) {
+      const detectedTakes = detectTakesFromDosage(selected.default_dosage);
+      const newTimes = getDefaultTimes(detectedTakes.count, detectedTakes.moments);
       setDosage(selected.default_dosage);
+      setTimes(newTimes);
     }
-  };
-
-  const addTime = () => {
-    if (newTime && !times.includes(newTime)) {
-      setTimes([...times, newTime]);
-      setNewTime("");
-    }
-  };
-
-  const removeTime = (time: string) => {
-    setTimes(times.filter(t => t !== time));
   };
 
   const handleSave = async () => {
@@ -176,9 +224,10 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
                           <span className="font-medium">{med.name}</span>
                           {med.dosage_amount && <span className="text-xs text-muted-foreground">{med.dosage_amount}</span>}
                         </div>
-                        {med.pathology && (
-                          <span className="text-xs text-muted-foreground">{med.pathology}</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {med.pathology && <span className="text-xs text-muted-foreground">{med.pathology}</span>}
+                          {med.default_dosage && <span className="text-xs text-muted-foreground">{med.default_dosage}</span>}
+                        </div>
                       </div>
                     </SelectItem>
                   ))}
@@ -190,31 +239,70 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
               <Label>Posologie</Label>
               <Input 
                 value={dosage}
-                onChange={(e) => setDosage(e.target.value)}
+                onChange={(e) => {
+                  const newDosage = e.target.value;
+                  const detectedTakes = detectTakesFromDosage(newDosage);
+                  const newTimes = getDefaultTimes(detectedTakes.count, detectedTakes.moments);
+                  setDosage(newDosage);
+                  setTimes(newTimes);
+                }}
                 placeholder="Ex: 1 comprimé matin et soir"
               />
             </div>
 
-            <div className="space-y-2">
-              <Label>{times.length === 1 ? "Horaire de prise" : "Horaires de prise"}</Label>
-              <div className="flex gap-2">
-                <Input 
-                  type="time"
-                  value={newTime}
-                  onChange={(e) => setNewTime(e.target.value)}
-                />
-                <Button type="button" onClick={addTime}>Ajouter</Button>
+            {/* Heures de prises - Design comme dans le référentiel */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Horaires de prise</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setTimes([...times, "09:30"]);
+                  }}
+                >
+                  + Ajouter
+                </Button>
               </div>
-              <div className="flex flex-wrap gap-2 mt-2">
-                {times.map((time) => (
-                  <div key={time} className="flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10">
-                    <span className="text-sm font-medium">{time}</span>
-                    <button onClick={() => removeTime(time)} className="ml-1">
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                ))}
-              </div>
+              
+              {times.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-3 border border-dashed rounded-md">
+                  Aucune heure de prise définie
+                </p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {times.map((time, index) => (
+                    <div key={index} className="flex items-center gap-1 p-2 rounded-md border bg-muted/30">
+                      <TimeSelect
+                        value={time}
+                        onValueChange={(value) => {
+                          const newTimes = [...times];
+                          newTimes[index] = value;
+                          setTimes(newTimes);
+                        }}
+                        className="bg-surface w-24 h-8 text-sm"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          const newTimes = times.filter((_, i) => i !== index);
+                          setTimes(newTimes);
+                        }}
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <p className="text-xs text-muted-foreground">
+                Ces heures seront utilisées pour les rappels de prise
+              </p>
             </div>
           </div>
         </ScrollArea>

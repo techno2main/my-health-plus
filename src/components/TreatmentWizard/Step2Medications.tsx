@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { TimeSelect } from "@/components/ui/time-select";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -19,7 +20,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
   const [catalog, setCatalog] = useState<CatalogMedication[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [showCustomDialog, setShowCustomDialog] = useState(false);
-  const [newCustomMed, setNewCustomMed] = useState({ name: "", pathology: "", dosage: "" });
+  const [newCustomMed, setNewCustomMed] = useState({ name: "", pathology: "", dosage: "", dosage_amount: "" });
 
   useEffect(() => {
     loadCatalog();
@@ -80,7 +81,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
       };
       setFormData({ ...formData, medications: [...formData.medications, newMed] });
       setShowCustomDialog(false);
-      setNewCustomMed({ name: "", pathology: "", dosage: "" });
+      setNewCustomMed({ name: "", pathology: "", dosage: "", dosage_amount: "" });
       loadCatalog();
     }
   };
@@ -200,12 +201,11 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
                 <Label>{med.times.length === 1 ? "Horaire de prise" : "Horaires de prise"}</Label>
                 <div className="grid gap-2">
                   {med.times.map((time, timeIndex) => (
-                    <Input
+                    <TimeSelect
                       key={`time-${index}-${timeIndex}`}
-                      id={`time-${index}-${timeIndex}`}
-                      type="time"
                       value={time}
-                      onChange={(e) => updateTimeSlot(index, timeIndex, e.target.value)}
+                      onValueChange={(value) => updateTimeSlot(index, timeIndex, value)}
+                      className="bg-surface"
                     />
                   ))}
                 </div>
@@ -251,10 +251,17 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
                           <span className="text-sm text-muted-foreground">{med.dosage_amount}</span>
                         )}
                       </div>
-                      {med.pathology && (
-                        <Badge variant="secondary" className="mb-2">
-                          {med.pathology}
-                        </Badge>
+                      {(med.pathology || med.default_dosage) && (
+                        <div className="flex items-center gap-2 mb-2">
+                          {med.pathology && (
+                            <Badge variant="secondary">
+                              {med.pathology}
+                            </Badge>
+                          )}
+                          {med.default_dosage && (
+                            <span className="text-sm text-muted-foreground">{med.default_dosage}</span>
+                          )}
+                        </div>
                       )}
                       {med.description && (
                         <p className="text-sm text-muted-foreground">
@@ -281,32 +288,48 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="space-y-2">
-              <Label>Nom du médicament *</Label>
-              <Input
-                id="custom-med-name"
-                value={newCustomMed.name}
-                onChange={(e) => setNewCustomMed({ ...newCustomMed, name: e.target.value })}
-                placeholder="Ex: Metformine 850mg"
-              />
+            {/* Première ligne : Nom du médicament + Dosage */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nom du médicament *</Label>
+                <Input
+                  id="custom-med-name"
+                  value={newCustomMed.name}
+                  onChange={(e) => setNewCustomMed({ ...newCustomMed, name: e.target.value })}
+                  placeholder="Ex: Metformine"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Dosage</Label>
+                <Input
+                  id="custom-med-dosage-amount"
+                  value={newCustomMed.dosage_amount || ""}
+                  onChange={(e) => setNewCustomMed({ ...newCustomMed, dosage_amount: e.target.value })}
+                  placeholder="Ex: 850mg"
+                />
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label>Pathologie</Label>
-              <Input
-                id="custom-med-pathology"
-                value={newCustomMed.pathology}
-                onChange={(e) => setNewCustomMed({ ...newCustomMed, pathology: e.target.value })}
-                placeholder="Ex: Diabète"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Posologie par défaut</Label>
-              <Input
-                id="custom-med-dosage"
-                value={newCustomMed.dosage}
-                onChange={(e) => setNewCustomMed({ ...newCustomMed, dosage: e.target.value })}
-                placeholder="Ex: 1 comprimé matin et soir"
-              />
+            
+            {/* Deuxième ligne : Pathologie + Posologie */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Pathologie</Label>
+                <Input
+                  id="custom-med-pathology"
+                  value={newCustomMed.pathology}
+                  onChange={(e) => setNewCustomMed({ ...newCustomMed, pathology: e.target.value })}
+                  placeholder="Ex: Diabète"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Posologie</Label>
+                <Input
+                  id="custom-med-dosage"
+                  value={newCustomMed.dosage}
+                  onChange={(e) => setNewCustomMed({ ...newCustomMed, dosage: e.target.value })}
+                  placeholder="Ex: 1 comprimé matin et soir"
+                />
+              </div>
             </div>
             <Button onClick={addCustomMedication} className="w-full">
               Créer et ajouter
