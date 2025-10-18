@@ -277,7 +277,7 @@ const HealthProfessionals = () => {
 
   return (
     <AppLayout>
-      <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate("/referentials")}>
             <ArrowLeft className="h-4 w-4" />
@@ -382,7 +382,7 @@ const HealthProfessionals = () => {
               </DialogDescription>
             </DialogHeader>
             
-            <ScrollArea className="flex-1 px-6">
+            <ScrollArea className="flex-1 px-6 max-h-[60vh]">
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Nom *</Label>

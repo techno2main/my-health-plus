@@ -402,7 +402,7 @@ export default function NavigationManager() {
 
   return (
     <AppLayout>
-      <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         <PageHeader 
           title="Navigation"
           subtitle="Configurez la navigation"
