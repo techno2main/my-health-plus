@@ -28,4 +28,6 @@ desktop.ini
 # Environment variables (sensitive data) 
 .env
 .env.local
+.env.development
 .env.production
+.env.test
