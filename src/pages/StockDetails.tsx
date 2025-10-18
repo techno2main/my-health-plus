@@ -60,7 +60,7 @@ export default function StockDetails() {
 
   if (loading) {
     return (
-      <AppLayout showBottomNav={false}>
+      <AppLayout>
         <div className="container max-w-2xl mx-auto px-4 py-6">
           <p className="text-center text-muted-foreground">Chargement...</p>
         </div>
@@ -70,7 +70,7 @@ export default function StockDetails() {
 
   if (!medication) {
     return (
-      <AppLayout showBottomNav={false}>
+      <AppLayout>
         <div className="container max-w-2xl mx-auto px-4 py-6">
           <p className="text-center text-muted-foreground">Médicament non trouvé</p>
         </div>
@@ -85,7 +85,7 @@ export default function StockDetails() {
   const estimatedDaysLeft = currentStock > 0 ? Math.floor(currentStock / dailyConsumption) : 0;
 
   return (
-    <AppLayout showBottomNav={false}>
+    <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="sm" onClick={() => navigate("/stock")}>

@@ -254,7 +254,7 @@ export default function TreatmentEdit() {
 
   if (loading) {
     return (
-      <AppLayout showBottomNav={false}>
+      <AppLayout>
         <div className="container max-w-2xl mx-auto px-4 py-6">
           <p className="text-center text-muted-foreground">Chargement...</p>
         </div>
@@ -264,7 +264,7 @@ export default function TreatmentEdit() {
 
   if (!treatment) {
     return (
-      <AppLayout showBottomNav={false}>
+      <AppLayout>
         <div className="container max-w-2xl mx-auto px-4 py-6">
           <p className="text-center text-muted-foreground">Traitement non trouvé</p>
         </div>
@@ -273,7 +273,7 @@ export default function TreatmentEdit() {
   }
 
   return (
-    <AppLayout showBottomNav={false}>
+    <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => navigate("/treatments")}>
