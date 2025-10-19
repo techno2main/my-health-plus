@@ -31,6 +31,7 @@ import NotificationSettings from "./pages/NotificationSettings";
 import NavigationManager from "./pages/NavigationManager";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Rattrapage from "./pages/Rattrapage";
 
 const queryClient = new QueryClient();
 
@@ -67,6 +68,7 @@ const App = () => (
           <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
           <Route path="/stock/:id" element={<ProtectedRoute><StockDetails /></ProtectedRoute>} />
           <Route path="/treatments/:id/edit" element={<ProtectedRoute><TreatmentEdit /></ProtectedRoute>} />
+          <Route path="/rattrapage" element={<ProtectedRoute><Rattrapage /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
