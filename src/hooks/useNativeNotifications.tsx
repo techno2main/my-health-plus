@@ -138,10 +138,26 @@ export const useNativeNotifications = () => {
     
     toast.success("Notification programmée dans 5 secondes...");
     
-    const success = await showNotification(
-      "💊 Test de notification",
-      "Si vous voyez ceci, les notifications fonctionnent parfaitement !"
-    );
+    const success = await LocalNotifications.schedule({
+      notifications: [
+        {
+          title: "💊 Test de notification",
+          body: "Si vous voyez ceci, les notifications fonctionnent parfaitement !",
+          id: 1,
+          schedule: { at: new Date(Date.now() + 5000) }, // 5 seconds from now
+          sound: undefined,
+          attachments: undefined,
+          actionTypeId: "",
+          extra: null
+        }
+      ]
+    }).then(() => {
+      console.log("Test notification scheduled successfully");
+      return true;
+    }).catch((error) => {
+      console.error("Failed to schedule test notification:", error);
+      return false;
+    });
     
     if (success) {
       console.log("Test notification sent successfully");
