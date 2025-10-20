@@ -20,9 +20,19 @@ export const useNotificationSystem = () => {
   useEffect(() => {
     // Détection du mode d'exécution
     const isCapacitorNative = Capacitor.isNativePlatform();
-    setIsNative(isCapacitorNative);
     
-    console.log("Notification system detected:", isCapacitorNative ? "Native (Capacitor)" : "PWA (Web)");
+    // Sur mobile (même en PWA), privilégier le mode natif pour un meilleur message
+    // (même si ça ne marche pas vraiment sans Capacitor, au moins pas de message d'erreur)
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const shouldUseNative = isCapacitorNative || isMobile;
+    
+    setIsNative(shouldUseNative);
+    
+    console.log("Notification system detected:", {
+      platform: shouldUseNative ? "Native (Capacitor)" : "PWA (Web)",
+      isCapacitorNative,
+      isMobile
+    });
   }, []);
 
   // Retourne le hook approprié selon le mode détecté avec interface unifiée

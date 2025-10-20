@@ -46,7 +46,21 @@ export const useNativeNotifications = () => {
   const [hasPermission, setHasPermission] = useState(false);
 
   useEffect(() => {
-    checkPermissions();
+    // Vérifier si Capacitor LocalNotifications est vraiment disponible
+    const checkCapacitorAvailability = async () => {
+      try {
+        // Tenter d'appeler une méthode Capacitor pour vérifier qu'il existe
+        await LocalNotifications.checkPermissions();
+        setIsSupported(true);
+        checkPermissions();
+      } catch (error) {
+        // Capacitor n'est pas disponible (PWA sans Capacitor)
+        console.log("Capacitor LocalNotifications not available, falling back to Web API");
+        setIsSupported(false);
+      }
+    };
+    
+    checkCapacitorAvailability();
     
     // Load preferences from localStorage
     const saved = localStorage.getItem("notificationPreferences");
