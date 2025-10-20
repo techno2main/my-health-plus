@@ -53,95 +53,58 @@ export const useMissedIntakesDetection = () => {
       const today = startOfDay(now);
       const yesterday = startOfDay(subDays(now, 1));
 
-      // 1. Récupérer les médicaments actifs avec leurs horaires
-      const { data: medications, error: medsError } = await supabase
-        .from("medications")
+      // NOUVELLE APPROCHE : Ne détecter que les prises existantes dans medication_intakes
+      // avec status='pending' et dont l'heure + tolérance est dépassée
+      
+      // 1. Récupérer les prises en attente (pending) des derniers jours
+      const { data: pendingIntakes, error: pendingError } = await supabase
+        .from("medication_intakes")
         .select(`
           id,
-          name,
-          dosage_amount,
-          dosage,
-          times,
-          treatment_id,
-          treatments!inner(name, is_active),
-          medication_catalog(dosage_amount, default_dosage)
+          medication_id,
+          scheduled_time,
+          status,
+          medications (
+            name,
+            dosage_amount,
+            dosage,
+            medication_catalog(dosage_amount, default_dosage)
+          )
         `)
-        .eq("treatments.is_active", true);
-
-      if (medsError) throw medsError;
-
-      // 2. Récupérer les prises traitées des 2 derniers jours
-      // Inclure "taken" ET "skipped" - toutes deux sont des prises déjà traitées
-      const { data: confirmedIntakes, error: intakesError } = await supabase
-        .from("medication_intakes")
-        .select("medication_id, scheduled_time, status")
+        .eq("status", "pending")
         .gte("scheduled_time", yesterday.toISOString())
-        .in("status", ["taken", "skipped"]); // Prises traitées (prises OU volontairement manquées)
+        .lt("scheduled_time", now.toISOString())
+        .order("scheduled_time", { ascending: false });
 
-      if (intakesError) throw intakesError;
+      if (pendingError) throw pendingError;
 
-      // 3. Créer un Set des prises confirmées pour recherche rapide
-      const confirmedSet = new Set(
-        (confirmedIntakes || []).map(intake => 
-          `${intake.medication_id}-${format(new Date(intake.scheduled_time), 'yyyy-MM-dd-HH:mm')}`
-        )
-      );
-
-      // 4. Analyser chaque médicament pour détecter les manquées
+      // 2. Filtrer celles dont le délai de tolérance est dépassé
       const missed: MissedIntake[] = [];
 
-      (medications || []).forEach(med => {
-        med.times?.forEach((time: string) => {
-          // Vérifier hier
-          const yesterdayIntake = new Date(yesterday);
-          const [hours, minutes] = time.split(':');
-          yesterdayIntake.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      (pendingIntakes || []).forEach((intake: any) => {
+        const scheduledTime = new Date(intake.scheduled_time);
+        
+        // Vérifier si le délai de tolérance est dépassé
+        if (isIntakeMissed(scheduledTime, now)) {
+          const intakeDate = new Date(intake.scheduled_time);
+          const isYesterday = format(intakeDate, 'yyyy-MM-dd') === format(yesterday, 'yyyy-MM-dd');
           
-          const yesterdayKey = `${med.id}-${format(yesterdayIntake, 'yyyy-MM-dd-HH:mm')}`;
-          
-          if (!confirmedSet.has(yesterdayKey)) {
-            missed.push({
-              id: `${med.id}-${med.name}-${yesterdayIntake.toISOString()}`,
-              medicationId: med.id,
-              medication: med.name,
-              dosage: med.medication_catalog?.dosage_amount || 
-                     med.medication_catalog?.default_dosage || 
-                     med.dosage_amount || med.dosage || '',
-              scheduledTime: yesterdayIntake.toISOString(),
-              displayTime: time,
-              date: yesterdayIntake,
-              dayName: 'Hier',
-              status: 'missed_yesterday'
-            });
-          }
-
-          // Vérifier aujourd'hui (seulement si l'heure + tolérance est dépassée)
-          const todayIntake = new Date(today);
-          todayIntake.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-          
-          const todayKey = `${med.id}-${format(todayIntake, 'yyyy-MM-dd-HH:mm')}`;
-          const isMissedToday = isIntakeMissed(todayIntake, now);
-          
-          if (!confirmedSet.has(todayKey) && isMissedToday) {
-            missed.push({
-              id: `${med.id}-${med.name}-${todayIntake.toISOString()}`,
-              medicationId: med.id,
-              medication: med.name,
-              dosage: med.medication_catalog?.dosage_amount || 
-                     med.medication_catalog?.default_dosage || 
-                     med.dosage_amount || med.dosage || '',
-              scheduledTime: todayIntake.toISOString(),
-              displayTime: time,
-              date: todayIntake,
-              dayName: "Aujourd'hui",
-              status: 'missed_today'
-            });
-          }
-        });
+          missed.push({
+            id: intake.id,
+            medicationId: intake.medication_id,
+            medication: intake.medications.name,
+            dosage: intake.medications.medication_catalog?.dosage_amount || 
+                   intake.medications.medication_catalog?.default_dosage || 
+                   intake.medications.dosage_amount || 
+                   intake.medications.dosage || '',
+            scheduledTime: intake.scheduled_time,
+            displayTime: format(scheduledTime, 'HH:mm'),
+            date: scheduledTime,
+            dayName: isYesterday ? 'Hier' : format(scheduledTime, 'dd/MM/yyyy'),
+            status: isYesterday ? 'missed_yesterday' : 'missed_today'
+          });
+        }
       });
-
-      // 5. Trier par date (plus récent en premier)
-      missed.sort((a, b) => new Date(b.scheduledTime).getTime() - new Date(a.scheduledTime).getTime());
 
       setMissedIntakes(missed);
 

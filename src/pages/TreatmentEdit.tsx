@@ -158,7 +158,22 @@ export default function TreatmentEdit() {
         })
       );
       
-      setMedications(medsWithPathology);
+      // Trier par horaire de prise puis par nom
+      const sortedMedications = medsWithPathology.sort((a, b) => {
+        // Obtenir le premier horaire de chaque médicament pour le tri
+        const aFirstTime = a.times && a.times.length > 0 ? a.times[0] : "99:99";
+        const bFirstTime = b.times && b.times.length > 0 ? b.times[0] : "99:99";
+        
+        // Comparer les horaires
+        if (aFirstTime !== bFirstTime) {
+          return aFirstTime.localeCompare(bFirstTime);
+        }
+        
+        // Si même horaire, trier par nom
+        return a.name.localeCompare(b.name);
+      });
+      
+      setMedications(sortedMedications);
 
     } catch (error) {
       console.error("Error loading treatment:", error);

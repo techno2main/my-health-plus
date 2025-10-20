@@ -181,82 +181,166 @@ const Calendar = () => {
         }
       }
 
-      // Get medications from active treatments
-      const { data: medications } = await supabase
-        .from("medications")
-        .select(`
-          id,
-          name,
-          times,
-          treatment_id,
-          catalog_id,
-          treatments!inner(name, is_active),
-          medication_catalog(dosage_amount, default_dosage)
-        `)
-        .eq("treatments.is_active", true);
-
       // Get start and end of selected day
       const dayStart = new Date(selectedDate);
       dayStart.setHours(0, 0, 0, 0);
       const dayEnd = new Date(selectedDate);
       dayEnd.setHours(23, 59, 59, 999);
+      const now = new Date();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const selectedDateOnly = new Date(selectedDate);
+      selectedDateOnly.setHours(0, 0, 0, 0);
+      const isToday = selectedDateOnly.getTime() === today.getTime();
+      const isPast = selectedDateOnly < today;
 
-      // Get ALL medications (including from inactive treatments) to match intakes
-      const { data: allMedications } = await supabase
-        .from("medications")
-        .select("id, name");
+      // APPROCHE HYBRIDE :
+      // - Jours PASSÉS : uniquement medication_intakes (historique figé)
+      // - AUJOURD'HUI : combiner medication_intakes + medications.times
+      // - Jours FUTURS : générer depuis medications.times
 
-      const { data: intakes } = await supabase
+      // 1. Charger les prises enregistrées
+      const { data: intakes, error: intakesError } = await supabase
         .from("medication_intakes")
-        .select("*")
+        .select(`
+          id,
+          medication_id,
+          scheduled_time,
+          taken_at,
+          status,
+          medications (
+            name,
+            treatment_id,
+            treatments (name),
+            medication_catalog (dosage_amount, default_dosage)
+          )
+        `)
         .gte("scheduled_time", dayStart.toISOString())
-        .lte("scheduled_time", dayEnd.toISOString());
+        .lte("scheduled_time", dayEnd.toISOString())
+        .order("scheduled_time", { ascending: true });
+
+      if (intakesError) throw intakesError;
 
       const details: IntakeDetail[] = [];
-      const now = new Date();
 
-      medications?.forEach((med: any) => {
-        med.times?.forEach((time: string) => {
-          const [hours, minutes] = time.split(':');
-          const scheduledTime = new Date(selectedDate);
-          scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-          // Find matching intake by medication name and time (not just ID)
-          const intake = intakes?.find((i: any) => {
-            const intakeTime = format(new Date(i.scheduled_time), 'HH:mm');
-            const intakeMed = allMedications?.find(m => m.id === i.medication_id);
-            return intakeMed?.name === med.name && intakeTime === time;
-          });
-
+      if (isPast) {
+        // JOURS PASSÉS : Utiliser UNIQUEMENT medication_intakes (historique figé)
+        (intakes || []).forEach((intake: any) => {
+          const scheduledTime = new Date(intake.scheduled_time);
+          
           let status: 'taken' | 'missed' | 'upcoming' = 'upcoming';
-          if (intake?.status === 'taken') {
+          if (intake.status === 'taken') {
             status = 'taken';
-          } else if (scheduledTime < now && selectedDate.setHours(0, 0, 0, 0) < new Date().setHours(0, 0, 0, 0)) {
-            // Only mark as missed if it's a past day, not today
+          } else if (intake.status === 'skipped') {
             status = 'missed';
-          } else if (scheduledTime < now) {
-            // For today, if time passed but not taken, still show as upcoming
-            status = 'upcoming';
+          } else if (intake.status === 'pending') {
+            status = 'missed'; // Dans le passé, pending = missed
           }
 
-          const catalogDosage = med.medication_catalog?.dosage_amount || 
-                                med.medication_catalog?.default_dosage || "";
+          const catalogDosage = intake.medications?.medication_catalog?.dosage_amount || 
+                                intake.medications?.medication_catalog?.default_dosage || "";
 
           details.push({
-            id: intake?.id || `${med.id}-${time}`,
-            medication: med.name,
+            id: intake.id,
+            medication: intake.medications?.name || '',
             dosage: catalogDosage,
-            time: time,
-            takenAt: intake?.taken_at ? format(new Date(intake.taken_at), 'HH:mm') : undefined,
+            time: format(scheduledTime, 'HH:mm'),
+            takenAt: intake.taken_at ? format(new Date(intake.taken_at), 'HH:mm') : undefined,
             status: status,
-            treatment: med.treatments.name,
-            scheduledTimestamp: scheduledTime.toISOString(),
-            takenAtTimestamp: intake?.taken_at || undefined
+            treatment: intake.medications?.treatments?.name || '',
+            scheduledTimestamp: intake.scheduled_time,
+            takenAtTimestamp: intake.taken_at || undefined
           });
         });
-      });
+      } else {
+        // AUJOURD'HUI ou FUTUR : Combiner medication_intakes + medications.times
+        
+        // 2. Charger les médicaments actifs
+        const { data: medications, error: medsError } = await supabase
+          .from("medications")
+          .select(`
+            id,
+            name,
+            times,
+            treatment_id,
+            treatments!inner(name, is_active),
+            medication_catalog(dosage_amount, default_dosage)
+          `)
+          .eq("treatments.is_active", true);
 
-      details.sort((a, b) => a.time.localeCompare(b.time));
+        if (medsError) throw medsError;
+
+        // 3. Créer un Set des prises déjà enregistrées
+        const intakesSet = new Set(
+          (intakes || []).map(i => {
+            const time = format(new Date(i.scheduled_time), 'HH:mm');
+            return `${i.medication_id}-${time}`;
+          })
+        );
+
+        // 4. Générer les prises depuis medications.times
+        (medications || []).forEach((med: any) => {
+          med.times?.forEach((time: string) => {
+            const key = `${med.id}-${time}`;
+            const [hours, minutes] = time.split(':');
+            const scheduledTime = new Date(selectedDate);
+            scheduledTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+            // Chercher si cette prise existe déjà dans medication_intakes
+            const existingIntake = (intakes || []).find((i: any) => 
+              i.medication_id === med.id && 
+              format(new Date(i.scheduled_time), 'HH:mm') === time
+            );
+
+            if (existingIntake) {
+              // Utiliser l'enregistrement existant
+              let status: 'taken' | 'missed' | 'upcoming' = 'upcoming';
+              if (existingIntake.status === 'taken') {
+                status = 'taken';
+              } else if (existingIntake.status === 'skipped') {
+                status = 'missed';
+              } else if (existingIntake.status === 'pending') {
+                if (scheduledTime < now) {
+                  status = 'missed';
+                } else {
+                  status = 'upcoming';
+                }
+              }
+
+              details.push({
+                id: existingIntake.id,
+                medication: med.name,
+                dosage: med.medication_catalog?.dosage_amount || 
+                       med.medication_catalog?.default_dosage || '',
+                time: time,
+                takenAt: existingIntake.taken_at ? format(new Date(existingIntake.taken_at), 'HH:mm') : undefined,
+                status: status,
+                treatment: med.treatments.name,
+                scheduledTimestamp: existingIntake.scheduled_time,
+                takenAtTimestamp: existingIntake.taken_at || undefined
+              });
+            } else {
+              // Générer une prise virtuelle (pas encore enregistrée)
+              details.push({
+                id: `${med.id}-${time}`,
+                medication: med.name,
+                dosage: med.medication_catalog?.dosage_amount || 
+                       med.medication_catalog?.default_dosage || '',
+                time: time,
+                takenAt: undefined,
+                status: 'upcoming',
+                treatment: med.treatments.name,
+                scheduledTimestamp: scheduledTime.toISOString(),
+                takenAtTimestamp: undefined
+              });
+            }
+          });
+        });
+
+        // Trier par heure
+        details.sort((a, b) => a.time.localeCompare(b.time));
+      }
+
       setDayDetails(details);
 
     } catch (error) {
