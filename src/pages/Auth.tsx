@@ -92,6 +92,7 @@ const Auth = () => {
                 id="email-signin"
                 type="email"
                 placeholder="votre@email.com"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -104,6 +105,7 @@ const Auth = () => {
                 id="password-signin"
                 type="password"
                 placeholder="••••••••"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
