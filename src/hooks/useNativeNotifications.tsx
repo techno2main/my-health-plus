@@ -36,7 +36,7 @@ const DEFAULT_PREFERENCES: NotificationPreferences = {
     delayedReminder: "⏰ Rappel de prise manquée",
     stockAlert: "⚠️ Stock faible",
     prescriptionRenewal: "📅 Renouvellement d'ordonnance",
-    pharmacyVisit: "💊 Visite pharmacie",
+    pharmacyVisit: "💊 Rechargement pharmacie",
   },
 };
 

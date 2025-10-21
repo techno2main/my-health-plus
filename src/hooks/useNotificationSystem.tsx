@@ -3,6 +3,9 @@ import { Capacitor } from '@capacitor/core';
 import { useNotifications } from "./useNotifications";
 import { useNativeNotifications } from "./useNativeNotifications";
 
+// Mode debug pour les logs (false en production)
+const DEBUG_NOTIFICATION_SYSTEM = false;
+
 /**
  * Hook de détection automatique du mode notifications
  * - Mode PWA : utilise useNotifications (API Web Notifications)  
@@ -28,11 +31,14 @@ export const useNotificationSystem = () => {
     
     setIsNative(shouldUseNative);
     
-    console.log("Notification system detected:", {
-      platform: shouldUseNative ? "Native (Capacitor)" : "PWA (Web)",
-      isCapacitorNative,
-      isMobile
-    });
+    // Log uniquement si debug activé
+    if (DEBUG_NOTIFICATION_SYSTEM) {
+      console.log("Notification system detected:", {
+        platform: shouldUseNative ? "Native (Capacitor)" : "PWA (Web)",
+        isCapacitorNative,
+        isMobile
+      });
+    }
   }, []);
 
   // Retourne le hook approprié selon le mode détecté avec interface unifiée
