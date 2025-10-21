@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/Layout/PageHeader";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Navigation, Database, ChevronRight, ShieldAlert, Clock } from "lucide-react";
+import { Navigation, Database, ChevronRight, ShieldAlert, Clock, Bug } from "lucide-react";
 import { Loader2 } from "lucide-react";
 
 export default function Admin() {
@@ -87,6 +87,21 @@ export default function Admin() {
                 <div>
                   <h3 className="font-semibold">Rattrapage des prises</h3>
                   <p className="text-sm text-muted-foreground">Gérer les prises manquées</p>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </div>
+          </Card>
+
+          <Card className="p-4" onClick={() => navigate("/notifications/debug")}>
+            <div className="flex items-center justify-between cursor-pointer">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-full bg-primary/10">
+                  <Bug className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Diagnostic des notifications</h3>
+                  <p className="text-sm text-muted-foreground">Diagnostiquer les notifications</p>
                 </div>
               </div>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />

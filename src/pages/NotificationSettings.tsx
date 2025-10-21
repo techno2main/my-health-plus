@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { NumberInput } from "@/components/ui/number-input";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Bell, Clock, AlertTriangle, Calendar, Pill, Settings2, Bug } from "lucide-react";
+import { ArrowLeft, Bell, Clock, AlertTriangle, Calendar, Pill, Settings2 } from "lucide-react";
 import { useNotificationSystem } from "@/hooks/useNotificationSystem";
 import { useMedicationNotificationScheduler } from "@/hooks/useMedicationNotificationScheduler";
 import { Badge } from "@/components/ui/badge";
@@ -132,11 +132,6 @@ export default function NotificationSettings() {
             </p>
           </div>
           <div className="flex gap-2">
-            {Capacitor.isNativePlatform() && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/notifications/debug")}>
-                <Bug className="h-4 w-4" />
-              </Button>
-            )}
             {isSupported && (mode === 'native' ? hasPermission : permission === "granted") && (
               <Button variant="outline" size="sm" onClick={handleTestNotification}>
                 Tester
