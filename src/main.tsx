@@ -6,6 +6,10 @@ import { StatusBar } from '@capacitor/status-bar';
 import { Capacitor } from '@capacitor/core';
 import { App as CapacitorApp } from '@capacitor/app';
 import { LocalNotifications } from '@capacitor/local-notifications';
+import { autoCleanInvalidTokens } from './lib/auth-cleaner';
+
+// Nettoyer les tokens invalides au démarrage (silencieux)
+autoCleanInvalidTokens();
 
 // Configure StatusBar for mobile platforms
 if (Capacitor.isNativePlatform()) {

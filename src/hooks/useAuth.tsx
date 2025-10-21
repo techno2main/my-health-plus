@@ -14,15 +14,38 @@ export function useAuth() {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Si erreur de token, nettoyer le localStorage
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          console.log("🧹 Token invalide détecté, nettoyage du localStorage");
+        }
       }
     );
 
-    // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // THEN check for existing session with error handling
+    supabase.auth.getSession()
+      .then(({ data: { session }, error }) => {
+        if (error) {
+          console.warn("⚠️ Erreur lors de la récupération de la session:", error.message);
+          // Si erreur de refresh token, on nettoie silencieusement
+          if (error.message.includes('refresh_token_not_found') || error.message.includes('Invalid Refresh Token')) {
+            console.log("🧹 Nettoyage des tokens invalides");
+            supabase.auth.signOut().catch(() => {}); // Nettoyage silencieux
+          }
+          setSession(null);
+          setUser(null);
+        } else {
+          setSession(session);
+          setUser(session?.user ?? null);
+        }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("❌ Erreur inattendue lors de getSession:", err);
+        setSession(null);
+        setUser(null);
+        setLoading(false);
+      });
 
     return () => subscription.unsubscribe();
   }, []);
