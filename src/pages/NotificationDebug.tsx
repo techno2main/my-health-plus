@@ -2,13 +2,14 @@ import { AppLayout } from "@/components/Layout/AppLayout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw } from "lucide-react";
+import { ArrowLeft, RefreshCw, Bell } from "lucide-react";
 import { useState, useEffect } from "react";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
+import { useMedicationNotificationScheduler } from "@/hooks/useMedicationNotificationScheduler";
 
 interface PendingNotification {
   id: number;
@@ -37,6 +38,7 @@ export default function NotificationDebug() {
   const [preferences, setPreferences] = useState<any>(null);
   const [cache, setCache] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const { rescheduleAll } = useMedicationNotificationScheduler();
 
   const loadDebugInfo = async () => {
     setLoading(true);
@@ -148,11 +150,28 @@ export default function NotificationDebug() {
     }
   };
 
+  const triggerRescheduleWithToasts = async () => {
+    setLoading(true);
+    try {
+      // Appel avec true pour afficher les toasts
+      await rescheduleAll(true);
+      // Recharger les infos après la replanification
+      setTimeout(() => {
+        loadDebugInfo();
+      }, 1000);
+    } catch (error) {
+      console.error("Erreur replanification:", error);
+      toast.error(`Erreur: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <AppLayout>
-      <div className="container max-w-4xl mx-auto px-4 py-6 space-y-6">
+      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/settings/notifications")}>
+          <Button variant="ghost" size="sm" onClick={() => navigate("/admin")}>
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div className="flex-1">
@@ -168,7 +187,18 @@ export default function NotificationDebug() {
 
         {/* Actions rapides */}
         <Card className="p-4">
+          <h3 className="font-semibold mb-3">⚡ Actions rapides</h3>
           <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="default" 
+              size="sm" 
+              onClick={triggerRescheduleWithToasts}
+              disabled={loading}
+              className="gap-2"
+            >
+              <Bell className="h-4 w-4" />
+              Replanifier avec toasts
+            </Button>
             <Button variant="outline" size="sm" onClick={clearCache}>
               Vider le cache
             </Button>
@@ -176,6 +206,10 @@ export default function NotificationDebug() {
               Annuler toutes les notifs
             </Button>
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            💡 Le bouton "Replanifier avec toasts" permet de tester la replanification 
+            complète avec affichage des toasts (désactivés au démarrage normal de l'app).
+          </p>
         </Card>
 
         {/* Préférences */}
