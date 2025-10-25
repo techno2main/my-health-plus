@@ -60,6 +60,13 @@ const Calendar = () => {
       setLoading(true);
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
+      
+      // Étendre la plage pour inclure les jours visibles du mois précédent et suivant
+      // Le calendrier affiche généralement 6 semaines (42 jours)
+      const extendedStart = new Date(monthStart);
+      extendedStart.setDate(extendedStart.getDate() - 7); // 7 jours avant
+      const extendedEnd = new Date(monthEnd);
+      extendedEnd.setDate(extendedEnd.getDate() + 14); // 14 jours après
 
       // Load active treatment start date and end date - get all active treatments and take the first one
       const { data: activeTreatments, error: treatmentError } = await supabase
@@ -85,19 +92,19 @@ const Calendar = () => {
         }
       }
 
-      // Load intakes for the month
+      // Load intakes for the extended period (includes visible days from adjacent months)
       const { data: intakes } = await supabase
         .from("medication_intakes")
         .select("*")
-        .gte("scheduled_time", monthStart.toISOString())
-        .lte("scheduled_time", monthEnd.toISOString());
+        .gte("scheduled_time", extendedStart.toISOString())
+        .lte("scheduled_time", extendedEnd.toISOString());
 
       // Process day by day using REAL intakes only
       const daysData: DayIntake[] = [];
-      const currentDate = new Date(monthStart);
+      const currentDate = new Date(extendedStart);
       const now = new Date();
 
-      while (currentDate <= monthEnd) {
+      while (currentDate <= extendedEnd) {
         const dayIntakes = intakes?.filter((i: any) =>
           isSameDay(new Date(i.scheduled_time), currentDate)
         ) || [];
@@ -491,7 +498,15 @@ const Calendar = () => {
               <CalendarComponent
                 mode="single"
                 selected={selectedDate}
-                onSelect={(date) => date && setSelectedDate(date)}
+                onSelect={(date) => {
+                  if (date) {
+                    setSelectedDate(date);
+                    // Si la date sélectionnée est dans un mois différent, changer le mois affiché
+                    if (date.getMonth() !== currentMonth.getMonth() || date.getFullYear() !== currentMonth.getFullYear()) {
+                      setCurrentMonth(new Date(date.getFullYear(), date.getMonth()));
+                    }
+                  }
+                }}
                 month={currentMonth}
                 onMonthChange={setCurrentMonth}
                 locale={fr}
