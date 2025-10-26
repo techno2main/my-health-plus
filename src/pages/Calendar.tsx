@@ -60,20 +60,19 @@ const Calendar = () => {
       setLoading(true);
       const monthStart = startOfMonth(currentMonth);
       const monthEnd = endOfMonth(currentMonth);
-      
-      // Étendre la plage pour inclure les jours visibles du mois précédent et suivant
-      // Le calendrier affiche généralement 6 semaines (42 jours)
-      const extendedStart = new Date(monthStart);
-      extendedStart.setDate(extendedStart.getDate() - 7); // 7 jours avant
-      const extendedEnd = new Date(monthEnd);
-      extendedEnd.setDate(extendedEnd.getDate() + 14); // 14 jours après
 
-      // Load active treatment start date and end date - get all active treatments and take the first one
+      // Extend range to include visible days from previous/next months (typically ±7 days)
+      const extendedStart = new Date(monthStart);
+      extendedStart.setDate(extendedStart.getDate() - 7);
+      const extendedEnd = new Date(monthEnd);
+      extendedEnd.setDate(extendedEnd.getDate() + 7);
+
+      // Load active treatment start date and end date - get all active treatments and take the EARLIEST one
       const { data: activeTreatments, error: treatmentError } = await supabase
         .from("treatments")
         .select("start_date, end_date")
         .eq("is_active", true)
-        .order("start_date", { ascending: false });
+        .order("start_date", { ascending: true }); // Prendre le plus ancien, pas le plus récent
 
       if (treatmentError) {
         console.error("Error loading active treatment:", treatmentError);
@@ -92,14 +91,14 @@ const Calendar = () => {
         }
       }
 
-      // Load intakes for the extended period (includes visible days from adjacent months)
+      // Load intakes for the extended range to include visible days from adjacent months
       const { data: intakes } = await supabase
         .from("medication_intakes")
         .select("*")
         .gte("scheduled_time", extendedStart.toISOString())
         .lte("scheduled_time", extendedEnd.toISOString());
 
-      // Process day by day using REAL intakes only
+      // Process day by day using REAL intakes only (but now including adjacent month days)
       const daysData: DayIntake[] = [];
       const currentDate = new Date(extendedStart);
       const now = new Date();
@@ -246,9 +245,9 @@ const Calendar = () => {
         const catalogDosage = intake.medications?.medication_catalog?.strength || 
                               intake.medications?.medication_catalog?.default_posology || "";
 
-        // Convertir les timestamps en heure locale française
-        const localTime = formatToFrenchTime(intake.scheduled_time, 'HH:mm');
-        const localTakenAt = intake.taken_at ? formatToFrenchTime(intake.taken_at, 'HH:mm') : undefined;
+        // Convertir UTC vers heure locale française
+        const localTime = formatToFrenchTime(intake.scheduled_time);
+        const localTakenAt = intake.taken_at ? formatToFrenchTime(intake.taken_at) : undefined;
 
         details.push({
           id: intake.id,
@@ -348,13 +347,13 @@ const Calendar = () => {
       if (differenceMinutes <= 30) {
         return <CheckCircle2 className="h-6 w-6 text-success" />;
       }
-      // Jaune : entre 30min et 1h après (léger retard)
+      // Vert : entre 30min et 1h après (léger retard)
       else if (differenceMinutes <= 60) {
-        return <ClockAlert className="h-6 w-6 text-yellow-500" />;
+        return <ClockAlert className="h-6 w-6 text-success" />;
       }
-      // Jaune foncé : plus d'1h après (gros retard)
+      // Vert : plus d'1h après (gros retard)
       else {
-        return <ClockAlert className="h-6 w-6 text-yellow-600" />;
+        return <ClockAlert className="h-6 w-6 text-success" />;
       }
     }
     
@@ -368,7 +367,7 @@ const Calendar = () => {
         if (scheduledTimestamp) {
           const scheduledDate = new Date(scheduledTimestamp);
           if (isIntakeOverdue(scheduledDate)) {
-            return <ClockAlert className="h-6 w-6 text-orange-600" />;
+            return <ClockAlert className="h-6 w-6 text-success" />;
           }
         }
         return <Clock className="h-6 w-6 text-warning" />;
@@ -387,34 +386,6 @@ const Calendar = () => {
 
         {/* Stats Overview */}
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <Card className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/history?tab=statistics')}>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-success/10">
-                  <TrendingUp className="h-5 w-5 text-success" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold">{observanceRate}%</p>
-                  <p className="text-xs text-muted-foreground">Observance</p>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/history?tab=history')}>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-warning/10">
-                  <AlertCircle className="h-5 w-5 text-warning" />
-                </div>
-                <div>
-                  <p className="text-xl font-bold">
-                    {dayDetails.filter(d => d.status === 'taken').length}/{dayDetails.length}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Prises du jour</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
           <div className="grid grid-cols-2 gap-3">
             <Card className="p-4 surface-elevated cursor-pointer hover:shadow-md transition-shadow" onClick={() => navigate('/prescriptions')}>
               <div className="flex items-center gap-3">
@@ -458,8 +429,8 @@ const Calendar = () => {
           {/* Calendar */}
           <Card className="p-6 surface-elevated">
             <div className="space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-baseline gap-2">
                   <h2 className="text-xl font-bold">
                     {format(currentMonth, "yyyy", { locale: fr })}
                   </h2>
@@ -479,7 +450,11 @@ const Calendar = () => {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setCurrentMonth(new Date())}
+                    onClick={() => {
+                      const today = new Date();
+                      setCurrentMonth(today);
+                      setSelectedDate(today);
+                    }}
                     className="h-8 px-2 text-xs"
                   >
                     Aujourd'hui
@@ -557,9 +532,16 @@ const Calendar = () => {
 
           {/* Day Details */}
           <Card className="p-6 surface-elevated">
-            <h3 className="text-lg font-semibold mb-4">
-              {format(selectedDate, "d MMMM yyyy", { locale: fr })}
-            </h3>
+            <div className="flex items-baseline gap-2 mb-4">
+              <h3 className="text-lg font-semibold">
+                {format(selectedDate, "d MMMM yyyy", { locale: fr })}
+              </h3>
+              {dayDetails.length > 0 && (
+                <span className="text-sm text-muted-foreground">
+                  {dayDetails.filter(d => d.status === 'taken').length}/{dayDetails.length}
+                </span>
+              )}
+            </div>
             
             {treatmentStartDate && (() => {
               const selectedDateOnly = new Date(selectedDate);
@@ -584,7 +566,7 @@ const Calendar = () => {
                         {getStatusIcon(detail.status)}
                         <span className={`text-sm font-medium ${
                           detail.status === 'upcoming' && detail.scheduledTimestamp && isIntakeOverdue(new Date(detail.scheduledTimestamp)) 
-                            ? 'text-orange-600' 
+                            ? 'text-green-700' 
                             : ''
                         }`}>
                           {detail.time}
