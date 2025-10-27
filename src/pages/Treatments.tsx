@@ -8,6 +8,8 @@ import { Pill, Clock, Calendar, User, Download, Stethoscope, Calendar as Calenda
 import { useNavigate } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { calculateDaysBetween, formatToFrenchDate } from "@/lib/dateUtils"
+import { sortTimeStrings, sortMedicationsByEarliestTime } from "@/lib/sortingUtils"
 
 interface Treatment {
   id: string
@@ -103,9 +105,7 @@ const Treatments = () => {
           
           // If no prescription QSP, calculate from existing dates
           if (!qspDays && treatment.start_date && treatment.end_date) {
-            const startDate = new Date(treatment.start_date)
-            const endDate = new Date(treatment.end_date)
-            qspDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24))
+            qspDays = calculateDaysBetween(treatment.start_date, treatment.end_date)
           }
 
           // Load next pharmacy visit
@@ -148,11 +148,7 @@ const Treatments = () => {
               }
 
               // Sort times in ascending order
-              const sortedTimes = [...(med.times || [])].sort((a, b) => {
-                const [hoursA, minutesA] = a.split(':').map(Number);
-                const [hoursB, minutesB] = b.split(':').map(Number);
-                return (hoursA * 60 + minutesA) - (hoursB * 60 + minutesB);
-              });
+              const sortedTimes = sortTimeStrings(med.times || []);
 
               return {
                 id: med.id,
@@ -167,29 +163,11 @@ const Treatments = () => {
           );
 
           // Sort medications by earliest time, then alphabetically by name
-          medsWithPathology.sort((a, b) => {
-            // Get earliest time for each medication
-            const getEarliestTime = (times: string[]) => {
-              if (!times || times.length === 0) return 24 * 60; // Put at end if no times
-              const [hours, minutes] = times[0].split(':').map(Number);
-              return hours * 60 + minutes;
-            };
-            
-            const timeA = getEarliestTime(a.times);
-            const timeB = getEarliestTime(b.times);
-            
-            // First sort by time
-            if (timeA !== timeB) {
-              return timeA - timeB;
-            }
-            
-            // Then sort alphabetically by name
-            return a.name.localeCompare(b.name, 'fr');
-          });
+          const sortedMeds = sortMedicationsByEarliestTime(medsWithPathology);
 
           return {
             ...treatment,
-            medications: medsWithPathology,
+            medications: sortedMeds,
             prescribing_doctor: prescribingDoctor,
             prescription: prescription,
             next_pharmacy_visit: pharmacyVisits && pharmacyVisits.length > 0 ? pharmacyVisits[0] : null,
@@ -310,12 +288,12 @@ const Treatments = () => {
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
                       <Calendar className="h-3 w-3" />
                       <span className="whitespace-nowrap">
-                        Début : {new Date(treatment.start_date).toLocaleDateString("fr-FR")}
+                        Début : {formatToFrenchDate(treatment.start_date)}
                         {treatment.qsp_days && (
                           <span className="text-[10px]"> (QSP {Math.round(treatment.qsp_days / 30)} mois)</span>
                         )}
                         {treatment.end_date && (
-                          <> • Fin : {new Date(treatment.end_date).toLocaleDateString("fr-FR")}</>
+                          <> • Fin : {formatToFrenchDate(treatment.end_date)}</>
                         )}
                       </span>
                     </div>
