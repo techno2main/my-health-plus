@@ -10,7 +10,7 @@ import { useAutoRegenerateIntakes } from "./hooks/useAutoRegenerateIntakes";
 import Index from "./pages/index/Index";
 import Auth from "./pages/Auth";
 import Treatments from "./pages/Treatments";
-import Calendar from "./pages/Calendar";
+import Calendar from "./pages/calendar/Calendar";
 import Pros from "./pages/Pros";
 import Stock from "./pages/Stock";
 import Prescriptions from "./pages/Prescriptions";
