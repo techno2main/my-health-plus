@@ -9,7 +9,7 @@ import { NotificationSchedulerProvider } from "./components/NotificationSchedule
 import { useAutoRegenerateIntakes } from "./hooks/useAutoRegenerateIntakes";
 import Index from "./pages/index/Index";
 import Auth from "./pages/auth/Auth";
-import Treatments from "./pages/Treatments";
+import Treatments from "./pages/treatments/Treatments";
 import Calendar from "./pages/calendar/Calendar";
 import Pros from "./pages/Pros";
 import Stock from "./pages/Stock";
