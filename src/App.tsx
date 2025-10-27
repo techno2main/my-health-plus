@@ -13,7 +13,7 @@ import Treatments from "./pages/treatments/Treatments";
 import Calendar from "./pages/calendar/Calendar";
 import Pros from "./pages/Pros";
 import Stock from "./pages/Stock";
-import Prescriptions from "./pages/Prescriptions";
+import Prescriptions from "./pages/prescriptions/Prescriptions";
 import Settings from "./pages/Settings";
 import History from "./pages/history/History";
 import TreatmentForm from "./pages/treatment-form/TreatmentForm";
