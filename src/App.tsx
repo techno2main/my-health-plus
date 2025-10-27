@@ -16,7 +16,7 @@ import Stock from "./pages/Stock";
 import Prescriptions from "./pages/Prescriptions";
 import Settings from "./pages/Settings";
 import History from "./pages/history/History";
-import TreatmentForm from "./pages/TreatmentForm";
+import TreatmentForm from "./pages/treatment-form/TreatmentForm";
 import StockForm from "./pages/StockForm";
 
 import ProForm from "./pages/ProForm";
