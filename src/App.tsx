@@ -33,7 +33,7 @@ import TreatmentEdit from "./pages/TreatmentEdit";
 import NotificationSettings from "./pages/NotificationSettings";
 import NotificationDebug from "./pages/NotificationDebug";
 import NavigationManager from "./pages/NavigationManager";
-import Admin from "./pages/Admin";
+import Admin from "./pages/admin/dashboard/AdminDashboard";
 import NotFound from "./pages/NotFound";
 import Rattrapage from "./pages/Rattrapage";
 
