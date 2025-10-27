@@ -27,12 +27,12 @@ import Privacy from "./pages/privacy/Privacy";
 import About from "./pages/About";
 import StockDetails from "./pages/stock/StockDetails";
 import TreatmentEdit from "./pages/treatment-edit/TreatmentEdit";
-import NotificationSettings from "./pages/NotificationSettings";
-import NotificationDebug from "./pages/NotificationDebug";
-import NavigationManager from "./pages/NavigationManager";
+import NotificationSettings from "./pages/notification-settings/NotificationSettings";
+import NotificationDebug from "./pages/admin/NotificationDebug";
+import NavigationManager from "./pages/admin/NavigationManager";
 import Admin from "./pages/admin/dashboard/AdminDashboard";
 import NotFound from "./pages/NotFound";
-import Rattrapage from "./pages/Rattrapage";
+import Rattrapage from "./pages/rattrapage/Rattrapage";
 
 const queryClient = new QueryClient();
 
