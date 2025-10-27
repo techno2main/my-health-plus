@@ -11,17 +11,15 @@ import Index from "./pages/index/Index";
 import Auth from "./pages/auth/Auth";
 import Treatments from "./pages/treatments/Treatments";
 import Calendar from "./pages/calendar/Calendar";
-import Pros from "./pages/Pros";
 import Stock from "./pages/stock/Stock";
 import Prescriptions from "./pages/prescriptions/Prescriptions";
 import Settings from "./pages/Settings";
 import History from "./pages/history/History";
 import TreatmentForm from "./pages/treatment-form/TreatmentForm";
 import StockForm from "./pages/stock/StockForm";
-import ProForm from "./pages/ProForm";
 import MedicationCatalog from "./pages/medication-catalog/MedicationCatalog";
 import Referentials from "./pages/Referentials";
-import HealthProfessionals from "./pages/HealthProfessionals";
+import HealthProfessionals from "./pages/health-professionals/HealthProfessionals";
 import Pathologies from "./pages/pathologies/Pathologies";
 import Allergies from "./pages/allergies/Allergies";
 import Profile from "./pages/Profile";
@@ -59,8 +57,6 @@ const App = () => {
           <Route path="/stock/new" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
           <Route path="/stock/adjust" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-          <Route path="/pros" element={<ProtectedRoute><Pros /></ProtectedRoute>} />
-          <Route path="/pros/new" element={<ProtectedRoute><ProForm /></ProtectedRoute>} />
           <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
           <Route path="/medications" element={<ProtectedRoute><MedicationCatalog /></ProtectedRoute>} />
           <Route path="/referentials" element={<ProtectedRoute><Referentials /></ProtectedRoute>} />
