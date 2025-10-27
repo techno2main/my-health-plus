@@ -32,7 +32,7 @@ export const useAdherenceStats = () => {
     try {
       setLoading(true);
 
-      // Charger tous les intakes (tout l'historique)
+      // Charger tous les intakes (tout l'historique) UNIQUEMENT pour traitements actifs
       const { data: intakesData, error } = await supabase
         .from("medication_intakes")
         .select(`
@@ -41,11 +41,12 @@ export const useAdherenceStats = () => {
           scheduled_time,
           taken_at,
           status,
-          medications (
+          medications!inner (
             treatment_id,
-            treatments(user_id)
+            treatments!inner(user_id, is_active)
           )
         `)
+        .eq("medications.treatments.is_active", true)
         .order("scheduled_time", { ascending: false });
 
       if (error) throw error;

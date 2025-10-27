@@ -22,6 +22,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MedicationEditDialog } from "@/components/TreatmentEdit/MedicationEditDialog";
+import { calculateDaysBetween, calculateEndDate, formatToFrenchDate } from "@/lib/dateUtils";
+import { sortMedicationsByEarliestTime } from "@/lib/sortingUtils";
 
 interface Medication {
   id: string;
@@ -101,17 +103,12 @@ export default function TreatmentEdit() {
       
       // If no prescription QSP, calculate from existing dates
       if (!durationDays && treatmentData.start_date && treatmentData.end_date) {
-        const startDate = new Date(treatmentData.start_date);
-        const endDate = new Date(treatmentData.end_date);
-        durationDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+        durationDays = calculateDaysBetween(treatmentData.start_date, treatmentData.end_date);
       }
       
       // Calculate end date from QSP if we have it
       if (durationDays && treatmentData.start_date) {
-        const startDate = new Date(treatmentData.start_date);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + durationDays);
-        calculatedEndDate = endDate.toISOString().split('T')[0];
+        calculatedEndDate = calculateEndDate(treatmentData.start_date, durationDays);
       }
       
       setQspDays(durationDays);
@@ -159,19 +156,7 @@ export default function TreatmentEdit() {
       );
       
       // Trier par horaire de prise puis par nom
-      const sortedMedications = medsWithPathology.sort((a, b) => {
-        // Obtenir le premier horaire de chaque médicament pour le tri
-        const aFirstTime = a.times && a.times.length > 0 ? a.times[0] : "99:99";
-        const bFirstTime = b.times && b.times.length > 0 ? b.times[0] : "99:99";
-        
-        // Comparer les horaires
-        if (aFirstTime !== bFirstTime) {
-          return aFirstTime.localeCompare(bFirstTime);
-        }
-        
-        // Si même horaire, trier par nom
-        return a.name.localeCompare(b.name);
-      });
+      const sortedMedications = sortMedicationsByEarliestTime(medsWithPathology);
       
       setMedications(sortedMedications);
 
@@ -189,10 +174,7 @@ export default function TreatmentEdit() {
       
       // Recalculate end date based on QSP if we have it
       if (qspDays && newStartDate) {
-        const startDate = new Date(newStartDate);
-        const endDate = new Date(startDate);
-        endDate.setDate(endDate.getDate() + qspDays);
-        updated.endDate = endDate.toISOString().split('T')[0];
+        updated.endDate = calculateEndDate(newStartDate, qspDays);
       }
       
       return updated;
@@ -220,10 +202,7 @@ export default function TreatmentEdit() {
       // Recalculate end_date to ensure it's always up-to-date in DB
       let calculatedEndDate = formData.endDate || null;
       if (qspDays && formData.startDate) {
-        const start = new Date(formData.startDate);
-        const end = new Date(start);
-        end.setDate(end.getDate() + qspDays);
-        calculatedEndDate = end.toISOString().split('T')[0];
+        calculatedEndDate = calculateEndDate(formData.startDate, qspDays);
       }
       
       const { error } = await supabase
@@ -349,7 +328,7 @@ export default function TreatmentEdit() {
               <div className="space-y-2">
                 <Label htmlFor="endDate">Date de fin</Label>
                 <div className="flex items-center h-10 px-3 py-2 rounded-md border border-input bg-muted/50 text-sm">
-                  {formData.endDate ? new Date(formData.endDate).toLocaleDateString('fr-FR') : "Non définie"}
+                  {formData.endDate ? formatToFrenchDate(formData.endDate) : "Non définie"}
                 </div>
               </div>
             </div>

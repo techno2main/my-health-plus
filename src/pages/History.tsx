@@ -13,6 +13,8 @@ import { formatToFrenchTime } from '../lib/dateUtils';
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAdherenceStats } from "@/hooks/useAdherenceStats";
+import { calculateDaysBetween } from "@/lib/dateUtils";
+import { sortIntakesByTimeAndName } from "@/lib/sortingUtils";
 
 
 interface MedicationIntake {
@@ -205,9 +207,7 @@ export default function History() {
           }
           
           if (!qspDays && treatment.start_date && treatment.end_date) {
-            const startDate = new Date(treatment.start_date);
-            const endDate = new Date(treatment.end_date);
-            qspDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+            qspDays = calculateDaysBetween(treatment.start_date, treatment.end_date);
           }
           
           treatmentsQspMap.set(treatmentId, {
@@ -256,13 +256,7 @@ export default function History() {
 
       // Sort intakes within each day: 1) by scheduled time, 2) by medication name
       Object.values(grouped).forEach(day => {
-        day.intakes.sort((a, b) => {
-          // Compare scheduled time first
-          const timeCompare = a.time.localeCompare(b.time);
-          if (timeCompare !== 0) return timeCompare;
-          // If same time, compare medication names alphabetically
-          return a.medication.localeCompare(b.medication);
-        });
+        day.intakes = sortIntakesByTimeAndName(day.intakes);
       });
 
       setHistoryData(Object.values(grouped));

@@ -14,6 +14,7 @@ import { useAdherenceStats } from "@/hooks/useAdherenceStats"
 import { useMissedIntakesDetection } from "@/hooks/useMissedIntakesDetection"
 import { formatToFrenchTime, convertFrenchToUTC } from "../lib/dateUtils"
 import { useIntakeOverdue } from "@/hooks/useIntakeOverdue"
+import { sortIntakesByTimeAndName } from "@/lib/sortingUtils"
 
 interface UpcomingIntake {
   id: string
@@ -545,13 +546,7 @@ const Index = () => {
 
                   // Sort intakes within each treatment: 1) by time, 2) by medication name
                   Object.values(groupedByTreatment).forEach(group => {
-                    group.intakes.sort((a, b) => {
-                      // Compare times first
-                      const timeCompare = a.time.localeCompare(b.time);
-                      if (timeCompare !== 0) return timeCompare;
-                      // If same time, compare medication names alphabetically
-                      return a.medication.localeCompare(b.medication);
-                    });
+                    group.intakes = sortIntakesByTimeAndName(group.intakes);
                   });
 
                   return (
@@ -671,13 +666,7 @@ const Index = () => {
 
                   // Sort intakes within each treatment: 1) by time, 2) by medication name
                   Object.values(groupedByTreatment).forEach(group => {
-                    group.intakes.sort((a, b) => {
-                      // Compare times first
-                      const timeCompare = a.time.localeCompare(b.time);
-                      if (timeCompare !== 0) return timeCompare;
-                      // If same time, compare medication names alphabetically
-                      return a.medication.localeCompare(b.medication);
-                    });
+                    group.intakes = sortIntakesByTimeAndName(group.intakes);
                   });
 
                   return (

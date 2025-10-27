@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { useNavigate } from "react-router-dom"
+import { sortTimeStrings } from "@/lib/sortingUtils"
 
 // Fonctions utilitaires pour la détection automatique des prises
 const detectTakesFromDosage = (dosage: string): { count: number; moments: string[] } => {
@@ -76,7 +77,7 @@ const getDefaultTimes = (numberOfTakes: number, detectedMoments: string[] = []):
 const generateDosageFromTimes = (times: string[]): string => {
   if (times.length === 0) return "Définir une ou plusieurs prises";
   
-  const sortedTimes = [...times].sort();
+  const sortedTimes = sortTimeStrings(times);
   const moments: string[] = [];
   
   sortedTimes.forEach(time => {
