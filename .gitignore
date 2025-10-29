@@ -36,3 +36,6 @@ desktop.ini
 android/capacitor.settings.gradle
 android/app/capacitor.build.gradle
 android/capacitor-cordova-android-plugins/cordova.variables.gradle
+
+# Supabase temporary files
+supabase/.temp/
