@@ -11,12 +11,12 @@ import Index from "./pages/index/Index";
 import Auth from "./pages/auth/Auth";
 import Treatments from "./pages/treatments/Treatments";
 import Calendar from "./pages/calendar/Calendar";
-import Stock from "./pages/stock/Stock";
+import Stock from "./pages/stocks/Stock";
 import Prescriptions from "./pages/prescriptions/Prescriptions";
 import Settings from "./pages/settings/Settings";
 import History from "./pages/history/History";
 import TreatmentForm from "./pages/treatment-form/TreatmentForm";
-import StockForm from "./pages/stock/StockForm";
+import StockForm from "./pages/stocks/StockForm";
 import MedicationCatalog from "./pages/medication-catalog/MedicationCatalog";
 import Referentials from "./pages/referentials/Referentials";
 import HealthProfessionals from "./pages/health-professionals/HealthProfessionals";
@@ -25,7 +25,7 @@ import Allergies from "./pages/allergies/Allergies";
 import Profile from "./pages/profile/Profile";
 import Privacy from "./pages/privacy/Privacy";
 import About from "./pages/about/About";
-import StockDetails from "./pages/stock/StockDetails";
+import StockDetails from "./pages/stocks/StockDetails";
 import TreatmentEdit from "./pages/treatment-edit/TreatmentEdit";
 import NotificationSettings from "./pages/notification-settings/NotificationSettings";
 import NotificationDebug from "./pages/admin/NotificationDebug";
@@ -53,9 +53,9 @@ const App = () => {
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/treatments" element={<ProtectedRoute><Treatments /></ProtectedRoute>} />
           <Route path="/treatments/new" element={<ProtectedRoute><TreatmentForm /></ProtectedRoute>} />
-          <Route path="/stock" element={<ProtectedRoute><Stock /></ProtectedRoute>} />
-          <Route path="/stock/new" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
-          <Route path="/stock/adjust" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
+          <Route path="/stocks" element={<ProtectedRoute><Stock /></ProtectedRoute>} />
+          <Route path="/stocks/new" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
+          <Route path="/stocks/adjust" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
           <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
           <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
           <Route path="/medications" element={<ProtectedRoute><MedicationCatalog /></ProtectedRoute>} />
@@ -72,7 +72,7 @@ const App = () => {
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/privacy" element={<ProtectedRoute><Privacy /></ProtectedRoute>} />
           <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
-          <Route path="/stock/:id" element={<ProtectedRoute><StockDetails /></ProtectedRoute>} />
+          <Route path="/stocks/:id" element={<ProtectedRoute><StockDetails /></ProtectedRoute>} />
           <Route path="/treatments/:id/edit" element={<ProtectedRoute><TreatmentEdit /></ProtectedRoute>} />
           <Route path="/rattrapage" element={<ProtectedRoute><Rattrapage /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

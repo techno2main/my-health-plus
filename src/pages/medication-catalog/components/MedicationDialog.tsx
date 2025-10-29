@@ -20,7 +20,7 @@ interface MedicationDialogProps {
   editingMed: any | null;
   formData: {
     name: string;
-    pathology: string;
+    pathology_id: string;
     default_posology: string;
     strength: string;
     description: string;
@@ -94,13 +94,16 @@ export function MedicationDialog({
             {/* Deuxième ligne : Pathologie seule */}
             <div className="space-y-2">
               <Label htmlFor="pathology">Pathologie</Label>
-              <Select value={formData.pathology} onValueChange={(value) => setFormData({ ...formData, pathology: value })}>
+              <Select 
+                value={formData.pathology_id} 
+                onValueChange={(value) => setFormData({ ...formData, pathology_id: value })}
+              >
                 <SelectTrigger className="bg-surface">
                   <SelectValue placeholder="Sélectionner une pathologie" />
                 </SelectTrigger>
                 <SelectContent className="bg-popover z-50">
                   {pathologies.map((pathology) => (
-                    <SelectItem key={pathology.id} value={pathology.name}>
+                    <SelectItem key={pathology.id} value={pathology.id}>
                       {pathology.name}
                     </SelectItem>
                   ))}

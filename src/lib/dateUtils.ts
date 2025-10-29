@@ -59,6 +59,28 @@ export const formatFrenchDate = (date: Date, formatPattern: string = 'dd/MM/yyyy
   return format(date, formatPattern, { locale: fr });
 };
 
+/**
+ * Vérifie si l'heure actuelle est dans la plage autorisée pour valider les prises (06:00-23:59)
+ * Entre 00:00 et 05:59, les boutons de validation sont désactivés
+ * 
+ * @returns true si l'heure actuelle est >= 06:00, false sinon
+ * 
+ * @example
+ * // À 05:30
+ * isIntakeValidationAllowed(); // false
+ * 
+ * // À 06:00
+ * isIntakeValidationAllowed(); // true
+ * 
+ * // À 23:59
+ * isIntakeValidationAllowed(); // true
+ */
+export const isIntakeValidationAllowed = (): boolean => {
+  const now = new Date();
+  const currentHour = now.getHours();
+  return currentHour >= 6; // Autorisé à partir de 06:00
+};
+
 // ============================================================================
 // CALCULS DE DATES
 // ============================================================================
@@ -192,4 +214,55 @@ export function formatToFrenchDate(
     console.error('[formatToFrenchDate] Erreur de formatage:', error);
     return "-";
   }
+}
+
+/**
+ * Retourne la date au format YYYY-MM-DD en heure locale
+ * Évite les problèmes de décalage UTC avec toISOString()
+ * 
+ * @param date - Objet Date à formater
+ * @returns Date au format "YYYY-MM-DD" en heure locale
+ * 
+ * @example
+ * getLocalDateString(new Date(2025, 9, 27)); // 27 octobre 2025
+ * // Résultat : "2025-10-27"
+ */
+export function getLocalDateString(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Crée un objet Date représentant le début de journée (00:00:00) en heure locale
+ * Utile pour les requêtes à la base de données qui nécessitent un timestamp UTC
+ * mais basé sur une date locale
+ * 
+ * @param date - Date de référence (optionnelle, par défaut aujourd'hui)
+ * @returns Objet Date avec l'heure à 00:00:00.000 en heure locale
+ * 
+ * @example
+ * getStartOfLocalDay(); // Aujourd'hui à 00:00
+ * getStartOfLocalDay(new Date(2025, 9, 27)); // 27 octobre 2025 à 00:00
+ */
+export function getStartOfLocalDay(date: Date = new Date()): Date {
+  const result = new Date(date);
+  result.setHours(0, 0, 0, 0);
+  return result;
+}
+
+/**
+ * Crée un objet Date représentant la fin de journée (23:59:59.999) en heure locale
+ * 
+ * @param date - Date de référence (optionnelle, par défaut aujourd'hui)
+ * @returns Objet Date avec l'heure à 23:59:59.999 en heure locale
+ * 
+ * @example
+ * getEndOfLocalDay(); // Aujourd'hui à 23:59:59.999
+ */
+export function getEndOfLocalDay(date: Date = new Date()): Date {
+  const result = new Date(date);
+  result.setHours(23, 59, 59, 999);
+  return result;
 }

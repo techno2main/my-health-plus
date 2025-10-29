@@ -31,3 +31,11 @@ desktop.ini
 .env.development
 .env.production
 .env.test
+
+# Capacitor auto-generated files
+android/capacitor.settings.gradle
+android/app/capacitor.build.gradle
+android/capacitor-cordova-android-plugins/cordova.variables.gradle
+
+# Supabase temporary files
+supabase/.temp/

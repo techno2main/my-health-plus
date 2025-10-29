@@ -32,7 +32,7 @@ export default function StockForm() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
-        <PageHeader title={`Ajuster le stock - ${medication.name}`} backTo="/stock" />
+        <PageHeader title={`Ajuster le stock - ${medication.name}`} backTo="/stocks" />
 
         <StockAdjustmentForm
           currentStock={currentStock}

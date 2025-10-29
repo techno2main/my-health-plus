@@ -66,7 +66,7 @@ export function useStockForm() {
       if (error) throw error;
 
       toast.success("Stock mis à jour");
-      navigate("/stock");
+      navigate("/stocks");
     } catch (error: any) {
       toast.error("Erreur lors de la mise à jour");
       console.error(error);
@@ -86,6 +86,6 @@ export function useStockForm() {
     setMinThreshold,
     isLoading,
     handleSubmit,
-    handleCancel: () => navigate("/stock"),
+    handleCancel: () => navigate("/stocks"),
   };
 }

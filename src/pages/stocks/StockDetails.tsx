@@ -32,7 +32,7 @@ export default function StockDetails() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 py-6 space-y-6">
-        <PageHeader title={`Détails - ${medication.name}`} backTo="/stock" />
+        <PageHeader title={`Détails - ${medication.name}`} backTo="/stocks" />
 
         <StockDetailsCard
           currentStock={currentStock}

@@ -40,11 +40,11 @@ export function useStock() {
   const lowStockCount = stockItems.filter((item) => item.status === "low" || item.status === "critical").length;
 
   const handleAdjust = (id: string) => {
-    navigate(`/stock/adjust?id=${id}`);
+    navigate(`/stocks/adjust?id=${id}`);
   };
 
   const handleViewDetails = (id: string) => {
-    navigate(`/stock/${id}`);
+    navigate(`/stocks/${id}`);
   };
 
   return {

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Settings2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 
 interface CustomMessagesCardProps {
   customMessages: {
@@ -21,9 +21,41 @@ export function CustomMessagesCard({
   onUpdate,
 }: CustomMessagesCardProps) {
   const [showCustomize, setShowCustomize] = useState(false);
+  const [editedMessages, setEditedMessages] = useState(customMessages);
+  const cardRef = useRef<HTMLDivElement>(null);
+  const buttonsRef = useRef<HTMLDivElement>(null);
+
+  // Mettre à jour les valeurs éditées quand les props changent
+  useEffect(() => {
+    setEditedMessages(customMessages);
+  }, [customMessages]);
+
+  const handleModify = () => {
+    setShowCustomize(true);
+    // Réinitialiser les valeurs éditées avec les valeurs actuelles
+    setEditedMessages(customMessages);
+    
+    // Scroll vers les boutons après un court délai pour que le contenu soit rendu
+    setTimeout(() => {
+      buttonsRef.current?.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'end' 
+      });
+    }, 150);
+  };
+
+  const handleSave = () => {
+    onUpdate(editedMessages);
+    setShowCustomize(false);
+  };
+
+  const handleCancel = () => {
+    setEditedMessages(customMessages);
+    setShowCustomize(false);
+  };
 
   return (
-    <Card className="p-4 space-y-4">
+    <Card ref={cardRef} className="p-4 space-y-4">
       <div className="flex items-start gap-3">
         <div className="p-2 rounded-lg bg-primary/10">
           <Settings2 className="h-5 w-5 text-primary" />
@@ -34,13 +66,15 @@ export function CustomMessagesCard({
             Modifier les textes
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowCustomize(!showCustomize)}
-        >
-          {showCustomize ? "Masquer" : "Modifier"}
-        </Button>
+        {!showCustomize && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleModify}
+          >
+            Modifier
+          </Button>
+        )}
       </div>
 
       {showCustomize && (
@@ -51,10 +85,10 @@ export function CustomMessagesCard({
             </Label>
             <Input
               id="msg-medication"
-              value={customMessages.medicationReminder}
+              value={editedMessages.medicationReminder}
               onChange={(e) =>
-                onUpdate({
-                  ...customMessages,
+                setEditedMessages({
+                  ...editedMessages,
                   medicationReminder: e.target.value,
                 })
               }
@@ -68,10 +102,10 @@ export function CustomMessagesCard({
             </Label>
             <Input
               id="msg-delayed"
-              value={customMessages.delayedReminder}
+              value={editedMessages.delayedReminder}
               onChange={(e) =>
-                onUpdate({
-                  ...customMessages,
+                setEditedMessages({
+                  ...editedMessages,
                   delayedReminder: e.target.value,
                 })
               }
@@ -85,10 +119,10 @@ export function CustomMessagesCard({
             </Label>
             <Input
               id="msg-stock"
-              value={customMessages.stockAlert}
+              value={editedMessages.stockAlert}
               onChange={(e) =>
-                onUpdate({
-                  ...customMessages,
+                setEditedMessages({
+                  ...editedMessages,
                   stockAlert: e.target.value,
                 })
               }
@@ -102,10 +136,10 @@ export function CustomMessagesCard({
             </Label>
             <Input
               id="msg-renewal"
-              value={customMessages.prescriptionRenewal}
+              value={editedMessages.prescriptionRenewal}
               onChange={(e) =>
-                onUpdate({
-                  ...customMessages,
+                setEditedMessages({
+                  ...editedMessages,
                   prescriptionRenewal: e.target.value,
                 })
               }
@@ -119,16 +153,35 @@ export function CustomMessagesCard({
             </Label>
             <Input
               id="msg-pharmacy"
-              value={customMessages.pharmacyVisit}
+              value={editedMessages.pharmacyVisit}
               onChange={(e) =>
-                onUpdate({
-                  ...customMessages,
+                setEditedMessages({
+                  ...editedMessages,
                   pharmacyVisit: e.target.value,
                 })
               }
               placeholder="💊 Visite pharmacie"
               className="mt-1"
             />
+          </div>
+
+          {/* Boutons Enregistrer et Annuler */}
+          <div ref={buttonsRef} className="flex gap-2 pt-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCancel}
+              className="flex-1"
+            >
+              Annuler
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleSave}
+              className="flex-1"
+            >
+              Enregistrer
+            </Button>
           </div>
         </div>
       )}

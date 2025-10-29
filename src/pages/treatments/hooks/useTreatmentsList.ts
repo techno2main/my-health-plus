@@ -5,6 +5,16 @@ import { calculateDaysBetween } from "@/lib/dateUtils"
 import { sortTimeStrings, sortMedicationsByEarliestTime } from "@/lib/sortingUtils"
 import type { Treatment } from "../types"
 
+type MedicationCatalogWithPathology = {
+  pathology_id: string | null
+  strength: string | null
+  default_posology: string | null
+  pathologies: {
+    id: string
+    name: string
+  } | null
+}
+
 export const useTreatmentsList = () => {
   const [treatments, setTreatments] = useState<Treatment[]>([])
   const [loading, setLoading] = useState(true)
@@ -103,11 +113,19 @@ export const useTreatmentsList = () => {
               if (med.catalog_id) {
                 const { data: catalogData } = await supabase
                   .from("medication_catalog")
-                  .select("pathology, strength, default_posology")
+                  .select(`
+                    pathology_id,
+                    strength,
+                    default_posology,
+                    pathologies (
+                      id,
+                      name
+                    )
+                  `)
                   .eq("id", med.catalog_id)
-                  .maybeSingle();
+                  .maybeSingle() as { data: MedicationCatalogWithPathology | null };
                 
-                pathology = catalogData?.pathology || null;
+                pathology = catalogData?.pathologies?.name || null;
                 catalogDosage = catalogData?.strength || catalogData?.default_posology;
               }
 

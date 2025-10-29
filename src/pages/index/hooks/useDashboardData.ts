@@ -2,7 +2,7 @@ import { useState, useEffect } from "react"
 import { parseISO } from "date-fns"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
-import { formatToFrenchTime } from "@/lib/dateUtils"
+import { formatToFrenchTime, getStartOfLocalDay } from "@/lib/dateUtils"
 import { UpcomingIntake, StockAlert, ActiveTreatment } from "../types"
 
 export const useDashboardData = () => {
@@ -81,8 +81,8 @@ export const useDashboardData = () => {
       if (medsError) throw medsError
 
       // SYSTÈME UNIFIÉ : Lire les prises depuis medication_intakes uniquement
-      const today = new Date()
-      today.setHours(0, 0, 0, 0)
+      // Utilisation de getStartOfLocalDay pour gérer correctement le changement d'heure été/hiver
+      const today = getStartOfLocalDay()
       const tomorrow = new Date(today)
       tomorrow.setDate(tomorrow.getDate() + 1)
       const dayAfterTomorrow = new Date(today)
@@ -102,7 +102,15 @@ export const useDashboardData = () => {
             min_threshold,
             treatment_id,
             treatments!inner (name, is_active),
-            medication_catalog (pathology, strength, default_posology)
+            medication_catalog (
+              pathology_id,
+              strength,
+              default_posology,
+              pathologies (
+                id,
+                name
+              )
+            )
           )
         `)
         .gte("scheduled_time", today.toISOString())
@@ -136,7 +144,7 @@ export const useDashboardData = () => {
           date: scheduledDate,
           treatment: intake.medications.treatments.name,
           treatmentId: intake.medications.treatment_id,
-          pathology: intake.medications?.medication_catalog?.pathology || "",
+          pathology: intake.medications?.medication_catalog?.pathologies?.name || "",
           currentStock: intake.medications.current_stock || 0,
           minThreshold: intake.medications.min_threshold || 10,
           treatmentQspDays: treatmentInfo?.qspDays || null,

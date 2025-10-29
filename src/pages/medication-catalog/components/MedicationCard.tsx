@@ -9,7 +9,12 @@ interface MedicationCardProps {
     id: string;
     name: string;
     strength?: string | null;
-    pathology?: string | null;
+    pathology_id?: string | null;
+    pathologies?: {
+      id: string;
+      name: string;
+      description?: string | null;
+    } | null;
     default_posology?: string | null;
     description?: string | null;
     total_stock?: number;
@@ -55,12 +60,12 @@ export function MedicationCard({ medication, onEdit, onDelete, onStockClick }: M
         </div>
 
         {/* Ligne 2: Pathologie + Stock */}
-        {(medication.pathology || medication.total_stock !== undefined) && (
+        {(medication.pathologies || medication.total_stock !== undefined) && (
           <div className="flex items-center justify-between">
             <div>
-              {medication.pathology && (
+              {medication.pathologies && (
                 <Badge variant="secondary">
-                  {medication.pathology}
+                  {medication.pathologies.name}
                 </Badge>
               )}
             </div>
