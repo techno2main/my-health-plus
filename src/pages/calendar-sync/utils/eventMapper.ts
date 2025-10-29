@@ -99,7 +99,7 @@ export const mapPharmacyVisitsToEvents = (visits: any[]): CalendarEvent[] => {
     const visitDate = new Date(visit.visit_date + 'T09:00:00Z'); // 9h par défaut
     const endDate = createEndDate(visitDate, 60); // 1h de durée
 
-    const pharmacyName = visit.pharmacies?.name || 'Pharmacie';
+    const pharmacyName = visit.health_professionals?.name || 'Pharmacie';
     const treatmentName = visit.treatments?.name || '';
 
     return {
@@ -108,7 +108,7 @@ export const mapPharmacyVisitsToEvents = (visits: any[]): CalendarEvent[] => {
       description: `Traitement: ${treatmentName}\nPharmacie: ${pharmacyName}\nVisite #${visit.visit_number}`,
       startDate: visitDate,
       endDate,
-      location: visit.pharmacies?.address,
+      location: visit.health_professionals?.street_address,
       eventType: 'pharmacy_visit' as const,
       color: getEventColor('pharmacy_visit'),
       alerts: getEventAlerts('pharmacy_visit'),

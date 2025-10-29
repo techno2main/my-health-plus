@@ -7,7 +7,7 @@ const DEFAULT_CONFIG: SyncConfig = {
   selectedCalendarId: null,
   syncEnabled: false,
   syncIntakes: true,
-  syncDoctorVisits: true,
+  syncDoctorVisits: false, // DÉSACTIVÉ : Pas de table doctor_visits dans la BDD
   syncPharmacyVisits: true,
   syncPrescriptionRenewals: true,
   lastSyncDate: null,

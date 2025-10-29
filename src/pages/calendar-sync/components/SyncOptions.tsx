@@ -38,12 +38,12 @@ export const SyncOptions = ({ config, onUpdateConfig }: SyncOptionsProps) => {
           />
         </div>
 
-        <div className="flex items-center justify-between">
-          <Label htmlFor="sync-doctor" className="flex-1">
+        <div className="flex items-center justify-between opacity-50">
+          <Label htmlFor="sync-doctor" className="flex-1 cursor-not-allowed">
             <div>
               <p className="font-medium">Rendez-vous médecin</p>
               <p className="text-sm text-muted-foreground">
-                Fin de traitement et consultations
+                Fin de traitement et consultations (non disponible)
               </p>
             </div>
           </Label>
@@ -51,6 +51,7 @@ export const SyncOptions = ({ config, onUpdateConfig }: SyncOptionsProps) => {
             id="sync-doctor"
             checked={config.syncDoctorVisits}
             onCheckedChange={(checked) => onUpdateConfig({ syncDoctorVisits: checked })}
+            disabled={true}
           />
         </div>
 

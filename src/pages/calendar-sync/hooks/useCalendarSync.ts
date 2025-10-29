@@ -60,7 +60,7 @@ export const useCalendarSync = () => {
             visit_number,
             treatment_id,
             treatments!inner (name, is_active),
-            pharmacies (name, address)
+            health_professionals:pharmacy_id (name, street_address)
           `)
           .eq('is_completed', false)
           .eq('treatments.is_active', true)
