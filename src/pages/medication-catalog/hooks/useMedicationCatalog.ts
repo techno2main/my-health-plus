@@ -226,9 +226,9 @@ export function useMedicationCatalog() {
     const { data } = await supabase.from("medications").select("id").eq("catalog_id", catalogId).limit(1).single();
 
     if (data) {
-      navigate(`/stock/${data.id}`);
+      navigate(`/stocks/${data.id}`);
     } else {
-      navigate("/stock");
+      navigate("/stocks");
     }
   };
 
