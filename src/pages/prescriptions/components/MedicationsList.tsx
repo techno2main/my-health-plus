@@ -16,12 +16,12 @@ export function MedicationsList({ medications }: MedicationsListProps) {
   return (
     <div className="mb-4">
       <p className="text-sm font-medium text-muted-foreground mb-2">Médicaments prescrits</p>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex justify-between gap-1">
         {medications.map((med) => (
           <Badge 
             key={med.id} 
             variant="secondary"
-            className="max-w-full break-words"
+            className="text-xs px-2 py-1"
           >
             {med.name}
           </Badge>

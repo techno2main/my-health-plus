@@ -34,23 +34,23 @@ export const MedicationItem = ({ medication }: MedicationItemProps) => {
           <p className="font-medium text-sm">
             {medication.name} <span className="text-muted-foreground">• {medication.posology}</span>
           </p>
-          {medication.pathology && (
-            <Badge variant="secondary" className="text-xs flex-shrink-0">
-              {medication.pathology}
-            </Badge>
-          )}
-        </div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Clock className="h-3 w-3" />
-            <span>{medication.times.join(", ")}</span>
-          </div>
           <div className={`flex items-center gap-1 px-2 py-0.5 rounded-full ${getStockBgColor(medication.currentStock, medication.minThreshold)}`}>
             <Pill className={`h-3 w-3 ${getStockColor(medication.currentStock, medication.minThreshold)}`} />
             <span className={`text-xs font-semibold ${getStockColor(medication.currentStock, medication.minThreshold)}`}>
               {medication.currentStock}
             </span>
           </div>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <Clock className="h-3 w-3" />
+            <span>{medication.times.join(", ")}</span>
+          </div>
+          {medication.pathology && (
+            <Badge variant="secondary" className="text-xs flex-shrink-0">
+              {medication.pathology}
+            </Badge>
+          )}
         </div>
       </div>
     </div>

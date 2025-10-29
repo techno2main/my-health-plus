@@ -102,7 +102,15 @@ export const useDashboardData = () => {
             min_threshold,
             treatment_id,
             treatments!inner (name, is_active),
-            medication_catalog (pathology, strength, default_posology)
+            medication_catalog (
+              pathology_id,
+              strength,
+              default_posology,
+              pathologies (
+                id,
+                name
+              )
+            )
           )
         `)
         .gte("scheduled_time", today.toISOString())
@@ -136,7 +144,7 @@ export const useDashboardData = () => {
           date: scheduledDate,
           treatment: intake.medications.treatments.name,
           treatmentId: intake.medications.treatment_id,
-          pathology: intake.medications?.medication_catalog?.pathology || "",
+          pathology: intake.medications?.medication_catalog?.pathologies?.name || "",
           currentStock: intake.medications.current_stock || 0,
           minThreshold: intake.medications.min_threshold || 10,
           treatmentQspDays: treatmentInfo?.qspDays || null,

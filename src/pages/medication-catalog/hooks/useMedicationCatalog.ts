@@ -6,7 +6,12 @@ import { toast } from "sonner";
 interface MedicationCatalog {
   id: string;
   name: string;
-  pathology: string | null;
+  pathology_id: string | null;
+  pathologies?: {
+    id: string;
+    name: string;
+    description: string | null;
+  } | null;
   default_posology: string | null;
   strength: string | null;
   description: string | null;
@@ -19,7 +24,7 @@ interface MedicationCatalog {
 
 interface FormData {
   name: string;
-  pathology: string;
+  pathology_id: string;
   default_posology: string;
   strength: string;
   description: string;
@@ -30,7 +35,7 @@ interface FormData {
 
 const initialFormData: FormData = {
   name: "",
-  pathology: "",
+  pathology_id: "",
   default_posology: "Définir une ou plusieurs prises",
   strength: "",
   description: "",
@@ -74,14 +79,21 @@ export function useMedicationCatalog() {
     try {
       const { data, error } = await supabase
         .from("medication_catalog")
-        .select("*")
+        .select(`
+          *,
+          pathologies (
+            id,
+            name,
+            description
+          )
+        `)
         .order("name");
 
       if (error) throw error;
 
       // Pour chaque médicament du catalogue, calculer le stock total et le seuil minimal
       const medsWithStock = await Promise.all(
-        (data || []).map(async (med) => {
+        (data || []).map(async (med: any) => {
           const { data: stockData } = await supabase
             .from("medications")
             .select("current_stock, min_threshold")
@@ -99,7 +111,7 @@ export function useMedicationCatalog() {
             ...med,
             total_stock: totalStock,
             effective_threshold: avgThreshold,
-          };
+          } as MedicationCatalog;
         })
       );
 
@@ -136,7 +148,7 @@ export function useMedicationCatalog() {
           .from("medication_catalog")
           .update({
             name: formData.name,
-            pathology: formData.pathology || null,
+            pathology_id: formData.pathology_id || null,
             default_posology: formData.default_posology || null,
             strength: formData.strength || null,
             description: formData.description || null,
@@ -151,7 +163,7 @@ export function useMedicationCatalog() {
       } else {
         const { error } = await supabase.from("medication_catalog").insert({
           name: formData.name,
-          pathology: formData.pathology || null,
+          pathology_id: formData.pathology_id || null,
           default_posology: formData.default_posology || null,
           strength: formData.strength || null,
           description: formData.description || null,
@@ -200,7 +212,7 @@ export function useMedicationCatalog() {
       setEditingMed(med);
       setFormData({
         name: med.name,
-        pathology: med.pathology || "",
+        pathology_id: med.pathology_id || "",
         default_posology: med.default_posology || "",
         strength: med.strength || "",
         description: med.description || "",
@@ -235,7 +247,7 @@ export function useMedicationCatalog() {
   const filteredMedications = medications.filter(
     (med) =>
       med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      med.pathology?.toLowerCase().includes(searchTerm.toLowerCase())
+      med.pathologies?.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return {
