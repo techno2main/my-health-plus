@@ -6,17 +6,17 @@
 - [x] Ajout route `/calendar-sync` dans App.tsx
 - [x] Vérification compilation TypeScript
 
-## 📦 Phase 2 : Installation du plugin Capacitor (EN COURS)
+## ✅ Phase 2 : Installation du plugin Capacitor (COMPLÉTÉ)
 
 ### Étape 1 : Installation du plugin
 ```bash
-npm install @capacitor-community/calendar
-npx cap sync
+npm install @ebarooni/capacitor-calendar --legacy-peer-deps
+npx cap sync android
 ```
 
-- [ ] Exécuter `npm install @capacitor-community/calendar`
-- [ ] Exécuter `npx cap sync android`
-- [ ] Vérifier que le plugin est bien ajouté dans package.json
+- [x] Exécuter `npm install @ebarooni/capacitor-calendar --legacy-peer-deps`
+- [x] Exécuter `npx cap sync android`
+- [x] Vérifier que le plugin est bien ajouté dans package.json
 
 ### Étape 2 : Configuration Android
 Fichier: `android/app/src/main/AndroidManifest.xml`
@@ -27,28 +27,27 @@ Ajouter les permissions (normalement déjà présentes) :
 <uses-permission android:name="android.permission.WRITE_CALENDAR" />
 ```
 
-- [ ] Vérifier les permissions dans AndroidManifest.xml
-- [ ] Ajouter les permissions si manquantes
+- [x] Vérifier les permissions dans AndroidManifest.xml
+- [x] Ajouter les permissions si manquantes
 
 ### Étape 3 : Test de la page
-- [ ] Ouvrir l'app en dev : `npm run dev`
-- [ ] Naviguer vers `/calendar-sync`
-- [ ] Vérifier que la page s'affiche sans erreur
+- [x] Ouvrir l'app en dev : `npm run dev`
+- [x] Naviguer vers `/calendar-sync`
+- [x] Vérifier que la page s'affiche sans erreur
 - [ ] Tester sur émulateur Android
 
-## 🔧 Phase 3 : Implémentation des hooks (À FAIRE)
+## ✅ Phase 3 : Implémentation des hooks (COMPLÉTÉ)
 
-Le hook `useNativeCalendar.ts` utilise actuellement des valeurs mockées.
-Il faut implémenter les vraies méthodes du plugin :
+Le hook `useNativeCalendar.ts` utilise maintenant le plugin réel.
 
 Fichier: `src/pages/calendar-sync/hooks/useNativeCalendar.ts`
 
-- [ ] Remplacer les mocks par les vraies méthodes du plugin
-- [ ] Implémenter `requestPermissions()`
-- [ ] Implémenter `getCalendars()`
-- [ ] Implémenter `createEvent()`
-- [ ] Implémenter `updateEvent()`
-- [ ] Implémenter `deleteEvent()`
+- [x] Remplacer les mocks par les vraies méthodes du plugin
+- [x] Implémenter `requestPermissions()` avec `requestFullCalendarAccess()`
+- [x] Implémenter `getCalendars()` avec `listCalendars()`
+- [x] Implémenter `createEvent()` avec `createEvent()`
+- [x] Implémenter `updateEvent()` avec `modifyEvent()`
+- [x] Implémenter `deleteEvent()` avec `deleteEvent()`
 
 ## 🎯 Phase 4 : Mapping des événements (À FAIRE)
 
