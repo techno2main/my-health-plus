@@ -43,6 +43,7 @@ export interface SyncConfig {
   syncPharmacyVisits: boolean;
   syncPrescriptionRenewals: boolean;
   lastSyncDate: string | null;
+  syncedEvents: Record<string, string>; // app_event_id -> native_event_id mapping
 }
 
 export interface SyncResult {

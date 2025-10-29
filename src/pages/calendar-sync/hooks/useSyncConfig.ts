@@ -10,7 +10,8 @@ const DEFAULT_CONFIG: SyncConfig = {
   syncDoctorVisits: true,
   syncPharmacyVisits: true,
   syncPrescriptionRenewals: true,
-  lastSyncDate: null
+  lastSyncDate: null,
+  syncedEvents: {} // Mapping app_event_id -> native_event_id
 };
 
 /**

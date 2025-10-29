@@ -162,29 +162,101 @@ export const useCalendarSync = () => {
     try {
       // Charger tous les événements de l'app
       const appEvents = await loadAppEvents();
+      
+      // Récupérer le mapping des événements déjà synchronisés
+      const syncedEvents = config.syncedEvents || {};
+      const processedAppEventIds = new Set<string>();
 
       // Synchroniser chaque événement
       for (const event of appEvents) {
-        const eventId = await nativeCalendar.createEvent({
-          title: event.title,
-          description: event.description,
-          startDate: event.startDate,
-          endDate: event.endDate,
-          calendarId: config.selectedCalendarId,
-          location: event.location,
-          color: event.color,
-          alerts: event.alerts
-        });
-
-        if (eventId) {
-          result.eventsCreated++;
+        processedAppEventIds.add(event.id);
+        
+        const existingNativeEventId = syncedEvents[event.id];
+        
+        if (existingNativeEventId) {
+          // L'événement existe déjà : le mettre à jour
+          const updated = await nativeCalendar.updateEvent(existingNativeEventId, {
+            title: event.title,
+            description: event.description,
+            startDate: event.startDate,
+            endDate: event.endDate,
+            location: event.location,
+            color: event.color,
+            alerts: event.alerts
+          });
+          
+          if (updated) {
+            result.eventsUpdated++;
+            console.log(`[Calendar Sync] Updated event: ${event.title}`);
+          } else {
+            // Si l'update échoue, l'événement n'existe peut-être plus
+            // Essayer de le recréer
+            const newEventId = await nativeCalendar.createEvent({
+              title: event.title,
+              description: event.description,
+              startDate: event.startDate,
+              endDate: event.endDate,
+              calendarId: config.selectedCalendarId,
+              location: event.location,
+              color: event.color,
+              alerts: event.alerts
+            });
+            
+            if (newEventId) {
+              syncedEvents[event.id] = newEventId;
+              result.eventsCreated++;
+              console.log(`[Calendar Sync] Recreated event: ${event.title}`);
+            } else {
+              result.errors.push(`Échec maj/création: ${event.title}`);
+            }
+          }
         } else {
-          result.errors.push(`Échec création: ${event.title}`);
+          // Nouvel événement : le créer
+          const eventId = await nativeCalendar.createEvent({
+            title: event.title,
+            description: event.description,
+            startDate: event.startDate,
+            endDate: event.endDate,
+            calendarId: config.selectedCalendarId,
+            location: event.location,
+            color: event.color,
+            alerts: event.alerts
+          });
+
+          if (eventId) {
+            syncedEvents[event.id] = eventId;
+            result.eventsCreated++;
+            console.log(`[Calendar Sync] Created event: ${event.title}`);
+          } else {
+            result.errors.push(`Échec création: ${event.title}`);
+          }
         }
       }
+      
+      // Supprimer les événements qui n'existent plus dans l'app
+      const eventsToDelete: string[] = [];
+      for (const [appEventId, nativeEventId] of Object.entries(syncedEvents)) {
+        if (!processedAppEventIds.has(appEventId)) {
+          // Cet événement n'existe plus dans l'app, le supprimer du calendrier natif
+          const deleted = await nativeCalendar.deleteEvent(nativeEventId);
+          if (deleted) {
+            eventsToDelete.push(appEventId);
+            result.eventsDeleted++;
+            console.log(`[Calendar Sync] Deleted event: ${appEventId}`);
+          } else {
+            result.errors.push(`Échec suppression: ${appEventId}`);
+          }
+        }
+      }
+      
+      // Nettoyer le mapping des événements supprimés
+      eventsToDelete.forEach(id => delete syncedEvents[id]);
 
-      // Mettre à jour la date de dernière synchro
-      updateConfig({ lastSyncDate: new Date().toISOString() });
+      // Mettre à jour la config avec le mapping et la date de dernière synchro
+      updateConfig({ 
+        lastSyncDate: new Date().toISOString(),
+        syncedEvents
+      });
 
       result.success = result.errors.length === 0;
       console.log('[Calendar Sync] Sync completed:', result);
