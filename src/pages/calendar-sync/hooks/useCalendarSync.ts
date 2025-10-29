@@ -174,41 +174,34 @@ export const useCalendarSync = () => {
         const existingNativeEventId = syncedEvents[event.id];
         
         if (existingNativeEventId) {
-          // L'événement existe déjà : le mettre à jour
-          const updated = await nativeCalendar.updateEvent(existingNativeEventId, {
+          // STRATÉGIE: DELETE + CREATE au lieu de UPDATE
+          // Certains calendriers natifs (Samsung) ne supportent pas bien modifyEvent
+          // On supprime l'ancien et on recrée avec les nouvelles données
+          
+          const deleted = await nativeCalendar.deleteEvent(existingNativeEventId);
+          
+          if (deleted) {
+            console.log(`[Calendar Sync] Deleted old event for recreation: ${event.title}`);
+          }
+          
+          // Recréer l'événement avec les nouvelles données
+          const newEventId = await nativeCalendar.createEvent({
             title: event.title,
             description: event.description,
             startDate: event.startDate,
             endDate: event.endDate,
+            calendarId: config.selectedCalendarId,
             location: event.location,
             color: event.color,
             alerts: event.alerts
           });
           
-          if (updated) {
+          if (newEventId) {
+            syncedEvents[event.id] = newEventId;
             result.eventsUpdated++;
-            console.log(`[Calendar Sync] Updated event: ${event.title}`);
+            console.log(`[Calendar Sync] Recreated event: ${event.title}`);
           } else {
-            // Si l'update échoue, l'événement n'existe peut-être plus
-            // Essayer de le recréer
-            const newEventId = await nativeCalendar.createEvent({
-              title: event.title,
-              description: event.description,
-              startDate: event.startDate,
-              endDate: event.endDate,
-              calendarId: config.selectedCalendarId,
-              location: event.location,
-              color: event.color,
-              alerts: event.alerts
-            });
-            
-            if (newEventId) {
-              syncedEvents[event.id] = newEventId;
-              result.eventsCreated++;
-              console.log(`[Calendar Sync] Recreated event: ${event.title}`);
-            } else {
-              result.errors.push(`Échec maj/création: ${event.title}`);
-            }
+            result.errors.push(`Échec recréation: ${event.title}`);
           }
         } else {
           // Nouvel événement : le créer

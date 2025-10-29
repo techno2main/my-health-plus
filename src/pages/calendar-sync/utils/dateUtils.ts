@@ -4,6 +4,8 @@
  * sans conversion pour les synchroniser au calendrier natif
  */
 
+import { getCurrentDateInParis } from '@/lib/dateUtils';
+
 /**
  * Récupère une date UTC depuis la BDD sans conversion
  * La date reste en UTC pour synchronisation correcte
@@ -28,7 +30,7 @@ export const filterEventsFromStartDate = <T extends { scheduled_time?: string; v
   events: T[]
 ): T[] => {
   const startDate = new Date('2025-10-13T00:00:00Z');
-  const now = new Date();
+  const now = getCurrentDateInParis(); // CRITIQUE: Utiliser l'heure de Paris
   
   return events.filter(event => {
     const eventDate = event.scheduled_time 
@@ -48,9 +50,10 @@ export const filterEventsFromStartDate = <T extends { scheduled_time?: string; v
 
 /**
  * Détermine le statut d'une prise de médicament
+ * CRITIQUE: Utilise l'heure de Paris pour éviter bugs fuseau horaire
  */
 export const determineIntakeStatus = (scheduledTime: string, status: string): 'on_time' | 'late' | 'missed' | 'upcoming' => {
-  const now = new Date();
+  const now = getCurrentDateInParis(); // CRITIQUE: Utiliser l'heure de Paris au lieu de new Date()
   const scheduled = new Date(scheduledTime);
   const timeDiff = now.getTime() - scheduled.getTime();
   const minutesDiff = timeDiff / (1000 * 60);
