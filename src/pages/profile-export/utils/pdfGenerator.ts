@@ -5,25 +5,42 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Capacitor } from '@capacitor/core';
+import { FileOpener } from '@capacitor-community/file-opener';
+
+// Fonction pour encoder les caractères spéciaux pour jsPDF
+const encodeText = (text: string): string => {
+  // jsPDF supporte l'encodage UTF-8 en utilisant la police helvetica
+  return text;
+};
 
 export const generatePDF = async (data: ExportData): Promise<void> => {
-  const doc = new jsPDF();
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+    putOnlyUsedFonts: true,
+    floatPrecision: 16
+  });
+  
+  // Utiliser une police qui supporte l'UTF-8
+  doc.setFont('helvetica');
+  
   let yPosition = 20;
 
   // Header
   doc.setFontSize(20);
   doc.setTextColor(40, 40, 40);
-  doc.text('MyHealth+ - Export M├®dical', 105, yPosition, { align: 'center' });
+  doc.text(encodeText('MyHealth+ - Export Médical'), 105, yPosition, { align: 'center' });
   yPosition += 10;
 
   doc.setFontSize(10);
   doc.setTextColor(100, 100, 100);
-  doc.text(`Date d'export : ${format(new Date(data.exportDate), 'dd/MM/yyyy ├á HH:mm', { locale: fr })}`, 105, yPosition, { align: 'center' });
+  doc.text(encodeText(`Date d'export : ${format(new Date(data.exportDate), 'dd/MM/yyyy à HH:mm', { locale: fr })}`), 105, yPosition, { align: 'center' });
   yPosition += 5;
 
   if (data.period.startDate || data.period.endDate) {
-    const periodText = `P├®riode : ${data.period.startDate ? format(new Date(data.period.startDate), 'dd/MM/yyyy') : '...'} - ${data.period.endDate ? format(new Date(data.period.endDate), 'dd/MM/yyyy') : '...'}`;
-    doc.text(periodText, 105, yPosition, { align: 'center' });
+    const periodText = `Période : ${data.period.startDate ? format(new Date(data.period.startDate), 'dd/MM/yyyy') : '...'} - ${data.period.endDate ? format(new Date(data.period.endDate), 'dd/MM/yyyy') : '...'}`;
+    doc.text(encodeText(periodText), 105, yPosition, { align: 'center' });
   }
   yPosition += 15;
 
@@ -31,7 +48,7 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
   if (data.profile) {
     doc.setFontSize(14);
     doc.setTextColor(40, 40, 40);
-    doc.text('Profil Patient', 14, yPosition);
+    doc.text(encodeText('Profil Patient'), 14, yPosition);
     yPosition += 8;
 
     const profileData = [
@@ -40,7 +57,7 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
       ['Groupe sanguin', data.profile.bloodType || '-'],
       ['Taille', data.profile.height ? `${data.profile.height} cm` : '-'],
       ['Poids', data.profile.weight ? `${data.profile.weight} kg` : '-'],
-      ['T├®l├®phone', data.profile.phone || '-'],
+      ['Téléphone', data.profile.phone || '-'],
     ];
 
     autoTable(doc, {
@@ -48,9 +65,14 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
       head: [],
       body: profileData,
       theme: 'plain',
-      styles: { fontSize: 10 },
+      styles: { 
+        fontSize: 10, 
+        cellPadding: 3,
+        font: 'helvetica'
+      },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 50 },
+        1: { cellWidth: 130 }
       },
     });
 
@@ -59,17 +81,17 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
 
   // Adherence
   if (data.adherence) {
-    checkPageBreak(doc, yPosition, 60);
+    yPosition = checkPageBreak(doc, yPosition, 60);
     
     doc.setFontSize(14);
     doc.setTextColor(40, 40, 40);
-    doc.text('Statistiques d\'Observance', 14, yPosition);
+    doc.text(encodeText('Statistiques d\'Observance'), 14, yPosition);
     yPosition += 8;
 
     const adherenceData = [
-      ['Prises ├á l\'heure', data.adherence.takenOnTime.toString()],
+      ['Prises à l\'heure', data.adherence.takenOnTime.toString()],
       ['Prises en retard', data.adherence.lateIntakes.toString()],
-      ['Prises manqu├®es', data.adherence.skipped.toString()],
+      ['Prises manquées', data.adherence.skipped.toString()],
       ['Observance 7 jours', `${data.adherence.adherence7Days}% (${data.adherence.total7Days} prises)`],
       ['Observance 30 jours', `${data.adherence.adherence30Days}% (${data.adherence.total30Days} prises)`],
     ];
@@ -79,151 +101,196 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
       head: [],
       body: adherenceData,
       theme: 'plain',
-      styles: { fontSize: 10 },
+      styles: { 
+        fontSize: 10, 
+        cellPadding: 3,
+        font: 'helvetica'
+      },
       columnStyles: {
         0: { fontStyle: 'bold', cellWidth: 60 },
+        1: { cellWidth: 120 }
       },
     });
 
     yPosition = (doc as any).lastAutoTable.finalY + 10;
   }
 
-  // Treatments
+  // Treatments avec ordonnances et prises
   if (data.treatments && data.treatments.length > 0) {
-    checkPageBreak(doc, yPosition, 40);
+    yPosition = checkPageBreak(doc, yPosition, 40);
     
-    doc.setFontSize(14);
+    doc.setFontSize(16);
     doc.setTextColor(40, 40, 40);
     doc.text('Traitements', 14, yPosition);
-    yPosition += 8;
+    yPosition += 10;
 
     data.treatments.forEach((treatment, index) => {
-      checkPageBreak(doc, yPosition, 50);
+      yPosition = checkPageBreak(doc, yPosition, 80);
       
+      // En-tête du traitement avec fond coloré
+      doc.setFillColor(66, 139, 202);
+      doc.roundedRect(14, yPosition, 182, 10, 2, 2, 'F');
+      
+      // Nom du traitement en blanc
       doc.setFontSize(12);
-      doc.setTextColor(60, 60, 60);
-      doc.text(`${index + 1}. ${treatment.name}`, 14, yPosition);
-      yPosition += 6;
+      doc.setTextColor(255, 255, 255);
+      doc.text(treatment.name, 18, yPosition + 7);
+      
+      // Badge statut
+      const statusText = treatment.isActive ? 'Actif' : 'Inactif';
+      const statusColor = treatment.isActive ? [40, 167, 69] : [108, 117, 125];
+      doc.setFillColor(statusColor[0], statusColor[1], statusColor[2]);
+      doc.roundedRect(168, yPosition + 1.5, 24, 7, 2, 2, 'F');
+      doc.setFontSize(8);
+      doc.setTextColor(255, 255, 255);
+      doc.text(statusText, 170, yPosition + 6);
+      
+      yPosition += 13;
 
-      const treatmentInfo = [
-        ['Pathologie', treatment.pathology || '-'],
-        ['Date de d├®but', format(new Date(treatment.startDate), 'dd/MM/yyyy')],
-        ['Date de fin', treatment.endDate ? format(new Date(treatment.endDate), 'dd/MM/yyyy') : 'En cours'],
-        ['Statut', treatment.isActive ? 'Actif' : 'Inactif'],
-      ];
+      // Informations du traitement
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      
+      // Pathologie
+      doc.text('Pathologie:', 18, yPosition);
+      doc.setTextColor(40, 40, 40);
+      doc.text(treatment.pathology || '-', 50, yPosition);
+      yPosition += 5;
+      
+      // Dates
+      doc.setTextColor(80, 80, 80);
+      doc.text('Debut:', 18, yPosition);
+      doc.setTextColor(40, 40, 40);
+      doc.text(format(new Date(treatment.startDate), 'dd/MM/yyyy'), 50, yPosition);
+      doc.setTextColor(80, 80, 80);
+      doc.text('Fin:', 100, yPosition);
+      doc.setTextColor(40, 40, 40);
+      doc.text(treatment.endDate ? format(new Date(treatment.endDate), 'dd/MM/yyyy') : 'En cours', 115, yPosition);
+      yPosition += 5;
 
-      if (treatment.description) {
-        treatmentInfo.push(['Description', treatment.description]);
+      // Ordonnance si présente
+      if (treatment.prescriptionInfo) {
+        doc.setTextColor(80, 80, 80);
+        doc.text('Ordonnance:', 18, yPosition);
+        doc.setTextColor(40, 40, 40);
+        const ordoText = `${format(new Date(treatment.prescriptionInfo.prescriptionDate), 'dd/MM/yyyy')}${treatment.prescriptionInfo.doctorName ? ' - Dr ' + treatment.prescriptionInfo.doctorName : ''}`;
+        doc.text(ordoText, 50, yPosition);
+        yPosition += 5;
+        
+        if (treatment.prescriptionInfo.durationDays) {
+          doc.setTextColor(80, 80, 80);
+          doc.text('Duree:', 18, yPosition);
+          doc.setTextColor(40, 40, 40);
+          doc.text(`${treatment.prescriptionInfo.durationDays} jours`, 50, yPosition);
+          yPosition += 5;
+        }
       }
 
-      autoTable(doc, {
-        startY: yPosition,
-        head: [],
-        body: treatmentInfo,
-        theme: 'plain',
-        styles: { fontSize: 9 },
-        columnStyles: {
-          0: { fontStyle: 'bold', cellWidth: 40 },
-        },
-        margin: { left: 20 },
-      });
+      if (treatment.description) {
+        doc.setTextColor(80, 80, 80);
+        doc.text('Note:', 18, yPosition);
+        doc.setTextColor(40, 40, 40);
+        const descLines = doc.splitTextToSize(treatment.description, 140);
+        doc.text(descLines, 50, yPosition);
+        yPosition += 5 * descLines.length;
+      }
 
-      yPosition = (doc as any).lastAutoTable.finalY + 5;
+      yPosition += 2;
 
+      // Médicaments prescrits
       if (treatment.medications.length > 0) {
         doc.setFontSize(10);
-        doc.setTextColor(80, 80, 80);
-        doc.text('M├®dicaments :', 20, yPosition);
-        yPosition += 5;
+        doc.setTextColor(60, 60, 60);
+        doc.text('Medicaments prescrits', 18, yPosition);
+        yPosition += 6;
 
-        const medicationsData = treatment.medications.map(m => [
-          m.name,
-          m.dosage,
-          m.times.join(', '),
-          m.currentStock ? `${m.currentStock}/${m.minThreshold}` : '-',
+        treatment.medications.forEach((med) => {
+          yPosition = checkPageBreak(doc, yPosition, 15);
+          
+          // Carte médicament avec fond gris clair
+          doc.setFillColor(248, 249, 250);
+          doc.roundedRect(18, yPosition - 3, 176, 11, 2, 2, 'F');
+          
+          // Nom du médicament
+          doc.setFontSize(9);
+          doc.setTextColor(40, 40, 40);
+          doc.text(med.name, 22, yPosition + 2);
+          
+          // Stock badge si disponible
+          if (med.currentStock !== undefined && med.minThreshold !== undefined) {
+            const stockText = `${med.currentStock}/${med.minThreshold}`;
+            const stockWidth = doc.getTextWidth(stockText) + 6;
+            const stockColor = med.currentStock <= med.minThreshold * 0.25 ? [220, 53, 69] : 
+                              med.currentStock <= med.minThreshold * 0.5 ? [255, 193, 7] : [40, 167, 69];
+            doc.setFillColor(stockColor[0], stockColor[1], stockColor[2]);
+            doc.roundedRect(188 - stockWidth, yPosition - 1, stockWidth, 6, 2, 2, 'F');
+            doc.setFontSize(7);
+            doc.setTextColor(255, 255, 255);
+            doc.text(stockText, 191 - stockWidth, yPosition + 2.5);
+          }
+          
+          yPosition += 5;
+          
+          // Dosage et horaires
+          doc.setFontSize(8);
+          doc.setTextColor(100, 100, 100);
+          doc.text(med.dosage, 22, yPosition);
+          
+          if (med.times.length > 0) {
+            doc.text(med.times.join(', '), 100, yPosition);
+          }
+          
+          yPosition += 7;
+        });
+        
+        yPosition += 2;
+      }
+
+      // Historique des prises pour ce traitement
+      if (treatment.intakes && treatment.intakes.length > 0) {
+        yPosition = checkPageBreak(doc, yPosition, 30);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(60, 60, 60);
+        doc.text(`Historique des prises (${treatment.intakes.length})`, 18, yPosition);
+        yPosition += 6;
+
+        // Afficher TOUTES les prises
+        const intakesData = treatment.intakes.map(i => [
+          i.date,
+          i.medicationName,
+          i.scheduledTime,
+          i.takenAt || '-',
+          getStatusLabel(i.status),
         ]);
 
         autoTable(doc, {
           startY: yPosition,
-          head: [['Nom', 'Dosage', 'Horaires', 'Stock']],
-          body: medicationsData,
+          head: [['Date', 'Medicament', 'Prevu', 'Pris', 'Statut']],
+          body: intakesData,
           theme: 'striped',
-          styles: { fontSize: 8 },
-          headStyles: { fillColor: [100, 100, 100] },
-          margin: { left: 25 },
+          styles: { 
+            fontSize: 7, 
+            cellPadding: 1.5,
+            font: 'helvetica'
+          },
+          headStyles: { 
+            fillColor: [108, 117, 125], 
+            textColor: 255, 
+            fontStyle: 'bold', 
+            fontSize: 8 
+          },
+          margin: { left: 18, right: 18 },
+          alternateRowStyles: {
+            fillColor: [245, 245, 245]
+          },
         });
 
-        yPosition = (doc as any).lastAutoTable.finalY + 8;
+        yPosition = (doc as any).lastAutoTable.finalY + 5;
       }
+
+      yPosition += 8; // Espace entre les traitements
     });
-  }
-
-  // Prescriptions
-  if (data.prescriptions && data.prescriptions.length > 0) {
-    checkPageBreak(doc, yPosition, 40);
-    
-    doc.setFontSize(14);
-    doc.setTextColor(40, 40, 40);
-    doc.text('Ordonnances', 14, yPosition);
-    yPosition += 8;
-
-    const prescriptionsData = data.prescriptions.map(p => [
-      format(new Date(p.prescriptionDate), 'dd/MM/yyyy'),
-      p.doctorName || '-',
-      `${p.durationDays} jours`,
-      p.treatments.join(', ') || '-',
-    ]);
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [['Date', 'M├®decin', 'Dur├®e', 'Traitements']],
-      body: prescriptionsData,
-      theme: 'striped',
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [100, 100, 100] },
-    });
-
-    yPosition = (doc as any).lastAutoTable.finalY + 10;
-  }
-
-  // Intake History
-  if (data.intakeHistory && data.intakeHistory.length > 0) {
-    doc.addPage();
-    yPosition = 20;
-    
-    doc.setFontSize(14);
-    doc.setTextColor(40, 40, 40);
-    doc.text('Historique des Prises', 14, yPosition);
-    yPosition += 8;
-
-    const intakesData = data.intakeHistory.slice(0, 100).map(i => [
-      i.date,
-      i.medicationName,
-      i.treatmentName,
-      i.scheduledTime,
-      i.takenAt || '-',
-      getStatusLabel(i.status),
-    ]);
-
-    autoTable(doc, {
-      startY: yPosition,
-      head: [['Date', 'M├®dicament', 'Traitement', 'Pr├®vu', 'Pris', 'Statut']],
-      body: intakesData,
-      theme: 'striped',
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [100, 100, 100] },
-      columnStyles: {
-        1: { cellWidth: 40 },
-        2: { cellWidth: 35 },
-      },
-    });
-
-    if (data.intakeHistory.length > 100) {
-      yPosition = (doc as any).lastAutoTable.finalY + 5;
-      doc.setFontSize(9);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`(Affichage limit├® aux 100 derni├¿res prises sur ${data.intakeHistory.length})`, 14, yPosition);
-    }
   }
 
   // Stocks
@@ -233,7 +300,7 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
     
     doc.setFontSize(14);
     doc.setTextColor(40, 40, 40);
-    doc.text('├ëtat des Stocks', 14, yPosition);
+    doc.text(encodeText('État des Stocks'), 14, yPosition);
     yPosition += 8;
 
     const stocksData = data.stocks.map(s => [
@@ -246,11 +313,15 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
 
     autoTable(doc, {
       startY: yPosition,
-      head: [['M├®dicament', 'Traitement', 'Stock actuel', 'Seuil minimum', 'Statut']],
+      head: [['Médicament', 'Traitement', 'Stock actuel', 'Seuil minimum', 'Statut']],
       body: stocksData,
-      theme: 'striped',
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [100, 100, 100] },
+      theme: 'grid',
+      styles: { 
+        fontSize: 9, 
+        cellPadding: 3,
+        font: 'helvetica'
+      },
+      headStyles: { fillColor: [66, 139, 202], textColor: 255, fontStyle: 'bold' },
     });
   }
 
@@ -280,8 +351,18 @@ export const generatePDF = async (data: ExportData): Promise<void> => {
       
       console.log('PDF sauvegardé:', result.uri);
       
-      // Optionnel : ouvrir le fichier avec l'app par défaut
-      // Note: nécessiterait le plugin @capacitor/file-opener
+      // Ouvrir le fichier PDF avec l'application par défaut
+      try {
+        await FileOpener.open({
+          filePath: result.uri,
+          contentType: 'application/pdf',
+          openWithDefault: true,
+        });
+        console.log('PDF ouvert avec succès');
+      } catch (openError) {
+        console.error('Erreur lors de l\'ouverture du PDF:', openError);
+        // Le fichier est sauvegardé même si l'ouverture échoue
+      }
       
     } catch (error) {
       console.error('Erreur sauvegarde PDF:', error);
@@ -304,7 +385,7 @@ const checkPageBreak = (doc: jsPDF, currentY: number, requiredSpace: number): nu
 const getStatusLabel = (status: string): string => {
   const labels: Record<string, string> = {
     taken: 'Prise',
-    skipped: 'Manqu├®e',
+    skipped: 'Manquée',
     pending: 'En attente',
   };
   return labels[status] || status;

@@ -95,7 +95,7 @@ export const CalendarSync = () => {
             visites en pharmacie et renouvellements d'ordonnances avec votre calendrier natif.
             <br />
             <span className="text-xs text-muted-foreground mt-1 block">
-              Synchronisation depuis le 13 octobre 2025
+              iOS : Rappels natifs • Android : Événements calendrier • Depuis le 13 octobre 2025
             </span>
           </AlertDescription>
         </Alert>

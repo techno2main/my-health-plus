@@ -56,7 +56,9 @@ export interface TreatmentData {
   prescriptionInfo?: {
     prescriptionDate: string;
     doctorName?: string;
+    durationDays?: number;
   };
+  intakes?: IntakeHistoryData[];
 }
 
 export interface MedicationData {

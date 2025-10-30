@@ -11,7 +11,8 @@ const DEFAULT_CONFIG: SyncConfig = {
   syncPharmacyVisits: true,
   syncPrescriptionRenewals: true,
   lastSyncDate: null,
-  syncedEvents: {} // Mapping app_event_id -> native_event_id
+  syncedEvents: {}, // Mapping app_event_id -> native_event_id
+  calendarEventsMigrated: false // Par défaut, la migration n'a pas encore été effectuée
 };
 
 /**

@@ -152,6 +152,30 @@ export const useCalendarSync = () => {
     }
 
     setSyncing(true);
+    
+    // ========== MIGRATION DES ANCIENS ÉVÉNEMENTS CALENDRIER ==========
+    // Si c'est la première synchro après la mise à jour, supprimer les anciens événements calendrier
+    if (!config.calendarEventsMigrated && Object.keys(config.syncedEvents || {}).length > 0) {
+      console.log('[Calendar Sync] Starting migration: cleaning up old calendar events');
+      try {
+        const eventIdsToDelete = Object.values(config.syncedEvents);
+        const deletedCount = await nativeCalendar.migrateCalendarEventsToReminders(eventIdsToDelete);
+        
+        console.log(`[Calendar Sync] Migration complete: ${deletedCount} old events deleted`);
+        
+        // Marquer la migration comme effectuée et vider le mapping
+        updateConfig({ 
+          calendarEventsMigrated: true,
+          syncedEvents: {} // Reset pour repartir de zéro avec les rappels
+        });
+      } catch (error) {
+        console.error('[Calendar Sync] Migration error:', error);
+        // Continuer quand même la synchro, marquer comme migré pour ne pas re-tenter
+        updateConfig({ calendarEventsMigrated: true });
+      }
+    }
+    // ==================================================================
+    
     const result: SyncResult = {
       success: true,
       eventsCreated: 0,
