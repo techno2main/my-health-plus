@@ -24,7 +24,8 @@ export default function ProfileExport() {
         await generatePDF(data);
         toast({
           title: "Export réussi",
-          description: "Votre fichier PDF a été sauvegardé dans Documents",
+          description: "Le PDF s'ouvre automatiquement",
+          duration: 2000,
         });
       }
     } catch (error) {
@@ -33,6 +34,7 @@ export default function ProfileExport() {
         title: "Erreur",
         description: "Impossible de générer le PDF",
         variant: "destructive",
+        duration: 3000,
       });
     }
   };

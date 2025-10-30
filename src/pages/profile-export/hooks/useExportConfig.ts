@@ -2,6 +2,19 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ExportConfig } from "../types";
 
+// Dates par défaut : début 13/10/2025, fin = date du jour
+const getDefaultDates = () => {
+  const startDate = new Date(2025, 9, 13); // 13 octobre 2025 (mois 9 = octobre car base 0)
+  const endDate = new Date(); // Date du jour
+  
+  return {
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  };
+};
+
+const defaultDates = getDefaultDates();
+
 const DEFAULT_CONFIG: ExportConfig = {
   includeProfile: true,
   includeAdherence: true,
@@ -9,8 +22,8 @@ const DEFAULT_CONFIG: ExportConfig = {
   includePrescriptions: true,
   includeIntakeHistory: true,
   includeStocks: true,
-  startDate: null,
-  endDate: null,
+  startDate: defaultDates.startDate,
+  endDate: defaultDates.endDate,
   format: 'pdf',
 };
 

@@ -100,11 +100,21 @@ export const useExportData = () => {
   };
 
   const fetchTreatments = async (userId: string, config: ExportConfig): Promise<TreatmentData[]> => {
+    // Récupérer tous les traitements avec leurs ordonnances
     let query = supabase
       .from('treatments')
       .select(`
         *,
+        prescriptions (
+          id,
+          prescription_date,
+          duration_days,
+          health_professionals (
+            name
+          )
+        ),
         medications (
+          id,
           name,
           strength,
           posology,
@@ -115,13 +125,6 @@ export const useExportData = () => {
       .eq('user_id', userId)
       .order('start_date', { ascending: false });
 
-    if (config.startDate) {
-      query = query.gte('start_date', config.startDate);
-    }
-    if (config.endDate) {
-      query = query.lte('start_date', config.endDate);
-    }
-
     const { data, error } = await query;
 
     if (error) {
@@ -129,23 +132,113 @@ export const useExportData = () => {
       throw error;
     }
 
-    return (data || []).map(t => ({
-      id: t.id,
-      name: t.name,
-      description: t.description,
-      pathology: t.pathology,
-      startDate: t.start_date,
-      endDate: t.end_date,
-      isActive: t.is_active,
-      medications: (t.medications || []).map((m: any) => ({
-        name: m.name,
-        dosage: `${m.strength} - ${m.posology}`,
-        times: [], // À remplir si nécessaire
-        currentStock: m.current_stock,
-        minThreshold: m.min_threshold,
-      })),
-      prescriptionInfo: undefined, // Simplifié pour éviter les erreurs de jointure
-    }));
+    let treatments = data || [];
+
+    // Filtrer les traitements selon la période si spécifiée
+    if (config.startDate || config.endDate) {
+      treatments = treatments.filter(t => {
+        const startDate = new Date(t.start_date);
+        const endDate = t.end_date ? new Date(t.end_date) : null;
+        const periodStart = config.startDate ? new Date(config.startDate) : null;
+        const periodEnd = config.endDate ? new Date(config.endDate) : null;
+
+        const startsBeforePeriodEnd = !periodEnd || startDate <= periodEnd;
+        const endsAfterPeriodStart = !periodStart || !endDate || endDate >= periodStart;
+
+        return startsBeforePeriodEnd && endsAfterPeriodStart;
+      });
+    }
+
+    // Récupérer les horaires et prises pour chaque médicament
+    const treatmentsWithDetails = await Promise.all(
+      treatments.map(async (t) => {
+        const medications = await Promise.all(
+          (t.medications || []).map(async (m: any) => {
+            // Récupérer les horaires uniques des prises planifiées
+            const { data: intakes } = await supabase
+              .from('medication_intakes')
+              .select('scheduled_time')
+              .eq('medication_id', m.id)
+              .order('scheduled_time', { ascending: true })
+              .limit(20);
+
+            const times: string[] = [];
+            if (intakes && intakes.length > 0) {
+              const uniqueTimes = new Set<string>();
+              intakes.forEach(intake => {
+                const time = intake.scheduled_time.split('T')[1]?.split(':').slice(0, 2).join(':');
+                if (time) uniqueTimes.add(time);
+              });
+              times.push(...Array.from(uniqueTimes).sort());
+            }
+
+            return {
+              name: m.name,
+              dosage: `${m.strength} - ${m.posology}`,
+              times: times,
+              currentStock: m.current_stock,
+              minThreshold: m.min_threshold,
+            };
+          })
+        );
+
+        // Récupérer l'historique des prises pour ce traitement dans la période
+        let intakeHistory: IntakeHistoryData[] = [];
+        if (config.includeIntakeHistory) {
+          const medicationIds = (t.medications || []).map((m: any) => m.id);
+          
+          if (medicationIds.length > 0) {
+            let intakeQuery = supabase
+              .from('medication_intakes')
+              .select(`
+                *,
+                medications!inner (
+                  name
+                )
+              `)
+              .in('medication_id', medicationIds)
+              .order('scheduled_time', { ascending: false });
+
+            if (config.startDate) {
+              intakeQuery = intakeQuery.gte('scheduled_time', config.startDate);
+            }
+            if (config.endDate) {
+              intakeQuery = intakeQuery.lte('scheduled_time', config.endDate);
+            }
+
+            const { data: intakesData } = await intakeQuery;
+
+            intakeHistory = (intakesData || []).map(i => ({
+              date: format(new Date(i.scheduled_time), 'dd/MM/yyyy'),
+              medicationName: i.medications.name,
+              scheduledTime: format(new Date(i.scheduled_time), 'HH:mm'),
+              takenAt: i.taken_at ? format(new Date(i.taken_at), 'HH:mm') : undefined,
+              status: i.status,
+              treatmentName: t.name,
+            }));
+          }
+        }
+
+        return {
+          id: t.id,
+          name: t.name,
+          description: t.description,
+          pathology: t.pathology,
+          startDate: t.start_date,
+          endDate: t.end_date,
+          isActive: t.is_active,
+          medications: medications,
+          prescriptionInfo: t.prescriptions ? {
+            prescriptionDate: t.prescriptions.prescription_date,
+            doctorName: t.prescriptions.health_professionals?.name,
+            durationDays: t.prescriptions.duration_days,
+          } : undefined,
+          intakes: intakeHistory,
+        };
+      })
+    );
+
+    return treatmentsWithDetails;
   };
 
   const fetchPrescriptions = async (userId: string, config: ExportConfig): Promise<PrescriptionData[]> => {
