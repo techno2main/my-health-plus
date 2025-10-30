@@ -28,7 +28,7 @@ export const CalendarSelector = ({
           Sélection du calendrier
         </CardTitle>
         <CardDescription>
-          Choisissez le calendrier natif où synchroniser vos événements de santé
+          Choisissez le calendrier où synchroniser vos événements de santé
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">

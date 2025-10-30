@@ -44,6 +44,7 @@ export interface SyncConfig {
   syncPrescriptionRenewals: boolean;
   lastSyncDate: string | null;
   syncedEvents: Record<string, string>; // app_event_id -> native_event_id mapping
+  calendarEventsMigrated: boolean; // Flag pour savoir si les anciens événements calendrier ont été migrés vers rappels
 }
 
 export interface SyncResult {
