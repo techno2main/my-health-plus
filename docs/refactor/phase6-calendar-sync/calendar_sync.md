@@ -72,18 +72,30 @@ Synchroniser les événements de santé de l'application (prises de médicaments
   - [x] `isIntakeValidationAllowed()`
 - [x] **FIX CRITIQUE** : Garantit que "Aujourd'hui" affiche bien les bonnes prises même sur émulateurs configurés en PST/EST/etc.
 
-### ⏳ Phase 6 : Tests sur Android (EN COURS)
+### ✅ Phase 6 : Corrections Critiques Samsung Calendar (TERMINÉ)
 
-- [ ] Tests de permissions sur émulateur Android
-- [ ] Tests de sélection de calendrier
-- [ ] Tests de synchronisation complète (CREATE)
-- [ ] Tests de synchronisation incrémentale (UPDATE/DELETE)
-- [ ] Tests des couleurs d'événements
-- [ ] Tests des alertes/rappels
-- [ ] Tests du fuseau horaire Paris
-- [ ] Tests sur téléphone Android réel
+- [x] Détection incompatibilité Samsung Calendar avec `updateEvent()`
+- [x] Implémentation stratégie DELETE+CREATE pour Samsung
+- [x] Correction calcul statut : utilisation `taken_at` au lieu de `updated_at`
+- [x] Tests sur émulateur Samsung Galaxy S25
+- [x] Validation codes couleur (7 couleurs fonctionnelles)
+- [x] Validation alertes (15min, 24h+1h, 7j+1j)
+- [x] Tests synchronisation complète 144 prises (13/10 → 02/11/2025)
 
-### ⏳ Phase 7 : Documentation Utilisateur (À FINALISER)
+**Bugs résolus** :
+- ❌ **Bug couleurs** : Événements toujours verts → ✅ RÉSOLU (utilisation `taken_at`)
+- ❌ **Bug UPDATE Samsung** : Erreur native → ✅ RÉSOLU (stratégie DELETE+CREATE)
+- ❌ **Bug doublons** : Événements multipliés → ✅ RÉSOLU (mapping `syncedEvents`)
+
+### ⏳ Phase 7 : Tests Android Réels (EN COURS)
+
+- [ ] Tests sur téléphone Android réel (Samsung/Google)
+- [ ] Vérification persistance événements après redémarrage app
+- [ ] Tests modification événements depuis calendrier natif
+- [ ] Tests suppression événements depuis calendrier natif
+- [ ] Validation alertes push réelles (notifications 15min avant)
+
+### ⏳ Phase 8 : Documentation Utilisateur (À FINALISER)
 
 - [ ] Guide utilisateur avec screenshots
 - [ ] FAQ et troubleshooting
