@@ -5,6 +5,7 @@ import { DataManagementCard } from "./components/DataManagementCard";
 import { PasswordChangeDialog } from "./components/PasswordChangeDialog";
 import { BiometricPasswordDialog } from "./components/BiometricPasswordDialog";
 import { ConfirmationAlerts } from "./components/ConfirmationAlerts";
+import { DeleteAccountDialog } from "./components/DeleteAccountDialog";
 import { usePrivacySettings } from "./hooks/usePrivacySettings";
 import { usePrivacyDialogs } from "./hooks/usePrivacyDialogs";
 
@@ -82,9 +83,12 @@ export default function Privacy() {
     setShowExportDialog(false);
   };
 
-  const onDeleteConfirm = async () => {
-    await handleDeleteAccount();
-    setShowDeleteDialog(false);
+  const onDeleteConfirm = async (password: string) => {
+    const success = await handleDeleteAccount(password);
+    if (success) {
+      setShowDeleteDialog(false);
+    }
+    return success;
   };
 
   if (loading) {
@@ -149,9 +153,14 @@ export default function Privacy() {
           exportOpen={showExportDialog}
           onExportOpenChange={setShowExportDialog}
           onExportConfirm={onExportConfirm}
-          deleteOpen={showDeleteDialog}
-          onDeleteOpenChange={setShowDeleteDialog}
-          onDeleteConfirm={onDeleteConfirm}
+        />
+
+        <DeleteAccountDialog
+          open={showDeleteDialog}
+          onOpenChange={setShowDeleteDialog}
+          onConfirmDelete={onDeleteConfirm}
+          authProvider={authProvider}
+          biometricEnabled={biometricEnabled}
         />
       </div>
     </AppLayout>

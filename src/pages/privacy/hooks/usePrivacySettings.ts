@@ -275,18 +275,90 @@ export const usePrivacySettings = () => {
     }
   };
 
-  const handleDeleteAccount = async () => {
+  const handleDeleteAccount = async (password: string) => {
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return false;
+
+      // Vérifier l'authentification selon le provider
+      const provider = user.app_metadata.provider || 'email';
+
+      // Pour les connexions email, vérifier le mot de passe
+      if (provider === 'email' && user.email) {
+        // Si biométrie activée, demander confirmation biométrique
+        if (biometricEnabled) {
+          try {
+            await NativeBiometric.verifyIdentity({
+              reason: "Confirmer la suppression du compte",
+              title: "Authentification requise",
+              subtitle: "Utilisez votre empreinte digitale ou Face ID",
+              description: "Cette action est irréversible",
+            });
+          } catch (error) {
+            toast({
+              title: "Authentification échouée",
+              description: "Impossible de vérifier votre identité",
+              variant: "destructive",
+            });
+            return false;
+          }
+        } else {
+          // Sinon, vérifier le mot de passe
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: user.email,
+            password: password,
+          });
+
+          if (signInError) {
+            toast({
+              title: "Mot de passe incorrect",
+              description: "Veuillez vérifier votre mot de passe",
+              variant: "destructive",
+            });
+            return false;
+          }
+        }
+      }
+
+      // ⚠️ MODE TEST : Suppression désactivée pour validation du workflow
+      // TODO: Décommenter ces lignes pour activer la suppression réelle
+      /*
+      // Supprimer les données utilisateur (les triggers RLS Supabase s'occuperont de la cascade)
+      const { error: deleteError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', user.id);
+
+      if (deleteError) {
+        console.error('Error deleting profile:', deleteError);
+      }
+
+      // Supprimer le compte auth
       await supabase.auth.signOut();
       
       toast({
         title: "Compte supprimé",
-        description: "Votre compte a été supprimé avec succès",
+        description: "Votre compte et toutes vos données ont été supprimés avec succès",
       });
       
       navigate('/auth');
+      */
+
+      // MODE TEST : Simulation de succès sans suppression réelle
+      console.log("🧪 MODE TEST : Suppression simulée (compte NON supprimé)");
+      console.log("Provider:", provider);
+      console.log("Biometric enabled:", biometricEnabled);
+      console.log("User ID:", user.id);
+      
+      toast({
+        title: "✅ TEST RÉUSSI",
+        description: "Le workflow de suppression a été validé. Votre compte n'a PAS été supprimé.",
+        duration: 5000,
+      });
+      
       return true;
     } catch (error: any) {
+      console.error('Delete account error:', error);
       toast({
         title: "Erreur",
         description: error.message || "Impossible de supprimer le compte",
