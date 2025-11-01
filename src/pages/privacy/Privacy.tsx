@@ -116,7 +116,6 @@ export default function Privacy() {
         />
 
         <DataManagementCard
-          onExportData={() => setShowExportDialog(true)}
           onDeleteAccount={() => setShowDeleteDialog(true)}
         />
 

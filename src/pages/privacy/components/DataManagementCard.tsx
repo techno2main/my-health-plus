@@ -1,16 +1,17 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Shield, Download, Trash2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface DataManagementCardProps {
-  onExportData: () => void;
   onDeleteAccount: () => void;
 }
 
 export function DataManagementCard({
-  onExportData,
   onDeleteAccount,
 }: DataManagementCardProps) {
+  const navigate = useNavigate();
+
   return (
     <Card className="p-6">
       <div className="flex items-center gap-3 mb-4">
@@ -21,7 +22,7 @@ export function DataManagementCard({
         <Button 
           variant="outline" 
           className="w-full justify-start"
-          onClick={onExportData}
+          onClick={() => navigate("/profile-export")}
         >
           <Download className="mr-2 h-4 w-4" />
           Télécharger les données
