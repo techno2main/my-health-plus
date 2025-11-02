@@ -3,38 +3,41 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { UpdateNotification } from "./components/UpdateNotification";
 import { NotificationSchedulerProvider } from "./components/NotificationSchedulerProvider";
 import { useAutoRegenerateIntakes } from "./hooks/useAutoRegenerateIntakes";
-import Index from "./pages/index/Index";
-import Auth from "./pages/auth/Auth";
-import Treatments from "./pages/treatments/Treatments";
-import Calendar from "./pages/calendar/Calendar";
-import Stock from "./pages/stocks/Stock";
-import Prescriptions from "./pages/prescriptions/Prescriptions";
-import Settings from "./pages/settings/Settings";
-import History from "./pages/history/History";
-import TreatmentForm from "./pages/treatment-form/TreatmentForm";
-import StockForm from "./pages/stocks/StockForm";
-import MedicationCatalog from "./pages/medication-catalog/MedicationCatalog";
-import Referentials from "./pages/referentials/Referentials";
-import HealthProfessionals from "./pages/health-professionals/HealthProfessionals";
-import Pathologies from "./pages/pathologies/Pathologies";
-import Allergies from "./pages/allergies/Allergies";
-import Profile from "./pages/profile/Profile";
-import Privacy from "./pages/privacy/Privacy";
-import About from "./pages/about/About";
-import StockDetails from "./pages/stocks/StockDetails";
-import TreatmentEdit from "./pages/treatment-edit/TreatmentEdit";
-import NotificationSettings from "./pages/notification-settings/NotificationSettings";
-import CalendarSync from "./pages/calendar-sync/CalendarSync";
-import ProfileExport from "./pages/profile-export/ProfileExport";
-import NotificationDebug from "./pages/admin/NotificationDebug";
-import NavigationManager from "./pages/admin/NavigationManager";
-import Admin from "./pages/admin/dashboard/AdminDashboard";
-import NotFound from "./pages/not-found/NotFound";
-import Rattrapage from "./pages/rattrapage/Rattrapage";
+
+// Lazy loading des pages
+const Index = lazy(() => import("./pages/index/Index"));
+const Auth = lazy(() => import("./pages/auth/Auth"));
+const Treatments = lazy(() => import("./pages/treatments/Treatments"));
+const Calendar = lazy(() => import("./pages/calendar/Calendar"));
+const Stock = lazy(() => import("./pages/stocks/Stock"));
+const Prescriptions = lazy(() => import("./pages/prescriptions/Prescriptions"));
+const Settings = lazy(() => import("./pages/settings/Settings"));
+const History = lazy(() => import("./pages/history/History"));
+const TreatmentForm = lazy(() => import("./pages/treatment-form/TreatmentForm"));
+const StockForm = lazy(() => import("./pages/stocks/StockForm"));
+const MedicationCatalog = lazy(() => import("./pages/medication-catalog/MedicationCatalog"));
+const Referentials = lazy(() => import("./pages/referentials/Referentials"));
+const HealthProfessionals = lazy(() => import("./pages/health-professionals/HealthProfessionals"));
+const Pathologies = lazy(() => import("./pages/pathologies/Pathologies"));
+const Allergies = lazy(() => import("./pages/allergies/Allergies"));
+const Profile = lazy(() => import("./pages/profile/Profile"));
+const Privacy = lazy(() => import("./pages/privacy/Privacy"));
+const About = lazy(() => import("./pages/about/About"));
+const StockDetails = lazy(() => import("./pages/stocks/StockDetails"));
+const TreatmentEdit = lazy(() => import("./pages/treatment-edit/TreatmentEdit"));
+const NotificationSettings = lazy(() => import("./pages/notification-settings/NotificationSettings"));
+const CalendarSync = lazy(() => import("./pages/calendar-sync/CalendarSync"));
+const ProfileExport = lazy(() => import("./pages/profile-export/ProfileExport"));
+const NotificationDebug = lazy(() => import("./pages/admin/NotificationDebug"));
+const NavigationManager = lazy(() => import("./pages/admin/NavigationManager"));
+const Admin = lazy(() => import("./pages/admin/dashboard/AdminDashboard"));
+const NotFound = lazy(() => import("./pages/not-found/NotFound"));
+const Rattrapage = lazy(() => import("./pages/rattrapage/Rattrapage"));
 
 const queryClient = new QueryClient();
 
@@ -50,6 +53,9 @@ const App = () => {
         <UpdateNotification />
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <NotificationSchedulerProvider>
+          <Suspense fallback={<div className="flex items-center justify-center h-screen">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>}>
           <Routes>
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
@@ -82,6 +88,7 @@ const App = () => {
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
+        </Suspense>
         </NotificationSchedulerProvider>
       </BrowserRouter>
     </TooltipProvider>

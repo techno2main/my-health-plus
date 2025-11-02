@@ -86,4 +86,33 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendors principaux
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+          'query-vendor': ['@tanstack/react-query'],
+          'date-vendor': ['date-fns'],
+          'lucide-vendor': ['lucide-react'],
+          // UI components
+          'ui-components': [
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-select',
+            '@radix-ui/react-tabs',
+            '@radix-ui/react-toast',
+            '@radix-ui/react-tooltip',
+            '@radix-ui/react-popover',
+            '@radix-ui/react-checkbox',
+            '@radix-ui/react-label',
+            '@radix-ui/react-scroll-area',
+            '@radix-ui/react-separator',
+            '@radix-ui/react-alert-dialog',
+          ],
+        },
+      },
+    },
+  },
 }));

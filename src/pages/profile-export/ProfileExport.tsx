@@ -4,7 +4,6 @@ import { useExportData } from "./hooks/useExportData";
 import { ExportConfigSection } from "./components/ExportConfig";
 import { PeriodSelector } from "./components/PeriodSelector";
 import { ExportActions } from "./components/ExportActions";
-import { generatePDF } from "./utils/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -21,6 +20,8 @@ export default function ProfileExport() {
     try {
       const data = await fetchExportData(config);
       if (data) {
+        // Lazy load du générateur PDF uniquement quand nécessaire
+        const { generatePDF } = await import("./utils/pdfGenerator");
         await generatePDF(data);
         toast({
           title: "Export réussi",

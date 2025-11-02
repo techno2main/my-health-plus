@@ -11,7 +11,6 @@ import { useExportData } from "@/pages/profile-export/hooks/useExportData";
 import { ExportConfigSection } from "@/pages/profile-export/components/ExportConfig";
 import { PeriodSelector } from "@/pages/profile-export/components/PeriodSelector";
 import { ExportActions } from "@/pages/profile-export/components/ExportActions";
-import { generatePDF } from "@/pages/profile-export/utils/pdfGenerator";
 import { useToast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
@@ -32,6 +31,8 @@ export function ExportDialog({ open, onOpenChange, onExportComplete }: ExportDia
     try {
       const data = await fetchExportData(config);
       if (data) {
+        // Lazy load du générateur PDF uniquement quand nécessaire
+        const { generatePDF } = await import("@/pages/profile-export/utils/pdfGenerator");
         await generatePDF(data);
         toast({
           title: "Export réussi",
