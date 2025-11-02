@@ -26,11 +26,6 @@ interface ConfirmationAlertsProps {
   exportOpen: boolean;
   onExportOpenChange: (open: boolean) => void;
   onExportConfirm: () => void;
-  
-  // Delete
-  deleteOpen: boolean;
-  onDeleteOpenChange: (open: boolean) => void;
-  onDeleteConfirm: () => void;
 }
 
 export function ConfirmationAlerts({
@@ -45,9 +40,6 @@ export function ConfirmationAlerts({
   exportOpen,
   onExportOpenChange,
   onExportConfirm,
-  deleteOpen,
-  onDeleteOpenChange,
-  onDeleteConfirm,
 }: ConfirmationAlertsProps) {
   return (
     <>
@@ -105,27 +97,6 @@ export function ConfirmationAlerts({
             <AlertDialogCancel>Annuler</AlertDialogCancel>
             <AlertDialogAction onClick={onExportConfirm}>
               Télécharger
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Delete Account Confirmation */}
-      <AlertDialog open={deleteOpen} onOpenChange={onDeleteOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="text-danger">Supprimer votre compte ?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ⚠️ Cette action est irréversible. Toutes vos données (traitements, ordonnances, historique) seront définitivement supprimées.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={onDeleteConfirm}
-              className="bg-danger hover:bg-danger/90"
-            >
-              Supprimer définitivement
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
