@@ -7,6 +7,7 @@ export interface AdminRoute {
   path: string;
   badge?: string;
   disabled?: boolean;
+  helpText?: string;
 }
 
 export interface AdminSection {
