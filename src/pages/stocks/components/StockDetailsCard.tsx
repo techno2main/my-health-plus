@@ -22,6 +22,12 @@ export function StockDetailsCard({
   expiryDate,
 }: StockDetailsCardProps) {
   const dailyConsumption = takesPerDay * unitsPerTake;
+  
+  const getStockColor = () => {
+    if (currentStock === 0) return "text-red-500";
+    if (status === "critical" || status === "low") return "text-orange-500";
+    return "text-primary";
+  };
 
   return (
     <div className="space-y-6">
@@ -38,7 +44,7 @@ export function StockDetailsCard({
         <div className="grid grid-cols-2 gap-6">
           <div>
             <p className="text-sm text-muted-foreground mb-1">Stock actuel</p>
-            <p className="text-3xl font-bold text-primary">{currentStock}</p>
+            <p className={`text-3xl font-bold ${getStockColor()}`}>{currentStock}</p>
             <p className="text-sm text-muted-foreground">unités</p>
           </div>
           <div>

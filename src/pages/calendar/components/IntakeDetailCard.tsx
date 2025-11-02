@@ -104,9 +104,6 @@ export const IntakeDetailCard = ({ intake, isToday = false, isPastDate = false, 
           {hasStockAlert() && (
             <div className="flex items-center gap-0.5">
               <AlertCircle className={`h-4 w-4 ${getAlertColor()}`} />
-              <span className={`text-xs font-semibold ${getAlertColor()}`}>
-                !
-              </span>
             </div>
           )}
         </div>
@@ -118,7 +115,14 @@ export const IntakeDetailCard = ({ intake, isToday = false, isPastDate = false, 
           <span className="text-xs text-muted-foreground">{intake.dosage}</span>
         )}
       </div>
-      <p className="text-xs text-muted-foreground mt-1">{intake.treatment}</p>
+      <div className="flex items-center justify-between mt-1">
+        <p className="text-xs text-muted-foreground">{intake.treatment}</p>
+        {intake.currentStock !== undefined && (
+          <p className={`text-xs font-medium ${getAlertColor() || 'text-muted-foreground'}`}>
+            Stock actuel : {intake.currentStock}
+          </p>
+        )}
+      </div>
     </div>
   );
 };

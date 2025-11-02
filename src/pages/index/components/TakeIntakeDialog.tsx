@@ -14,6 +14,15 @@ interface TakeIntakeDialogProps {
 }
 
 export const TakeIntakeDialog = ({ open, intake, onConfirm, onCancel, processing }: TakeIntakeDialogProps) => {
+  const getStockColor = () => {
+    if (!intake) return "";
+    if (intake.currentStock === 0) return "text-red-500";
+    if (intake.minThreshold !== undefined && intake.currentStock <= intake.minThreshold) {
+      return "text-orange-500";
+    }
+    return "";
+  };
+
   return (
     <Dialog open={open} onOpenChange={onCancel}>
       <DialogContent className="sm:max-w-md">
@@ -51,8 +60,8 @@ export const TakeIntakeDialog = ({ open, intake, onConfirm, onCancel, processing
               )}
               <div className="flex items-center gap-2">
                 <Pill className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm">
-                  Stock actuel : <span className="font-medium">{intake.currentStock}</span>
+                <span className={`text-sm font-medium ${getStockColor()}`}>
+                  Stock actuel : {intake.currentStock}
                 </span>
               </div>
             </div>

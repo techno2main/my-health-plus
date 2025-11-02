@@ -20,6 +20,12 @@ interface StockCardProps {
 }
 
 export function StockCard({ item, onAdjust, onViewDetails }: StockCardProps) {
+  const getStockColor = () => {
+    if (item.current_stock === 0) return "text-red-500";
+    if (item.status === "critical" || item.status === "low") return "text-orange-500";
+    return "";
+  };
+
   return (
     <Card className="p-4">
       <div className="flex items-start justify-between mb-3">
@@ -37,7 +43,7 @@ export function StockCard({ item, onAdjust, onViewDetails }: StockCardProps) {
         <div className="grid grid-cols-2 gap-4 text-sm ml-6">
           <div>
             <p className="text-muted-foreground">Stock actuel</p>
-            <p className="font-medium text-base">{formatUnits(item.current_stock || 0, item.unit)}</p>
+            <p className={`font-medium text-base ${getStockColor()}`}>{formatUnits(item.current_stock || 0, item.unit)}</p>
           </div>
           <div>
             <p className="text-muted-foreground">Seuil minimum</p>
