@@ -1,5 +1,4 @@
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { EmptyState as EmptyStateAtom } from "@/components/ui/atoms/EmptyState";
 import { CheckCircle2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -7,15 +6,15 @@ export function EmptyState() {
   const navigate = useNavigate();
   
   return (
-    <Card className="p-12 text-center">
-      <CheckCircle2 className="h-12 w-12 text-success mx-auto mb-4" />
-      <h3 className="font-semibold text-lg mb-2">Tout est à jour !</h3>
-      <p className="text-muted-foreground mb-4">
-        Aucune prise manquée détectée
-      </p>
-      <Button onClick={() => navigate("/")}>
-        Retour à l'accueil
-      </Button>
-    </Card>
+    <EmptyStateAtom
+      icon={CheckCircle2}
+      iconColor="text-success"
+      title="Tout est à jour !"
+      description="Aucune prise manquée détectée"
+      action={{
+        label: "Retour à l'accueil",
+        onClick: () => navigate("/")
+      }}
+    />
   );
 }
