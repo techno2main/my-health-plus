@@ -8,9 +8,32 @@ export function useAuth() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let isCleanedUp = false;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (isCleanedUp) return;
+
+        // Gérer les événements d'erreur de token
+        if (event === 'TOKEN_REFRESHED' && !session) {
+          // Token invalide, nettoyer la session
+          setTimeout(() => {
+            supabase.auth.signOut().catch(() => {});
+          }, 0);
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        if (event === 'SIGNED_OUT') {
+          setSession(null);
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
@@ -19,31 +42,50 @@ export function useAuth() {
 
     // THEN check for existing session with error handling
     supabase.auth.getSession()
-      .then(({ data: { session }, error }) => {
+      .then(async ({ data: { session }, error }) => {
+        if (isCleanedUp) return;
+
         if (error) {
-          // Si erreur de refresh token, on nettoie silencieusement (pas de console.warn)
-          if (error.message.includes('refresh_token_not_found') || error.message.includes('Invalid Refresh Token')) {
-            supabase.auth.signOut().catch(() => {}); // Nettoyage silencieux
-          } else {
-            // Autres erreurs : on les affiche
-            console.warn("⚠️ Erreur lors de la récupération de la session:", error.message);
-          }
+          // Nettoyer toute session invalide
+          await supabase.auth.signOut().catch(() => {});
           setSession(null);
           setUser(null);
-        } else {
-          setSession(session);
-          setUser(session?.user ?? null);
+          setLoading(false);
+          return;
         }
+
+        // Vérifier si la session est valide
+        if (session) {
+          // Tester si le token est valide en faisant une requête simple
+          const { error: userError } = await supabase.auth.getUser();
+          if (userError) {
+            // Token invalide, nettoyer
+            await supabase.auth.signOut().catch(() => {});
+            setSession(null);
+            setUser(null);
+            setLoading(false);
+            return;
+          }
+        }
+
+        setSession(session);
+        setUser(session?.user ?? null);
         setLoading(false);
       })
-      .catch((err) => {
+      .catch(async (err) => {
+        if (isCleanedUp) return;
         console.error("❌ Erreur inattendue lors de getSession:", err);
+        // Nettoyer en cas d'erreur
+        await supabase.auth.signOut().catch(() => {});
         setSession(null);
         setUser(null);
         setLoading(false);
       });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isCleanedUp = true;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signInWithGoogle = async () => {
