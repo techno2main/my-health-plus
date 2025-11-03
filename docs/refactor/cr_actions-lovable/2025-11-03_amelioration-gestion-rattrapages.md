@@ -350,4 +350,185 @@ L'utilisateur voit maintenant l'heure exacte à laquelle il valide la prise du m
 
 ---
 
+## 🔄 Mise à jour : Affichage de l'heure de prise réelle dans le récap "Prêt"
+
+**Date** : 03/11/2025
+
+### Demande utilisateur
+
+Dans le récap "Prêt" (après avoir sélectionné une action), afficher l'heure de prise réelle qui sera enregistrée à côté de "Prévu à hh:mm".
+
+**Exemple** :
+- Prévu à 09:30
+- Pris à 09:15 *(affiché en bleu)*
+
+### Modification technique
+
+**IntakeCard.tsx** (`src/pages/rattrapage/components/IntakeCard.tsx`)
+
+#### Modification de la section d'affichage de l'heure (lignes 91-93)
+
+**Avant** :
+```typescript
+<p className="text-sm text-muted-foreground pl-6">
+  Prévu à {intake.displayTime}
+</p>
+```
+
+**Après** :
+```typescript
+<div className="text-sm text-muted-foreground pl-6 space-y-1">
+  <p>Prévu à {intake.displayTime}</p>
+  {currentAction?.actualTakenTime && currentAction.action !== 'pending' && (
+    <p className="text-primary font-medium">
+      Pris à {currentAction.actualTakenTime}
+    </p>
+  )}
+</div>
+```
+
+### Résultat
+
+Lorsque l'utilisateur :
+1. Clique sur "Pris" et saisit une heure (ex: 09:15)
+2. Le statut passe à "Prêt" ✓
+3. L'heure de prise réelle s'affiche en bleu sous l'heure prévue :
+   ```
+   Prévu à 09:30
+   Pris à 09:15
+   ```
+
+Cette information permet à l'utilisateur de vérifier visuellement l'heure qui sera enregistrée avant de valider définitivement avec le bouton "Valider".
+
+---
+
+## 🔄 Mise à jour : Affichage de l'heure réelle pour le bouton "Prendre"
+
+**Date** : 03/11/2025
+
+### Demande utilisateur
+
+Le bouton "Prendre" (action `taken_now`) doit aussi afficher l'heure réelle dans le récap "Prêt", comme pour le bouton "Pris".
+
+### Modification technique
+
+**useRattrapageActions.ts** (`src/pages/rattrapage/hooks/useRattrapageActions.ts`)
+
+#### Modification de confirmAction pour stocker l'heure actuelle au format HH:MM (lignes 62-95)
+
+**Avant** :
+```typescript
+} else if (action === 'taken_now') {
+  takenAtValue = new Date().toISOString();
+}
+
+setActions(prev => ({
+  ...prev,
+  [intakeId]: {
+    id: intakeId,
+    action,
+    takenAt: takenAtValue,
+    scheduledTime: confirmDialog.scheduledTime,
+    actualTakenTime: actualTakenTime,  // Seulement pour 'taken'
+  },
+}));
+```
+
+**Après** :
+```typescript
+} else if (action === 'taken_now') {
+  const now = new Date();
+  takenAtValue = now.toISOString();
+  // ✨ NOUVEAU : Stocker aussi l'heure actuelle au format HH:MM pour l'affichage
+  actualTakenTimeValue = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+}
+
+setActions(prev => ({
+  ...prev,
+  [intakeId]: {
+    id: intakeId,
+    action,
+    takenAt: takenAtValue,
+    scheduledTime: confirmDialog.scheduledTime,
+    actualTakenTime: actualTakenTimeValue,  // ✨ MODIFIÉ : pour 'taken' ET 'taken_now'
+  },
+}));
+```
+
+### Résultat
+
+Lorsque l'utilisateur :
+1. Clique sur "Prendre" (bouton orange)
+2. Confirme l'action
+3. Le statut passe à "Prêt" ✓
+4. L'heure de prise réelle (heure actuelle) s'affiche en bleu sous l'heure prévue :
+   ```
+   Prévu à 09:30
+   Pris à 14:25
+   ```
+
+Comme pour le bouton "Pris", l'utilisateur peut maintenant voir l'heure exacte qui sera enregistrée avant de valider définitivement.
+
+---
+
+## 🔄 Mise à jour : Affichage "Prise manquée" pour le bouton "Manqué"
+
+**Date** : 03/11/2025
+
+### Demande utilisateur
+
+Le bouton "Manqué" (action `skipped`) doit afficher "Prise manquée" dans le récap "Prêt", sous l'heure prévue.
+
+### Modification technique
+
+**IntakeCard.tsx** (`src/pages/rattrapage/components/IntakeCard.tsx`)
+
+#### Modification de la section d'affichage de l'heure (lignes 91-101)
+
+**Avant** :
+```typescript
+<div className="text-sm text-muted-foreground pl-6 space-y-1">
+  <p>Prévu à {intake.displayTime}</p>
+  {currentAction?.actualTakenTime && currentAction.action !== 'pending' && (
+    <p className="text-primary font-medium">
+      Pris à {currentAction.actualTakenTime}
+    </p>
+  )}
+</div>
+```
+
+**Après** :
+```typescript
+<div className="text-sm text-muted-foreground pl-6 space-y-1">
+  <p>Prévu à {intake.displayTime}</p>
+  {currentAction?.actualTakenTime && currentAction.action !== 'pending' && currentAction.action !== 'skipped' && (
+    <p className="text-primary font-medium">
+      Pris à {currentAction.actualTakenTime}
+    </p>
+  )}
+  {/* ✨ NOUVEAU : Affichage pour l'action "Manqué" */}
+  {currentAction?.action === 'skipped' && (
+    <p className="text-danger font-medium">
+      Prise manquée
+    </p>
+  )}
+</div>
+```
+
+### Résultat
+
+Lorsque l'utilisateur :
+1. Clique sur "Manqué" (bouton rouge)
+2. Confirme l'action
+3. Le statut passe à "Prêt" ✓
+4. Le message "Prise manquée" s'affiche en rouge sous l'heure prévue :
+   ```
+   Prévu à 09:30
+   Prise manquée
+   ```
+
+Cela permet à l'utilisateur de vérifier visuellement l'action qui sera enregistrée avant de valider définitivement.
+
+---
+
 **Fin du compte-rendu**

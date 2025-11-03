@@ -63,6 +63,7 @@ export function useRattrapageActions(missedIntakes: MissedIntake[]) {
     const { intakeId, action } = confirmDialog;
     
     let takenAtValue: string | undefined = undefined;
+    let actualTakenTimeValue: string | undefined = actualTakenTime;
     
     if (action === 'taken' && actualTakenTime) {
       // Convertir actualTakenTime (HH:MM) en timestamp ISO en utilisant la date du scheduledTime
@@ -73,7 +74,10 @@ export function useRattrapageActions(missedIntakes: MissedIntake[]) {
     } else if (action === 'taken') {
       takenAtValue = confirmDialog.scheduledTime;
     } else if (action === 'taken_now') {
-      takenAtValue = new Date().toISOString();
+      const now = new Date();
+      takenAtValue = now.toISOString();
+      // Stocker aussi l'heure actuelle au format HH:MM pour l'affichage
+      actualTakenTimeValue = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
     }
     
     setActions(prev => ({
@@ -83,7 +87,7 @@ export function useRattrapageActions(missedIntakes: MissedIntake[]) {
         action,
         takenAt: takenAtValue,
         scheduledTime: confirmDialog.scheduledTime,
-        actualTakenTime: actualTakenTime,
+        actualTakenTime: actualTakenTimeValue,
       },
     }));
 

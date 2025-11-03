@@ -88,9 +88,19 @@ export function IntakeCard({
               </span>
             )}
           </div>
-          <p className="text-sm text-muted-foreground pl-6">
-            Prévu à {intake.displayTime}
-          </p>
+          <div className="text-sm text-muted-foreground pl-6 space-y-1">
+            <p>Prévu à {intake.displayTime}</p>
+            {currentAction?.actualTakenTime && currentAction.action !== 'pending' && currentAction.action !== 'skipped' && (
+              <p className="text-primary font-medium">
+                Pris à {currentAction.actualTakenTime}
+              </p>
+            )}
+            {currentAction?.action === 'skipped' && (
+              <p className="text-danger font-medium">
+                Prise manquée
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Actions */}
