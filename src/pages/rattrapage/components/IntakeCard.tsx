@@ -113,7 +113,7 @@ export function IntakeCard({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>
-                <p>J'ai pris le médicament à l'heure prévue mais j'ai oublié de cliquer sur le bouton</p>
+                <p>J'ai pris le médicament, mais j'ai oublié de cliquer sur le bouton</p>
               </TooltipContent>
             </Tooltip>
 
