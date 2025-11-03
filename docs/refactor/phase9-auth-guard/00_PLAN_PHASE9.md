@@ -3,7 +3,7 @@
 **Date de début** : 3 novembre 2025  
 **Branche** : `fix/auth-guard-migration`  
 **Objectif** : Sécuriser TOUS les appels `supabase.auth.getUser()` avec AuthGuard  
-**Statut** : � Phase 1 terminée - 5/20 fichiers corrigés (25%)
+**Statut** : ✅ Phase 2 terminée - 13/20 fichiers corrigés (65%)
 
 ---
 
@@ -19,13 +19,13 @@
 | 4 | `src/components/Layout/AppHeader.tsx` | 1 | 🔴 CRITIQUE | ✅ FAIT |
 | 5 | `src/hooks/useMedicationNotificationScheduler.tsx` | 1 | 🔴 CRITIQUE | ✅ FAIT |
 | 6 | `src/components/TreatmentWizard/TreatmentWizard.tsx` | 1 | 🔴 CRITIQUE | ✅ FAIT |
-| 7 | `src/components/TreatmentWizard/hooks/useStep3Stocks.ts` | 1 | 🟠 HAUTE | ⏳ À faire |
-| 8 | `src/pages/profile-export/hooks/useExportConfig.ts` | 2 | 🟠 HAUTE | ⏳ À faire |
-| 9 | `src/pages/profile-export/hooks/useExportData.ts` | 1 | 🟠 HAUTE | ⏳ À faire |
-| 10 | `src/pages/privacy/hooks/usePrivacySettings.ts` | 1 | 🟠 HAUTE | ⏳ À faire |
-| 11 | `src/pages/privacy/hooks/usePasswordManagement.ts` | 2 | 🟠 HAUTE | ⏳ À faire |
-| 12 | `src/pages/privacy/hooks/useBiometricSettings.ts` | 2 | 🟠 HAUTE | ⏳ À faire |
-| 13 | `src/pages/privacy/hooks/useAccountActions.ts` | 3 | 🟠 HAUTE | ⏳ À faire |
+| 7 | `src/components/TreatmentWizard/hooks/useStep3Stocks.ts` | 1 | 🟠 HAUTE | ✅ FAIT |
+| 8 | `src/pages/profile-export/hooks/useExportConfig.ts` | 2 | 🟠 HAUTE | ✅ FAIT |
+| 9 | `src/pages/profile-export/hooks/useExportData.ts` | 1 | 🟠 HAUTE | ✅ FAIT |
+| 10 | `src/pages/privacy/hooks/usePrivacySettings.ts` | 1 | 🟠 HAUTE | ✅ FAIT |
+| 11 | `src/pages/privacy/hooks/usePasswordManagement.ts` | 2 | 🟠 HAUTE | ✅ FAIT |
+| 12 | `src/pages/privacy/hooks/useBiometricSettings.ts` | 2 | 🟠 HAUTE | ✅ FAIT |
+| 13 | `src/pages/privacy/hooks/useAccountActions.ts` | 3 | 🟠 HAUTE | ✅ FAIT |
 | 14 | `src/pages/prescriptions/hooks/usePrescriptions.ts` | 1 | 🟡 MOYENNE | ⏳ À faire |
 | 15 | `src/pages/pathologies/hooks/usePathologies.ts` | 1 | 🟡 MOYENNE | ⏳ À faire |
 | 16 | `src/pages/medication-catalog/hooks/useMedicationCatalog.ts` | 1 | 🟡 MOYENNE | ⏳ À faire |
@@ -98,16 +98,16 @@ if (error || !user) {
 - [x] `useMedicationNotificationScheduler.tsx` - Notifications médicaments
 - [x] `TreatmentWizard.tsx` - Création de traitements
 
-### Phase 2 : HAUTE PRIORITÉ (Fichiers 7-13) - 1h30
+### Phase 2 : HAUTE PRIORITÉ (Fichiers 7-13) - ✅ TERMINÉE
 **Impact** : Fonctionnalités importantes mais pas bloquantes
 
-- [ ] `useStep3Stocks.ts` - Étape 3 wizard traitement
-- [ ] `useExportConfig.ts` (2 occurrences) - Export configuration
-- [ ] `useExportData.ts` - Export données
-- [ ] `usePrivacySettings.ts` - Paramètres confidentialité
-- [ ] `usePasswordManagement.ts` (2 occurrences) - Gestion mot de passe
-- [ ] `useBiometricSettings.ts` (2 occurrences) - Biométrie
-- [ ] `useAccountActions.ts` (3 occurrences) - Actions compte
+- [x] `useStep3Stocks.ts` - Étape 3 wizard traitement
+- [x] `useExportConfig.ts` (2 occurrences) - Export configuration
+- [x] `useExportData.ts` - Export données
+- [x] `usePrivacySettings.ts` - Paramètres confidentialité
+- [x] `usePasswordManagement.ts` (2 occurrences) - Gestion mot de passe
+- [x] `useBiometricSettings.ts` (2 occurrences) - Biométrie
+- [x] `useAccountActions.ts` (3 occurrences) - Actions compte
 
 ### Phase 3 : MOYENNE & BASSE (Fichiers 14-21) - 1h30
 **Impact** : Référentiels et fonctionnalités secondaires
