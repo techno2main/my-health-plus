@@ -189,6 +189,69 @@
   .transition-slow {
     transition: all var(--transition-slow);
   }
+
+  /* Material 3 Date Picker styles */
+  .date-picker-m3 {
+    @apply bg-card rounded-xl;
+  }
+
+  .date-picker-m3 .rdp {
+    --rdp-cell-size: 40px;
+    --rdp-accent-color: hsl(var(--primary));
+    --rdp-background-color: hsl(var(--primary) / 0.1);
+  }
+
+  /* Animation des jours sélectionnés */
+  .date-picker-m3 [aria-selected="true"] {
+    animation: date-select 0.2s ease-out;
+  }
+
+  @keyframes date-select {
+    0% {
+      transform: scale(0.9);
+      opacity: 0.8;
+    }
+    50% {
+      transform: scale(1.05);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  /* Effet hover sur les jours */
+  .date-picker-m3 button[name="day"]:not([disabled]):hover {
+    transform: scale(1.05);
+    transition: transform 0.15s ease-out;
+  }
+
+  /* Animation du swipe sur le calendrier */
+  .date-picker-m3 {
+    touch-action: pan-y;
+    user-select: none;
+  }
+
+  /* Style pour le sélecteur mois/année */
+  .date-picker-m3 .month-year-selector {
+    animation: slide-in 0.2s ease-out;
+  }
+
+  @keyframes slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Amélioration du style des inputs de saisie manuelle */
+  input[inputmode="numeric"] {
+    font-variant-numeric: tabular-nums;
+  }
 }
 
 /* Android-specific safe areas utilities */

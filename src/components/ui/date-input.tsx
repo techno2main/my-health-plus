@@ -1,15 +1,5 @@
 import * as React from "react"
-import { format } from "date-fns"
-import { fr } from "date-fns/locale"
-import { CalendarIcon } from "lucide-react"
-import { cn } from "@/lib/utils"
-import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
+import { DatePickerM3 } from "@/components/ui/date-picker-m3"
 
 interface DateInputProps {
   value?: string
@@ -17,47 +7,60 @@ interface DateInputProps {
   placeholder?: string
   id?: string
   className?: string
+  disabled?: boolean
+  minDate?: Date
+  maxDate?: Date
 }
 
-export function DateInput({ value, onChange, placeholder, id, className }: DateInputProps) {
-  const [date, setDate] = React.useState<Date | undefined>(
-    value ? new Date(value) : undefined
+/**
+ * DateInput - Composant de saisie de date avec Material 3
+ * 
+ * Wrapper du DatePickerM3 qui accepte des dates au format ISO string
+ * et maintient la compatibilité avec l'API existante
+ */
+export function DateInput({ 
+  value, 
+  onChange, 
+  placeholder, 
+  id, 
+  className,
+  disabled,
+  minDate,
+  maxDate 
+}: DateInputProps) {
+  const date = React.useMemo(
+    () => value ? new Date(value) : undefined,
+    [value]
   )
 
-  const handleSelect = (selectedDate: Date | undefined) => {
-    setDate(selectedDate)
-    if (onChange && selectedDate) {
-      onChange(selectedDate.toISOString().split('T')[0])
-    } else if (onChange && !selectedDate) {
-      onChange("")
-    }
-  }
+  const handleChange = React.useCallback(
+    (selectedDate: Date | undefined) => {
+      if (onChange) {
+        if (selectedDate) {
+          // Utiliser le fuseau horaire local au lieu d'UTC
+          const year = selectedDate.getFullYear()
+          const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+          const day = String(selectedDate.getDate()).padStart(2, '0')
+          onChange(`${year}-${month}-${day}`)
+        } else {
+          onChange("")
+        }
+      }
+    },
+    [onChange]
+  )
 
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          variant="outline"
-          className={cn(
-            "w-full justify-start text-left font-normal h-10 px-3.5",
-            !date && "text-muted-foreground",
-            className
-          )}
-        >
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {date ? format(date, "dd/MM/yyyy", { locale: fr }) : <span>{placeholder || "Date"}</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <Calendar
-          mode="single"
-          selected={date}
-          onSelect={handleSelect}
-          initialFocus
-          className="pointer-events-auto"
-        />
-      </PopoverContent>
-    </Popover>
+    <div id={id} className={className}>
+      <DatePickerM3
+        variant="popover"
+        value={date}
+        onChange={handleChange}
+        placeholder={placeholder || "Sélectionner une date"}
+        disabled={disabled}
+        minDate={minDate}
+        maxDate={maxDate}
+      />
+    </div>
   )
 }

@@ -1,12 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, X } from "lucide-react";
+import { DatePickerM3 } from "@/components/ui/date-picker-m3";
+import { X } from "lucide-react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 import { ExportConfig } from "../types";
 
 interface PeriodSelectorProps {
@@ -16,11 +13,25 @@ interface PeriodSelectorProps {
 
 export function PeriodSelector({ config, onConfigChange }: PeriodSelectorProps) {
   const handleStartDateChange = (date: Date | undefined) => {
-    onConfigChange({ startDate: date ? format(date, 'yyyy-MM-dd') : null });
+    if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      onConfigChange({ startDate: `${year}-${month}-${day}` });
+    } else {
+      onConfigChange({ startDate: null });
+    }
   };
 
   const handleEndDateChange = (date: Date | undefined) => {
-    onConfigChange({ endDate: date ? format(date, 'yyyy-MM-dd') : null });
+    if (date) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      onConfigChange({ endDate: `${year}-${month}-${day}` });
+    } else {
+      onConfigChange({ endDate: null });
+    }
   };
 
   const clearStartDate = () => {
@@ -42,32 +53,14 @@ export function PeriodSelector({ config, onConfigChange }: PeriodSelectorProps) 
         <div className="space-y-2">
           <Label>Date de début</Label>
           <div className="flex gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "flex-1 justify-start text-left font-normal",
-                    !config.startDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {config.startDate
-                    ? format(new Date(config.startDate), 'dd/MM/yyyy', { locale: fr })
-                    : "Sélectionner"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={config.startDate ? new Date(config.startDate) : undefined}
-                  onSelect={handleStartDateChange}
-                  initialFocus
-                  locale={fr}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex-1">
+              <DatePickerM3
+                variant="popover"
+                value={config.startDate ? new Date(config.startDate) : undefined}
+                onChange={handleStartDateChange}
+                placeholder="Sélectionner"
+              />
+            </div>
             {config.startDate && (
               <Button
                 variant="outline"
@@ -83,32 +76,14 @@ export function PeriodSelector({ config, onConfigChange }: PeriodSelectorProps) 
         <div className="space-y-2">
           <Label>Date de fin</Label>
           <div className="flex gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "flex-1 justify-start text-left font-normal",
-                    !config.endDate && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {config.endDate
-                    ? format(new Date(config.endDate), 'dd/MM/yyyy', { locale: fr })
-                    : "Sélectionner"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={config.endDate ? new Date(config.endDate) : undefined}
-                  onSelect={handleEndDateChange}
-                  initialFocus
-                  locale={fr}
-                  className="pointer-events-auto"
-                />
-              </PopoverContent>
-            </Popover>
+            <div className="flex-1">
+              <DatePickerM3
+                variant="popover"
+                value={config.endDate ? new Date(config.endDate) : undefined}
+                onChange={handleEndDateChange}
+                placeholder="Sélectionner"
+              />
+            </div>
             {config.endDate && (
               <Button
                 variant="outline"

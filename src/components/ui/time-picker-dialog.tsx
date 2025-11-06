@@ -21,8 +21,10 @@ export function TimePickerDialog({
   const [inputMode, setInputMode] = useState<"dial" | "input">("dial");
   const [hourInput, setHourInput] = useState("");
   const [minuteInput, setMinuteInput] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
   const hourInputRef = useRef<HTMLInputElement>(null);
   const minuteInputRef = useRef<HTMLInputElement>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   const getInitialTime = () => {
     if (value && value.includes(":")) {
@@ -134,6 +136,76 @@ export function TimePickerDialog({
     setInputMode(prev => prev === "dial" ? "input" : "dial");
   };
 
+  // Fonction pour calculer l'heure ou la minute depuis les coordonnées du pointeur
+  const getTimeFromPointer = (clientX: number, clientY: number) => {
+    if (!svgRef.current) return null;
+    
+    const svg = svgRef.current;
+    const rect = svg.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    
+    // Calculer l'angle depuis le centre
+    const deltaX = clientX - centerX;
+    const deltaY = clientY - centerY;
+    let angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+    angle = (angle + 90 + 360) % 360; // Ajuster pour commencer à 12h
+    
+    // Calculer la distance depuis le centre (en pourcentage du rayon)
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const maxRadius = rect.width / 2;
+    const normalizedDistance = distance / maxRadius;
+    
+    if (mode === "hours") {
+      // Déterminer si on est sur le cercle intérieur (1-12) ou extérieur (00, 13-23)
+      const isInner = normalizedDistance < 0.6; // Seuil pour discriminer inner/outer
+      
+      // Calculer l'heure (0-11)
+      const hourIndex = Math.round(angle / 30) % 12;
+      
+      if (isInner) {
+        // Cercle intérieur : heures 1-12
+        return hourIndex === 0 ? 12 : hourIndex;
+      } else {
+        // Cercle extérieur : heures 00, 13-23
+        return hourIndex === 0 ? 0 : hourIndex + 12;
+      }
+    } else {
+      // Minutes : 0-59
+      const minute = Math.round(angle / 6) % 60;
+      return minute;
+    }
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<SVGSVGElement>) => {
+    setIsDragging(true);
+    updateTimeFromPointer(e.clientX, e.clientY);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<SVGSVGElement>) => {
+    if (!isDragging) return;
+    updateTimeFromPointer(e.clientX, e.clientY);
+  };
+
+  const handlePointerUp = () => {
+    if (isDragging && mode === "hours") {
+      // Passer automatiquement aux minutes après avoir sélectionné l'heure
+      setMode("minutes");
+    }
+    setIsDragging(false);
+  };
+
+  const updateTimeFromPointer = (clientX: number, clientY: number) => {
+    const time = getTimeFromPointer(clientX, clientY);
+    if (time === null) return;
+    
+    if (mode === "hours") {
+      setSelectedHour(time);
+    } else {
+      setSelectedMinute(time);
+    }
+  };
+
   // CERCLE INTÉRIEUR : heures 1-12
   const innerHourPositions = Array.from({ length: 12 }, (_, i) => {
     const hour = i === 0 ? 12 : i;
@@ -173,10 +245,22 @@ export function TimePickerDialog({
   };
 
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+    <DialogPrimitive.Root 
+      open={open} 
+      onOpenChange={(newOpen) => {
+        // Empêcher la fermeture automatique - on ne peut fermer que via les boutons
+        if (!newOpen) return
+        onOpenChange(newOpen)
+      }}
+    >
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
-        <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-[340px] translate-x-[-50%] translate-y-[-50%]">
+        <DialogPrimitive.Content 
+          className="fixed left-[50%] top-[50%] z-50 w-full max-w-[340px] translate-x-[-50%] translate-y-[-50%]"
+          onEscapeKeyDown={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => e.preventDefault()}
+          onInteractOutside={(e) => e.preventDefault()}
+        >
           <DialogPrimitive.Title className="sr-only">Sélectionner l'heure</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">Choisissez l'heure et les minutes</DialogPrimitive.Description>
           
@@ -260,8 +344,14 @@ export function TimePickerDialog({
               <div className="relative w-full bg-white p-8">
                 <div className="relative w-full" style={{ paddingBottom: '100%' }}>
                   <svg 
+                    ref={svgRef}
                     viewBox="0 0 100 100" 
-                    className="absolute inset-0 w-full h-full"
+                    className="absolute inset-0 w-full h-full touch-none"
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                    style={{ touchAction: 'none' }}
                   >
                     {/* Cercle de fond */}
                     <circle cx="50" cy="50" r="45" fill="#1976D2" />
