@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { PageHeader } from "@/components/Layout/PageHeader";
 import { useNavigate } from "react-router-dom";
-import { Bell, Shield, Smartphone, Database, CalendarSync, Clock, Navigation, ArrowUpDown } from "lucide-react";
+import { Bell, Shield, Smartphone, Database, CalendarSync, Clock, Navigation, ArrowUpDown, Bug } from "lucide-react";
 import { ThemeCard } from "./components/ThemeCard";
 import { NavigationCard } from "./components/NavigationCard";
 import { Button } from "@/components/ui/button";
@@ -82,6 +82,17 @@ export default function Settings() {
           title="Confidentialité et sécurité"
           description="Protection des données"
           onClick={() => navigate("/privacy")}
+        />
+      </div>
+    ),
+    diagnostics: (
+      <div className="space-y-3" key="diagnostics">
+        <h3 className="text-sm font-medium text-muted-foreground px-1">Diagnostics</h3>
+        <NavigationCard
+          icon={Bug}
+          title="Diagnostic des notifications"
+          description="Diagnostiquer les notifications"
+          onClick={() => navigate("/notifications/debug")}
         />
       </div>
     ),

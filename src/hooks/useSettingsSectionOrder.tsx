@@ -18,7 +18,8 @@ const DEFAULT_SECTIONS: SettingsSection[] = [
   { id: "calendar", title: "Calendrier", order: 4, visible: true },
   { id: "rattrapage", title: "Rattrapage", order: 5, visible: true },
   { id: "security", title: "Sécurité", order: 6, visible: true },
-  { id: "about", title: "À propos", order: 7, visible: true },
+  { id: "diagnostics", title: "Diagnostics", order: 7, visible: true },
+  { id: "about", title: "À propos", order: 8, visible: true },
 ];
 
 export function useSettingsSectionOrder() {
