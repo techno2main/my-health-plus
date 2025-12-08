@@ -1,4 +1,10 @@
 import { Pill, CheckCircle2, XCircle, Clock, ClockAlert, SkipForward } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface IntakeHistoryCardProps {
   intake: {
@@ -14,41 +20,39 @@ interface IntakeHistoryCardProps {
 }
 
 const getStatusIcon = () => {
-  // Toujours afficher l'icône pilule blanche
   return <Pill className="h-5 w-5 text-white" />
 }
 
-const getStatusBadge = (status: string, scheduledTimestamp?: string, takenAtTimestamp?: string) => {
+const getStatusInfo = (status: string, scheduledTimestamp?: string, takenAtTimestamp?: string): { icon: JSX.Element; label: string } => {
   if (status === "taken" && scheduledTimestamp && takenAtTimestamp) {
     const scheduled = new Date(scheduledTimestamp)
     const taken = new Date(takenAtTimestamp)
     const differenceMinutes = (taken.getTime() - scheduled.getTime()) / (1000 * 60)
     
-    // Vert : avant l'heure ou jusqu'à 30min après (à l'heure)
     if (differenceMinutes <= 30) {
-      return <CheckCircle2 className="h-6 w-6 text-success" />
-    }
-    // Vert : plus de 30min après (en retard)
-    else {
-      return <ClockAlert className="h-6 w-6 text-success" />
+      return { icon: <CheckCircle2 className="h-6 w-6 text-success" />, label: "À l'heure" }
+    } else {
+      return { icon: <ClockAlert className="h-6 w-6 text-success" />, label: "En retard" }
     }
   }
   
   switch (status) {
     case "taken":
-      return <CheckCircle2 className="h-6 w-6 text-success" />
+      return { icon: <CheckCircle2 className="h-6 w-6 text-success" />, label: "À l'heure" }
     case "skipped":
-      return <SkipForward className="h-6 w-6 text-warning flex-shrink-0" />
+      return { icon: <SkipForward className="h-6 w-6 text-warning flex-shrink-0" />, label: "Sautée" }
     case "missed":
-      return <XCircle className="h-6 w-6 text-danger" />
+      return { icon: <XCircle className="h-6 w-6 text-danger" />, label: "Manquée" }
     case "pending":
-      return <Clock className="h-6 w-6 text-muted-foreground" />
+      return { icon: <Clock className="h-6 w-6 text-muted-foreground" />, label: "En attente" }
     default:
-      return null
+      return { icon: <></>, label: "" }
   }
 }
 
 export const IntakeHistoryCard = ({ intake }: IntakeHistoryCardProps) => {
+  const statusInfo = getStatusInfo(intake.status, intake.scheduledTimestamp, intake.takenAtTimestamp)
+  
   return (
     <div className="flex items-center justify-between p-3 rounded-lg bg-surface">
       <div className="flex items-center gap-3 flex-1">
@@ -64,7 +68,16 @@ export const IntakeHistoryCard = ({ intake }: IntakeHistoryCardProps) => {
           </p>
         </div>
       </div>
-      {getStatusBadge(intake.status, intake.scheduledTimestamp, intake.takenAtTimestamp)}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div>{statusInfo.icon}</div>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{statusInfo.label}</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   )
 }

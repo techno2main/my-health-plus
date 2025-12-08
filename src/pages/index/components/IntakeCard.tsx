@@ -4,6 +4,12 @@ import { Clock, Pill, CheckCircle2, XCircle, ClockAlert, SkipForward } from "luc
 import { format } from "date-fns"
 import { isIntakeValidationAllowed, getLocalDateString } from "@/lib/dateUtils"
 import { UpcomingIntake } from "../types"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface IntakeCardProps {
   intake: UpcomingIntake
@@ -56,12 +62,12 @@ const getButtonClasses = (
 
 // Icône de statut basée sur le statut de la prise (comme dans l'historique)
 // Calcul du retard basé sur la différence entre heure prévue et heure de prise
-const getStatusBadge = (
+const getStatusInfo = (
   status: string,
   isOverdue: boolean,
   scheduledTime: Date,
   takenAt?: Date | null
-) => {
+): { icon: JSX.Element; label: string } => {
   // Prise effectuée - vérifier si en retard
   if (status === 'taken') {
     if (takenAt && scheduledTime) {
@@ -69,34 +75,34 @@ const getStatusBadge = (
       
       // Plus de 30 minutes de retard = icône ClockAlert verte
       if (differenceMinutes > 30) {
-        return <ClockAlert className="h-6 w-6 text-success" />
+        return { icon: <ClockAlert className="h-6 w-6 text-success" />, label: "En retard" }
       }
     }
     // À l'heure ou moins de 30 min de retard = CheckCircle2 vert
-    return <CheckCircle2 className="h-6 w-6 text-success" />
+    return { icon: <CheckCircle2 className="h-6 w-6 text-success" />, label: "À l'heure" }
   }
   
   // Prise sautée volontairement
   if (status === 'skipped') {
-    return <SkipForward className="h-6 w-6 text-orange-500" />
+    return { icon: <SkipForward className="h-6 w-6 text-orange-500" />, label: "Sautée" }
   }
   
   // Prise manquée
   if (status === 'missed') {
-    return <XCircle className="h-6 w-6 text-danger" />
+    return { icon: <XCircle className="h-6 w-6 text-danger" />, label: "Manquée" }
   }
   
   // Prise en attente mais en retard
   if (status === 'pending' && isOverdue) {
-    return <ClockAlert className="h-6 w-6 text-warning" />
+    return { icon: <ClockAlert className="h-6 w-6 text-warning" />, label: "À rattraper" }
   }
   
   // Prise en attente (à venir)
   if (status === 'pending') {
-    return <Clock className="h-6 w-6 text-primary" />
+    return { icon: <Clock className="h-6 w-6 text-primary" />, label: "En attente" }
   }
   
-  return null
+  return { icon: <></>, label: "" }
 }
 
 export const IntakeCard = ({ intake, isOverdue, isTomorrowSection = false, onTake }: IntakeCardProps) => {
@@ -179,7 +185,16 @@ export const IntakeCard = ({ intake, isOverdue, isTomorrowSection = false, onTak
           {/* Afficher l'icône de statut si pris/manqué, sinon le bouton d'action */}
           {isTaken ? (
             <div className="flex flex-col items-center">
-              {getStatusBadge(intake.status, isOverdue, intake.date, intake.takenAt)}
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>{getStatusInfo(intake.status, isOverdue, intake.date, intake.takenAt).icon}</div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{getStatusInfo(intake.status, isOverdue, intake.date, intake.takenAt).label}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
               {intake.takenAt && (
                 <span className="text-[10px] text-muted-foreground mt-0.5">
                   {format(intake.takenAt, "HH:mm")}
@@ -187,7 +202,16 @@ export const IntakeCard = ({ intake, isOverdue, isTomorrowSection = false, onTak
               )}
             </div>
           ) : isMissed ? (
-            getStatusBadge(intake.status, isOverdue, intake.date, intake.takenAt)
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>{getStatusInfo(intake.status, isOverdue, intake.date, intake.takenAt).icon}</div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getStatusInfo(intake.status, isOverdue, intake.date, intake.takenAt).label}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           ) : (
             <Button 
               size="sm" 
