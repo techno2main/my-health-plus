@@ -10,25 +10,25 @@ const Referentials = () => {
   const categories = [
     {
       title: "Professionnels de Santé",
-      description: "Médecins, pharmacies et laboratoires",
+      description: "Mon réseau de professionnels",
       icon: Stethoscope,
       path: "/referentials/health-professionals"
     },
     {
       title: "Pathologies",
-      description: "Gestion des pathologies",
+      description: "Mes pathologies",
       icon: AlertCircle,
       path: "/referentials/pathologies"
     },
     {
       title: "Allergies",
-      description: "Gestion des allergies",
+      description: "Mes allergies",
       icon: AlertCircle,
       path: "/referentials/allergies"
     },
     {
       title: "Médicaments",
-      description: "Catalogue complet des médicaments",
+      description: "Mon catalogue de médicaments",
       icon: Pill,
       path: "/medications"
     }

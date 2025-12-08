@@ -1,6 +1,5 @@
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -8,6 +7,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface MedicationDeleteAlertProps {
   open: boolean;
@@ -22,15 +22,21 @@ export function MedicationDeleteAlert({ open, onOpenChange, onConfirm }: Medicat
         <AlertDialogHeader>
           <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer ce médicament du référentiel ?
             Cette action est irréversible.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction onClick={onConfirm} className="bg-destructive hover:bg-destructive/90">
+        <AlertDialogFooter className="flex-row gap-2">
+          <AlertDialogCancel className="mt-0 flex-1">Annuler</AlertDialogCancel>
+          <Button 
+            variant="destructive" 
+            className="flex-1"
+            onClick={() => {
+              onConfirm();
+              onOpenChange(false);
+            }}
+          >
             Supprimer
-          </AlertDialogAction>
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

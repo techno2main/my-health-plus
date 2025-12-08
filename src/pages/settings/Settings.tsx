@@ -25,7 +25,7 @@ export default function Settings() {
         <NavigationCard
           icon={Navigation}
           title="Menu de navigation"
-          description="Personnaliser l'ordre et la visibilité des éléments"
+          description="Gérer les éléments de navigation"
           onClick={() => navigate("/settings/navigation")}
         />
       </div>
@@ -69,7 +69,7 @@ export default function Settings() {
         <NavigationCard
           icon={CalendarSync}
           title="Synchronisation"
-          description="Synchroniser avec le calendrier natif"
+          description="Synchroniser le calendrier"
           onClick={() => navigate("/calendar-sync")}
         />
       </div>
