@@ -22,6 +22,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   
   // Ref to track if initial lock has been set (prevents re-locking after unlock)
   const initialLockSetRef = useRef(false);
+  // Ref to prevent re-locking immediately after manual unlock
+  const justUnlockedRef = useRef(false);
 
   const loadLockPreferences = useCallback(async () => {
     if (!user) {
@@ -47,7 +49,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         setInactivityTimeoutMinutes(prefs.inactivity_timeout_minutes ?? 5);
         
         // Verrouiller UNIQUEMENT au premier chargement si l'option est activée
-        if (prefs.require_auth_on_open && !initialLockSetRef.current) {
+        // ET si on n'a pas déjà déverrouillé manuellement
+        if (prefs.require_auth_on_open && !initialLockSetRef.current && !justUnlockedRef.current) {
           initialLockSetRef.current = true;
           setIsLocked(true);
         }
@@ -68,7 +71,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     if (!Capacitor.isNativePlatform() || !requireAuthOnOpen) return;
 
     const listener = App.addListener("appStateChange", async ({ isActive }) => {
-      if (isActive && requireAuthOnOpen) {
+      // Ne pas verrouiller si on vient juste de déverrouiller
+      if (isActive && requireAuthOnOpen && !justUnlockedRef.current) {
         setIsLocked(true);
       }
     });
@@ -79,7 +83,14 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   }, [requireAuthOnOpen]);
 
   const handleUnlock = useCallback(() => {
+    console.log("[ProtectedRoute] Déverrouillage manuel");
+    justUnlockedRef.current = true;
     setIsLocked(false);
+    
+    // Réinitialiser le flag après un délai pour permettre le re-verrouillage futur
+    setTimeout(() => {
+      justUnlockedRef.current = false;
+    }, 2000);
   }, []);
 
   // Hook de déconnexion automatique après inactivité
