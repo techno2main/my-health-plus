@@ -3,7 +3,7 @@ import { AdherenceStats } from "@/hooks/useAdherenceStats"
 
 interface StatsCardsProps {
   stats: AdherenceStats
-  onFilterClick: (filter: 'ontime' | 'late' | 'missed') => void
+  onFilterClick: (filter: 'ontime' | 'late' | 'missed' | 'skipped') => void
   totalCompleted: number
   totalPending: number
 }
@@ -44,7 +44,7 @@ export const StatsCards = ({ stats, onFilterClick, totalCompleted, totalPending 
 
       <Card className="p-6">
         <h3 className="font-semibold mb-4">Résumé (depuis le 13/10/25)</h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           <div 
             className="p-3 rounded-lg bg-success/10 cursor-pointer hover:bg-success/20 transition-colors" 
             onClick={() => onFilterClick("ontime")}
@@ -60,11 +60,18 @@ export const StatsCards = ({ stats, onFilterClick, totalCompleted, totalPending 
             <p className="text-2xl font-bold text-success">{stats.lateIntakes}</p>
           </div>
           <div 
+            className="p-3 rounded-lg bg-warning/10 cursor-pointer hover:bg-warning/20 transition-colors" 
+            onClick={() => onFilterClick("skipped")}
+          >
+            <p className="text-xs text-muted-foreground mb-1">Sautées</p>
+            <p className="text-2xl font-bold text-warning">{stats.skipped}</p>
+          </div>
+          <div 
             className="p-3 rounded-lg bg-danger/10 cursor-pointer hover:bg-danger/20 transition-colors" 
             onClick={() => onFilterClick("missed")}
           >
             <p className="text-xs text-muted-foreground mb-1">Manquées</p>
-            <p className="text-2xl font-bold text-danger">{stats.skipped}</p>
+            <p className="text-2xl font-bold text-danger">{stats.missed}</p>
           </div>
         </div>
         
