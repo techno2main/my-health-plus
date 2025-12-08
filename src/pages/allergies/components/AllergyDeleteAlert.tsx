@@ -1,4 +1,5 @@
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 
 interface AllergyDeleteAlertProps {
   open: boolean;
@@ -11,19 +12,23 @@ export function AllergyDeleteAlert({ open, onClose, onConfirm }: AllergyDeleteAl
     <AlertDialog open={open} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
           <AlertDialogDescription>
-            Êtes-vous sûr de vouloir supprimer cette allergie ? Cette action est irréversible.
+            Cette action est irréversible.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={onConfirm}
-            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+        <AlertDialogFooter className="flex-row gap-2">
+          <AlertDialogCancel className="mt-0 flex-1">Annuler</AlertDialogCancel>
+          <Button 
+            variant="destructive" 
+            className="flex-1"
+            onClick={() => {
+              onConfirm();
+              onClose();
+            }}
           >
-            OK
-          </AlertDialogAction>
+            Supprimer
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
