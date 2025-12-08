@@ -87,7 +87,7 @@ export default function Prescriptions() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <PageHeader title="Ordonnances" subtitle="Vos prescriptions médicales" />
+        <PageHeader title="Ordonnances" subtitle="Vos prescriptions médicales" backTo="/treatments" />
 
         <PrescriptionList
           prescriptions={prescriptions}
