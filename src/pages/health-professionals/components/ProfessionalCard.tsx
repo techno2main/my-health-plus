@@ -2,6 +2,12 @@ import { ActionCard } from "@/components/ui/molecules/ActionCard";
 import { Badge } from "@/components/ui/badge";
 import { Star, Phone, Mail, MapPin } from "lucide-react";
 import type { HealthProfessional } from "../utils/professionalUtils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ProfessionalCardProps {
   professional: HealthProfessional;
@@ -13,7 +19,16 @@ export function ProfessionalCard({ professional, onEdit, onDelete }: Professiona
   const subtitle = (
     <div className="flex items-center gap-2">
       {professional.is_primary_doctor && (
-        <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Star className="h-4 w-4 text-yellow-500 fill-yellow-500" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Médecin traitant</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
       {professional.specialty && <Badge variant="secondary">{professional.specialty}</Badge>}
     </div>
