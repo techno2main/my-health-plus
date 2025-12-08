@@ -69,7 +69,7 @@ export default function Settings() {
         <NavigationCard
           icon={CalendarSync}
           title="Synchronisation"
-          description="Synchroniser avec le calendrier natif"
+          description="Synchroniser le calendrier"
           onClick={() => navigate("/calendar-sync")}
         />
       </div>
