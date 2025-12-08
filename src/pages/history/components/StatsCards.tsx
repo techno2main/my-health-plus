@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card"
 import { AdherenceStats } from "@/hooks/useAdherenceStats"
-import { CheckCircle2, Clock, SkipForward, XCircle } from "lucide-react"
+import { CheckCircle2, ClockAlert, SkipForward, XCircle } from "lucide-react"
 
 interface StatsCardsProps {
   stats: AdherenceStats
@@ -57,7 +57,7 @@ export const StatsCards = ({ stats, onFilterClick, totalCompleted, totalPending 
             className="p-3 rounded-lg bg-success/10 cursor-pointer hover:bg-success/20 transition-colors text-center" 
             onClick={() => onFilterClick("late")}
           >
-            <Clock className="h-5 w-5 text-success mx-auto mb-1" />
+            <ClockAlert className="h-5 w-5 text-success mx-auto mb-1" />
             <p className="text-2xl font-bold text-success">{stats.lateIntakes}</p>
           </div>
           <div 
