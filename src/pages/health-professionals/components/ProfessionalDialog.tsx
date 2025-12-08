@@ -48,10 +48,9 @@ export function ProfessionalDialog({
     <FormDialog
       open={open}
       onClose={onClose}
-      title={editingItem ? "Modifier" : "Ajouter"}
-      description={
+      title={
         editingItem
-          ? `Modifiez les informations du ${typeInfo.label.toLowerCase()}`
+          ? `Modifier ${typeInfo.article} ${typeInfo.label}`
           : `Ajouter ${typeInfo.article} ${typeInfo.label}`
       }
       onSubmit={onSubmit}
