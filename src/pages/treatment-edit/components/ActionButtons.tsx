@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -46,17 +45,21 @@ export const ActionButtons = ({
           <AlertDialogHeader>
             <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
             <AlertDialogDescription>
-              Êtes-vous sûr de vouloir supprimer ce traitement ? Cette action est irréversible.
+              Cette action est irréversible.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Annuler</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={onDelete}
-              className="bg-danger hover:bg-danger/90"
+          <AlertDialogFooter className="flex-row gap-2">
+            <AlertDialogCancel className="mt-0 flex-1">Annuler</AlertDialogCancel>
+            <Button 
+              variant="destructive" 
+              className="flex-1"
+              onClick={() => {
+                onDelete();
+                onDeleteDialogChange(false);
+              }}
             >
               Supprimer
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

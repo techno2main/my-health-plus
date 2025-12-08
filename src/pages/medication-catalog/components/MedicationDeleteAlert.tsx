@@ -25,10 +25,11 @@ export function MedicationDeleteAlert({ open, onOpenChange, onConfirm }: Medicat
             Cette action est irréversible.
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter>
-          <AlertDialogCancel>Annuler</AlertDialogCancel>
+        <AlertDialogFooter className="flex-row gap-2">
+          <AlertDialogCancel className="mt-0 flex-1">Annuler</AlertDialogCancel>
           <Button 
             variant="destructive" 
+            className="flex-1"
             onClick={() => {
               onConfirm();
               onOpenChange(false);
