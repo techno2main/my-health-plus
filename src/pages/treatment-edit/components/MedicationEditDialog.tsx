@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -94,7 +94,7 @@ interface MedicationEditDialogProps {
 
 export function MedicationEditDialog({ open, onOpenChange, medication, treatmentId, onSave }: MedicationEditDialogProps) {
   const [catalog, setCatalog] = useState<CatalogMedication[]>([]);
-  const [selectedCatalogId, setSelectedCatalogId] = useState<string>("");
+  const [selectedCatalogId, setSelectedCatalogId] = useState<string | undefined>(undefined);
   const [posology, setPosology] = useState("");
   const [times, setTimes] = useState<string[]>([]);
 
@@ -102,16 +102,21 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
     loadCatalog();
   }, []);
 
+  // Stabiliser la valeur pour éviter le warning uncontrolled/controlled
+  const stableCatalogId = useMemo(() => {
+    return (selectedCatalogId === null || selectedCatalogId === undefined || selectedCatalogId === '') ? undefined : selectedCatalogId;
+  }, [selectedCatalogId]);
+
   useEffect(() => {
     if (open) {
       if (medication) {
-        // Mode édition
-        setSelectedCatalogId(medication.catalog_id || "");
+        // Mode édition - toujours undefined pour les valeurs vides
+        setSelectedCatalogId((medication.catalog_id === null || medication.catalog_id === '') ? undefined : medication.catalog_id);
         setPosology(medication.posology);
         setTimes(medication.times || []);
       } else {
         // Mode ajout
-        setSelectedCatalogId("");
+        setSelectedCatalogId(undefined);
         setPosology("");
         setTimes([]);
       }
@@ -202,17 +207,17 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <DialogTitle>{medication ? "Modifier" : "Ajouter"}</DialogTitle>
-            <DialogDescription>
-              {medication ? "Paramètres du médicament" : "Nouveau médicament"}
-            </DialogDescription>
           </div>
+          <DialogDescription className="text-muted-foreground">
+            {medication ? "Modifiez les paramètres de ce médicament" : "Ajoutez un nouveau médicament à votre traitement"}
+          </DialogDescription>
         </DialogHeader>
         
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4 space-y-4">
             <div className="space-y-2">
               <Label>Médicament du référentiel</Label>
-              <Select value={selectedCatalogId} onValueChange={handleCatalogChange}>
+              <Select value={stableCatalogId} onValueChange={handleCatalogChange}>
                 <SelectTrigger>
                   <SelectValue placeholder="Sélectionner un médicament" />
                 </SelectTrigger>
