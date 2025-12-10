@@ -21,7 +21,7 @@ export const LoginForm = ({
   isSubmitting
 }: LoginFormProps) => {
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-4" data-lpignore="true" data-form-type="other">
       <div className="space-y-2">
         <Label htmlFor="email-signin">Email</Label>
         <Input
@@ -45,6 +45,8 @@ export const LoginForm = ({
           value={password}
           onChange={(e) => onPasswordChange(e.target.value)}
           required
+          data-lpignore="true"
+          data-form-type="other"
         />
       </div>
       

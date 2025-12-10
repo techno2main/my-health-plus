@@ -250,16 +250,27 @@ export function AppLockScreen({ onUnlock, biometricEnabled }: AppLockScreenProps
               </div>
             )}
 
-            <div className="space-y-4">
+            <form 
+              className="space-y-4"
+              onSubmit={(e) => {
+                e.preventDefault();
+                if (!isLockedOut) handlePasswordUnlock();
+              }}
+              data-lpignore="true"
+              data-form-type="other"
+            >
               <div className="relative">
                 <Input
                   type={showPassword ? "text" : "password"}
                   placeholder="Mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && !isLockedOut && handlePasswordUnlock()}
                   disabled={isLockedOut}
                   className={isLockedOut ? "opacity-50" : ""}
+                  data-lpignore="true"
+                  data-form-type="other"
+                  autoComplete="off"
+                  name="app-lock-password"
                 />
                 <Button
                   type="button"
@@ -274,13 +285,13 @@ export function AppLockScreen({ onUnlock, biometricEnabled }: AppLockScreenProps
               </div>
               
               <Button
+                type="submit"
                 className="w-full"
-                onClick={handlePasswordUnlock}
                 disabled={isLoading || isLockedOut}
               >
                 {isLoading ? "Vérification..." : isLockedOut ? `Bloqué (${remainingSeconds}s)` : "Déverrouiller"}
               </Button>
-            </div>
+            </form>
           </>
         )}
       </Card>
