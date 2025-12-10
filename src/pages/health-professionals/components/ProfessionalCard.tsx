@@ -16,6 +16,14 @@ interface ProfessionalCardProps {
 }
 
 export function ProfessionalCard({ professional, onEdit, onDelete }: ProfessionalCardProps) {
+  const getTypeLabel = () => {
+    if (professional.type === "pharmacy" || professional.type === "pharmacie") return "Pharmacie";
+    if (professional.type === "laboratory" || professional.type === "laboratoire") return "Laboratoire";
+    return null;
+  };
+
+  const typeLabel = getTypeLabel();
+
   const subtitle = (
     <div className="flex items-center gap-2">
       {professional.is_primary_doctor && (
@@ -31,6 +39,7 @@ export function ProfessionalCard({ professional, onEdit, onDelete }: Professiona
         </TooltipProvider>
       )}
       {professional.specialty && <Badge variant="secondary">{professional.specialty}</Badge>}
+      {typeLabel && !professional.specialty && <Badge variant="secondary">{typeLabel}</Badge>}
     </div>
   );
 
