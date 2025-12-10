@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import type { IntakeAction, ConfirmationDialog } from "../utils/rattrapageTypes";
+import { IntakeNotes } from "@/lib/intakeNotesUtils";
 
 interface MissedIntake {
   id: string;
@@ -144,12 +145,22 @@ export function useRattrapageActions(missedIntakes: MissedIntake[]) {
         // Ajouter une note
         if (actionItem.action === 'taken') {
           if (actionItem.actualTakenTime) {
-            updateData.notes = `Pris à ${actionItem.actualTakenTime} (déclaré en retard)`;
+            updateData.notes = IntakeNotes.takenLateWithTime(actionItem.actualTakenTime);
           } else {
-            updateData.notes = "Pris à l'heure prévue (marqué en retard)";
+            // Extraire l'heure prévue du scheduledTime
+            const scheduledDate = new Date(actionItem.scheduledTime || intake.scheduledTime);
+            const scheduledTimeStr = `${scheduledDate.getHours().toString().padStart(2, '0')}:${scheduledDate.getMinutes().toString().padStart(2, '0')}`;
+            updateData.notes = IntakeNotes.takenLateNoTime(scheduledTimeStr);
           }
         } else if (actionItem.action === 'taken_now') {
-          updateData.notes = "Pris en rattrapage";
+          // Extraire l'heure de prise du takenAt
+          const takenDate = new Date(actionItem.takenAt || new Date());
+          const takenTimeStr = `${takenDate.getHours().toString().padStart(2, '0')}:${takenDate.getMinutes().toString().padStart(2, '0')}`;
+          updateData.notes = IntakeNotes.takenInCatchup(takenTimeStr);
+        } else if (actionItem.action === 'skipped') {
+          // Note pour une prise marquée comme manquée lors du rattrapage
+          updateData.notes = IntakeNotes.markedAsMissed();
+          updateData.status = 'missed'; // Status explicite pour distinguer de skipped volontaire
         }
 
         // Mettre à jour la prise

@@ -39,6 +39,9 @@ export function PasswordChangeDialog({
             value={newPassword}
             onChange={(e) => onNewPasswordChange(e.target.value)}
             placeholder="••••••••"
+            data-lpignore="true"
+            data-form-type="other"
+            autoComplete="new-password"
           />
         </div>
         <div>
@@ -49,6 +52,9 @@ export function PasswordChangeDialog({
             value={confirmPassword}
             onChange={(e) => onConfirmPasswordChange(e.target.value)}
             placeholder="••••••••"
+            data-lpignore="true"
+            data-form-type="other"
+            autoComplete="new-password"
           />
         </div>
       </div>

@@ -40,6 +40,9 @@ export function BiometricPasswordDialog({
             value={password}
             onChange={(e) => onPasswordChange(e.target.value)}
             placeholder="••••••••"
+            data-lpignore="true"
+            data-form-type="other"
+            autoComplete="off"
           />
         </div>
       </div>

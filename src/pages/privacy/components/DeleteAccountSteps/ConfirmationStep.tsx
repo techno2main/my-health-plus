@@ -99,6 +99,9 @@ export function ConfirmationStep({
                     onChange={(e) => onPasswordChange(e.target.value)}
                     className="w-full"
                     disabled={isDeleting}
+                    data-lpignore="true"
+                    data-form-type="other"
+                    autoComplete="off"
                   />
                   <p className="text-xs text-muted-foreground">
                     Minimum 6 caractères requis

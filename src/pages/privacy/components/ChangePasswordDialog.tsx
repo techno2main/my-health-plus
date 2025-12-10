@@ -98,6 +98,8 @@ export function ChangePasswordDialog({
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   disabled={isChanging}
                   autoComplete="current-password"
+                  data-lpignore="true"
+                  data-form-type="other"
                 />
               </div>
 
@@ -114,6 +116,8 @@ export function ChangePasswordDialog({
                   onChange={(e) => setNewPassword(e.target.value)}
                   disabled={isChanging}
                   autoComplete="new-password"
+                  data-lpignore="true"
+                  data-form-type="other"
                 />
                 {newPassword && newPassword.length < 6 && (
                   <p className="text-xs text-warning">
@@ -135,6 +139,8 @@ export function ChangePasswordDialog({
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isChanging}
                   autoComplete="new-password"
+                  data-lpignore="true"
+                  data-form-type="other"
                 />
                 {!passwordsMatch && (
                   <p className="text-xs text-danger">
