@@ -12,10 +12,10 @@ interface AllergyDialogProps {
   editingItem: Allergy | null;
   formData: {
     name: string;
-    severity: string;
-    description: string;
+    severity?: string | null;
+    description: string | null;
   };
-  onFormChange: (data: { name: string; severity: string; description: string }) => void;
+  onFormChange: (data: { name: string; severity?: string | null; description: string | null }) => void;
 }
 
 export function AllergyDialog({
@@ -26,12 +26,16 @@ export function AllergyDialog({
   formData,
   onFormChange,
 }: AllergyDialogProps) {
+  // Normaliser pour Select: null/"" → undefined
+  const severityValue = formData.severity || undefined;
+
   return (
     <FormDialog
       open={open}
       onClose={onClose}
       onSubmit={onSubmit}
       title={editingItem ? "Modifier une Allergie" : "Ajouter une Allergie"}
+      description={editingItem ? "Modifiez les informations de cette allergie" : "Ajoutez une nouvelle allergie à votre profil médical"}
       submitLabel={editingItem ? "Modifier" : "Ajouter"}
     >
       <div className="space-y-4">
@@ -49,7 +53,7 @@ export function AllergyDialog({
         <div className="space-y-2">
           <Label htmlFor="severity">Sévérité</Label>
           <Select
-            value={formData.severity}
+            value={severityValue}
             onValueChange={(value) => onFormChange({ ...formData, severity: value })}
           >
             <SelectTrigger id="severity" className="bg-surface">
@@ -67,8 +71,8 @@ export function AllergyDialog({
           <Label htmlFor="description">Description</Label>
           <Textarea
             id="description"
-            value={formData.description}
-            onChange={(e) => onFormChange({ ...formData, description: e.target.value })}
+            value={formData.description || ""}
+            onChange={(e) => onFormChange({ ...formData, description: e.target.value || null })}
             placeholder="Description de l'allergie..."
             className="bg-surface min-h-[100px]"
           />

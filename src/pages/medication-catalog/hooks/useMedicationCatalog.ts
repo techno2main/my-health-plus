@@ -36,7 +36,7 @@ interface FormData {
 
 const initialFormData: FormData = {
   name: "",
-  pathology_id: "",
+  pathology_id: undefined as any,
   default_posology: "Définir une ou plusieurs prises",
   strength: "",
   description: "",

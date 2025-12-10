@@ -8,7 +8,11 @@ export interface Allergy {
   updated_at?: string;
 }
 
-export type AllergyFormData = Omit<Allergy, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
+export type AllergyFormData = {
+  name: string;
+  severity?: string | null;
+  description: string | null;
+};
 
 export type SeverityLevel = "Légère" | "Modérée" | "Sévère";
 

@@ -3,6 +3,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +44,9 @@ export function MedicationDialog({
   onSubmit,
   onStockClick,
 }: MedicationDialogProps) {
+  // Normaliser pour Select: null/"" → undefined
+  const pathologyValue = formData.pathology_id || undefined;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 top-[45%]">
@@ -55,6 +59,9 @@ export function MedicationDialog({
               {editingMed ? "Modifier un Médicament" : "Ajouter un Médicament"}
             </DialogTitle>
           </div>
+          <DialogDescription className="text-muted-foreground">
+            {editingMed ? "Modifiez les informations de ce médicament dans le catalogue" : "Ajoutez un nouveau médicament au catalogue"}
+          </DialogDescription>
         </DialogHeader>
         
         <ScrollArea className="flex-1 overflow-y-auto">
@@ -88,7 +95,7 @@ export function MedicationDialog({
             <div className="space-y-2">
               <Label htmlFor="pathology">Pathologie</Label>
               <Select 
-                value={formData.pathology_id} 
+                value={pathologyValue} 
                 onValueChange={(value) => setFormData({ ...formData, pathology_id: value })}
               >
                 <SelectTrigger className="bg-surface">

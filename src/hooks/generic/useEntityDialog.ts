@@ -43,9 +43,24 @@ export function useEntityDialog<T extends { id: string }, F = Omit<T, 'id' | 'us
       setEditingItem(item);
       // Extraire les données sans id et user_id
       const { id, user_id, created_at, updated_at, ...itemData } = item as any;
-      // Convertir les valeurs null en chaînes vides pour les inputs React
+      // Convertir les valeurs selon le type attendu dans initialFormData
       const cleanedData = Object.fromEntries(
-        Object.entries(itemData).map(([key, value]) => [key, value ?? ""])
+        Object.entries(itemData).map(([key, value]) => {
+          const initialValue = initialFormData[key as keyof F];
+          
+          // Si la valeur initiale est undefined (champs Select), on garde undefined même si value est null
+          if (typeof initialValue === 'undefined') {
+            return [key, value === null ? undefined : value];
+          }
+          
+          // Si la valeur initiale est null (champs texte acceptant null), on garde null ou ""
+          if (initialValue === null) {
+            return [key, value];
+          }
+          
+          // Pour les chaînes vides, on convertit null en ""
+          return [key, value ?? ""];
+        })
       ) as F;
       setFormData(cleanedData);
     } else {

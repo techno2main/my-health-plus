@@ -1,6 +1,7 @@
 import { FormDialog } from "@/components/ui/organisms/FormDialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { Pathology } from "../utils/pathologyUtils";
 
 interface PathologyDialogProps {
@@ -10,9 +11,10 @@ interface PathologyDialogProps {
   editingItem: Pathology | null;
   formData: {
     name: string;
-    description: string;
+    description: string | null;
+    severity?: string | null;
   };
-  onFormChange: (data: { name: string; description: string }) => void;
+  onFormChange: (data: { name: string; description: string | null; severity?: string | null }) => void;
 }
 
 export function PathologyDialog({
@@ -29,6 +31,7 @@ export function PathologyDialog({
       onClose={onClose}
       onSubmit={onSubmit}
       title={editingItem ? "Modifier une Pathologie" : "Ajouter une Pathologie"}
+      description={editingItem ? "Modifiez les informations de cette pathologie" : "Ajoutez une nouvelle pathologie à votre historique médical"}
       submitLabel={editingItem ? "Modifier" : "Ajouter"}
     >
       <div className="space-y-4">
@@ -44,11 +47,28 @@ export function PathologyDialog({
         </div>
 
         <div className="space-y-2">
+          <Label htmlFor="severity">Type de pathologie</Label>
+          <Select
+            value={formData.severity || ""}
+            onValueChange={(value) => onFormChange({ ...formData, severity: value })}
+          >
+            <SelectTrigger id="severity" className="bg-surface">
+              <SelectValue placeholder="Sélectionner le type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Récurrente">Récurrente</SelectItem>
+              <SelectItem value="Temporaire">Temporaire</SelectItem>
+              <SelectItem value="Ponctuelle">Ponctuelle</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="description">Description</Label>
           <Input
             id="description"
-            value={formData.description}
-            onChange={(e) => onFormChange({ ...formData, description: e.target.value })}
+            value={formData.description || ""}
+            onChange={(e) => onFormChange({ ...formData, description: e.target.value || null })}
             placeholder="Description de la pathologie..."
             className="bg-surface"
           />

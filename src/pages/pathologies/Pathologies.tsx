@@ -42,7 +42,8 @@ const Pathologies = () => {
     closeDialog 
   } = useEntityDialog<Pathology, PathologyFormData>({
     name: "",
-    description: ""
+    description: null,
+    severity: ""
   });
 
   const filteredPathologies = filterPathologies(pathologies, searchTerm);

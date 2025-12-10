@@ -16,12 +16,15 @@ export const PharmacyInfoFields = ({
   prescriptions, 
   pharmacies 
 }: PharmacyInfoFieldsProps) => {
+  const prescriptionValue = formData.prescriptionId || undefined;
+  const pharmacyValue = formData.pharmacyId || undefined;
+
   return (
     <>
       <div className="space-y-2">
         <Label htmlFor="prescription">Ordonnance de référence (optionnel)</Label>
         <Select
-          value={formData.prescriptionId}
+          value={prescriptionValue}
           onValueChange={(value) => setFormData({ ...formData, prescriptionId: value })}
         >
           <SelectTrigger className="bg-surface">
@@ -46,7 +49,7 @@ export const PharmacyInfoFields = ({
       <div className="space-y-2">
         <Label htmlFor="pharmacy">Pharmacie de délivrance *</Label>
         <Select
-          value={formData.pharmacyId}
+          value={pharmacyValue}
           onValueChange={(value) => setFormData({ ...formData, pharmacyId: value })}
         >
           <SelectTrigger className="bg-surface">

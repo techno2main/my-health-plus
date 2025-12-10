@@ -42,8 +42,8 @@ const Allergies = () => {
     closeDialog 
   } = useEntityDialog<Allergy, AllergyFormData>({
     name: "",
-    severity: "",
-    description: ""
+    severity: undefined,
+    description: null
   });
 
   const filteredAllergies = filterAllergies(allergies, searchTerm);
