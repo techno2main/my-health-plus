@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { TreatmentFormData } from "@/components/TreatmentWizard/types";
+import { TreatmentFormData, MedicationItem } from "@/components/TreatmentWizard/types";
 import {
   buildPrescriptionData,
   buildTreatmentData,
@@ -125,6 +125,63 @@ export class TreatmentSubmissionService {
   }
 
   /**
+   * Insère les médicaments personnalisés en attente dans le catalogue
+   * et met à jour les catalogId correspondants
+   */
+  private async insertPendingCustomMedications(
+    formData: TreatmentFormData
+  ): Promise<MedicationItem[]> {
+    const updatedMedications: MedicationItem[] = [];
+
+    for (const med of formData.medications) {
+      if (med.pendingInsertion) {
+        // 1. Créer la pathologie si elle n'existe pas
+        if (med.pendingPathology) {
+          const { data: existingPathology } = await supabase
+            .from("pathologies")
+            .select("id")
+            .ilike("name", med.pendingPathology)
+            .maybeSingle();
+
+          if (!existingPathology) {
+            await supabase
+              .from("pathologies")
+              .insert({ name: med.pendingPathology });
+          }
+        }
+
+        // 2. Insérer le médicament dans le catalogue
+        const { data: catalogData } = await supabase
+          .from("medication_catalog")
+          .insert({
+            name: med.name,
+            pathology: med.pathology || null,
+            default_posology: med.posology || null,
+            strength: med.strength || null,
+            default_times: med.times
+          })
+          .select()
+          .single();
+
+        if (catalogData) {
+          // Mettre à jour avec le catalogId réel
+          updatedMedications.push({
+            ...med,
+            catalogId: catalogData.id,
+            pendingInsertion: false,
+            pendingPathology: undefined,
+          });
+        }
+      } else {
+        // Médicament déjà du catalogue, pas de modification
+        updatedMedications.push(med);
+      }
+    }
+
+    return updatedMedications;
+  }
+
+  /**
    * Crée les médicaments associés au traitement
    */
   private async createMedications(
@@ -211,16 +268,20 @@ export class TreatmentSubmissionService {
       // 2. Créer ou récupérer la prescription
       const prescriptionId = await this.ensurePrescriptionExists(userId, formData);
 
-      // 3. Créer le traitement
-      const treatmentId = await this.createTreatment(userId, prescriptionId, formData);
+      // 3. Insérer les médicaments personnalisés en attente dans le catalogue
+      const updatedMedications = await this.insertPendingCustomMedications(formData);
+      const updatedFormData = { ...formData, medications: updatedMedications };
 
-      // 4. Créer les médicaments
-      await this.createMedications(treatmentId, formData);
+      // 4. Créer le traitement
+      const treatmentId = await this.createTreatment(userId, prescriptionId, updatedFormData);
 
-      // 5. Créer les visites pharmacie
-      await this.createPharmacyVisits(treatmentId, formData);
+      // 5. Créer les médicaments
+      await this.createMedications(treatmentId, updatedFormData);
 
-      // 6. Retour succès
+      // 6. Créer les visites pharmacie
+      await this.createPharmacyVisits(treatmentId, updatedFormData);
+
+      // 7. Retour succès
       return {
         success: true,
         data: {

@@ -1,9 +1,20 @@
+import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { TimePickerInput } from "@/components/ui/time-picker-dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Trash2 } from "lucide-react"
 import type { MedicationItem } from "../types"
 
@@ -31,9 +42,11 @@ export const MedicationCard = ({
 }: MedicationCardProps) => {
   const { medication, index } = data
   const { onRemove, onUpdate, onUpdatePosology, onUpdateTimeSlot, onUpdateTakesPerDay } = handlers
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   return (
-    <Card className="p-4 space-y-4 bg-card border-border">
+    <>
+      <Card className="p-4 space-y-4 bg-card border-border">
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -47,7 +60,7 @@ export const MedicationCard = ({
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => onRemove(index)}
+          onClick={() => setShowDeleteDialog(true)}
         >
           <Trash2 className="h-4 w-4 text-destructive" />
         </Button>
@@ -63,6 +76,7 @@ export const MedicationCard = ({
             value={medication.takesPerDay}
             onChange={(e) => onUpdateTakesPerDay(index, parseInt(e.target.value) || 1)}
             onFocus={(e) => e.target.select()}
+            onClick={(e) => e.currentTarget.select()}
           />
         </div>
         <div className="space-y-2">
@@ -74,6 +88,7 @@ export const MedicationCard = ({
             value={medication.unitsPerTake}
             onChange={(e) => onUpdate(index, { unitsPerTake: parseInt(e.target.value) || 1 })}
             onFocus={(e) => e.target.select()}
+            onClick={(e) => e.currentTarget.select()}
           />
         </div>
       </div>
@@ -99,10 +114,34 @@ export const MedicationCard = ({
           value={medication.posology}
           onChange={(e) => onUpdatePosology(index, e.target.value)}
           onFocus={(e) => e.target.select()}
+          onClick={(e) => e.currentTarget.select()}
           placeholder="Ex: 1 comprimé matin et soir"
           className="bg-surface"
         />
       </div>
     </Card>
+
+    <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+          <AlertDialogDescription>
+            Êtes-vous sûr de vouloir supprimer &quot;{medication.name}&quot; de la liste des médicaments ?
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annuler</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => {
+              onRemove(index);
+              setShowDeleteDialog(false);
+            }}
+          >
+            Supprimer
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   )
 }

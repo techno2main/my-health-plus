@@ -55,6 +55,7 @@ export const CustomMedicationDialog = ({
                 value={formData.name}
                 onChange={(e) => onFieldChange('name', e.target.value)}
                 onFocus={(e) => e.target.select()}
+                onClick={(e) => e.currentTarget.select()}
                 placeholder="Ex: Metformine"
               />
             </div>
@@ -65,6 +66,7 @@ export const CustomMedicationDialog = ({
                 value={formData.strength || ""}
                 onChange={(e) => onFieldChange('strength', e.target.value)}
                 onFocus={(e) => e.target.select()}
+                onClick={(e) => e.currentTarget.select()}
                 placeholder="Ex: 850mg"
               />
             </div>
@@ -79,6 +81,7 @@ export const CustomMedicationDialog = ({
                 value={formData.pathology}
                 onChange={(e) => onFieldChange('pathology', e.target.value)}
                 onFocus={(e) => e.target.select()}
+                onClick={(e) => e.currentTarget.select()}
                 onBlur={() => {
                   // Delay to allow click on suggestion - parent component manages this
                   setTimeout(() => {}, 200);
@@ -107,6 +110,7 @@ export const CustomMedicationDialog = ({
                 value={formData.posology}
                 onChange={(e) => onFieldChange('posology', e.target.value)}
                 onFocus={(e) => e.target.select()}
+                onClick={(e) => e.currentTarget.select()}
                 placeholder="Ex: 1 comprimé matin et soir"
               />
             </div>
