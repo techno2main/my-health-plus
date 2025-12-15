@@ -76,7 +76,7 @@ export const MedicationCard = ({
             value={medication.takesPerDay}
             onChange={(e) => onUpdateTakesPerDay(index, parseInt(e.target.value) || 1)}
             onFocus={(e) => e.target.select()}
-            onClick={(e) => e.currentTarget.select()}
+            onDoubleClick={(e) => e.currentTarget.select()}
           />
         </div>
         <div className="space-y-2">
@@ -88,7 +88,7 @@ export const MedicationCard = ({
             value={medication.unitsPerTake}
             onChange={(e) => onUpdate(index, { unitsPerTake: parseInt(e.target.value) || 1 })}
             onFocus={(e) => e.target.select()}
-            onClick={(e) => e.currentTarget.select()}
+            onDoubleClick={(e) => e.currentTarget.select()}
           />
         </div>
       </div>
@@ -114,7 +114,7 @@ export const MedicationCard = ({
           value={medication.posology}
           onChange={(e) => onUpdatePosology(index, e.target.value)}
           onFocus={(e) => e.target.select()}
-          onClick={(e) => e.currentTarget.select()}
+          onDoubleClick={(e) => e.currentTarget.select()}
           placeholder="Ex: 1 comprimé matin et soir"
           className="bg-surface"
         />

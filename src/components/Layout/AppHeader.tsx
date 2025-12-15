@@ -61,7 +61,7 @@ export function AppHeader() {
 
   return (
     <header className="border-b border-border sticky top-0 z-50 bg-[#1976D2] dark:bg-[#0D1117] pt-safe">
-      <div className="pt-2 pb-4 container max-w-2xl mx-auto px-3 md:px-4 space-y-2">
+      <div className="pt-8 pb-4 container max-w-2xl mx-auto px-3 md:px-4 space-y-2">
         <div className="flex items-center justify-between">
           <h1 
             className="text-2xl font-bold cursor-pointer hover:opacity-80 transition-opacity text-white"

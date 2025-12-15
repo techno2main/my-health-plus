@@ -102,7 +102,7 @@ export function StockCard({
             value={stock === 0 ? "" : stock}
             onChange={handleStockChange}
             onFocus={handleStockFocus}
-            onClick={(e) => e.currentTarget.select()}
+            onDoubleClick={(e) => e.currentTarget.select()}
             onBlur={handleStockBlur}
             className="bg-surface"
             placeholder="0"
@@ -118,7 +118,7 @@ export function StockCard({
             value={medication.minThreshold === 0 ? "" : medication.minThreshold}
             onChange={handleThresholdChange}
             onFocus={handleThresholdFocus}
-            onClick={(e) => e.currentTarget.select()}
+            onDoubleClick={(e) => e.currentTarget.select()}
             onBlur={handleThresholdBlur}
             className="bg-surface"
             placeholder="0"
