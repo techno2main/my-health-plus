@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 
-interface StockCardProps {
+interface StockCardData {
   medication: {
     name: string;
     pathology?: string;
@@ -12,18 +12,25 @@ interface StockCardProps {
     minThreshold: number;
   };
   index: number;
+}
+
+interface StockHandlers {
   stock: number;
   onStockChange: (index: number, value: number) => void;
   onThresholdChange: (index: number, value: number) => void;
 }
 
+interface StockCardProps {
+  data: StockCardData;
+  handlers: StockHandlers;
+}
+
 export function StockCard({
-  medication,
-  index,
-  stock,
-  onStockChange,
-  onThresholdChange,
+  data,
+  handlers,
 }: StockCardProps) {
+  const { medication, index } = data;
+  const { stock, onStockChange, onThresholdChange } = handlers;
   const dailyConsumption = medication.takesPerDay * medication.unitsPerTake;
   const estimatedDays = stock ? Math.floor(stock / dailyConsumption) : 0;
 
@@ -95,6 +102,7 @@ export function StockCard({
             value={stock === 0 ? "" : stock}
             onChange={handleStockChange}
             onFocus={handleStockFocus}
+            onClick={(e) => e.currentTarget.select()}
             onBlur={handleStockBlur}
             className="bg-surface"
             placeholder="0"
@@ -110,6 +118,7 @@ export function StockCard({
             value={medication.minThreshold === 0 ? "" : medication.minThreshold}
             onChange={handleThresholdChange}
             onFocus={handleThresholdFocus}
+            onClick={(e) => e.currentTarget.select()}
             onBlur={handleThresholdBlur}
             className="bg-surface"
             placeholder="0"

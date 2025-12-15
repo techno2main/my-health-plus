@@ -36,11 +36,11 @@
 | **2.1** | ✅ **VALIDÉ** | CustomMedicationDialog | 9 → 5 paramètres |
 | **2.2** | ✅ **VALIDÉ** | MedicationCard | 7 → 2 paramètres |
 | **2.3** | ✅ **VALIDÉ** | MedicationsList | 6 → Context |
-| **2.4** | ⏳ À FAIRE | StockCard | 6 → 3 paramètres |
+| **2.4** | ✅ **VALIDÉ** | StockCard | 5 → 2 paramètres |
 | **2.5** | ⏳ À FAIRE | EmptyState | 7 → 3 paramètres |
 | **2.6** | ⏳ À FAIRE | AvatarWithBadge | 6 → 2 paramètres |
 
-**Progression Phase 2 :** 50% (3/6)
+**Progression Phase 2 :** 67% (4/6)
 
 ---
 
@@ -79,9 +79,9 @@
 ### 📈 PROGRESSION GLOBALE
 
 ```
-Total : 7/18 étapes validées (39%)
+Total : 8/18 étapes validées (44%)
 Phase 1 : ✅ 100% (4/4 validées) - TERMINÉE
-Phase 2 : 🔄  50% (3/6) - EN COURS
+Phase 2 : 🔄  67% (4/6) - EN COURS
 Phase 3 : ⏳  0% (0/2)
 Phase 4 : ⏳  0% (0/3)
 Phase 5 : ⏳  0% (0/3)
@@ -98,10 +98,12 @@ Phase 5 : ⏳  0% (0/3)
 - Step 2.1 : CustomMedicationDialog validé (9→5)
 - Step 2.2 : MedicationCard validé (7→2)
 - Step 2.3 : MedicationsList validé (6→Context API)
+- Step 2.4 : StockCard validé (5→2)
 - Bugs critiques corrigés :
   - Confirmation suppression normalisée (AlertDialog)
   - Médicaments personnalisés non insérés prématurément
   - Insertion différée jusqu'à soumission finale
+  - Sélection auto double-clic sur tous les champs numériques
 - UX améliorée (sélection auto, boutons)
 
 **⚠️ NOTES :**
