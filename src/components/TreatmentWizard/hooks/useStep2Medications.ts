@@ -40,18 +40,21 @@ export const useStep2Medications = (formData: TreatmentFormData, setFormData: (d
     }
   }
 
-  const handlePathologyChange = (value: string) => {
-    setNewCustomMed({ ...newCustomMed, pathology: value })
+  const handleMedicationFieldChange = (field: keyof typeof newCustomMed, value: string) => {
+    setNewCustomMed({ ...newCustomMed, [field]: value })
     
-    if (value.trim().length > 0) {
-      const filtered = pathologies.filter(p => 
-        p.toLowerCase().startsWith(value.toLowerCase())
-      )
-      setPathologySuggestions(filtered)
-      setShowPathologySuggestions(filtered.length > 0)
-    } else {
-      setPathologySuggestions([])
-      setShowPathologySuggestions(false)
+    // Si on modifie la pathologie, gérer les suggestions
+    if (field === "pathology") {
+      if (value.trim().length > 0) {
+        const filtered = pathologies.filter(p => 
+          p.toLowerCase().startsWith(value.toLowerCase())
+        )
+        setPathologySuggestions(filtered)
+        setShowPathologySuggestions(filtered.length > 0)
+      } else {
+        setPathologySuggestions([])
+        setShowPathologySuggestions(false)
+      }
     }
   }
 
@@ -136,8 +139,9 @@ export const useStep2Medications = (formData: TreatmentFormData, setFormData: (d
           medications: [...formData.medications, newMed],
           stocks: { ...formData.stocks, [newIndex]: 0 }
         })
-        setShowCustomDialog(false)
+        // Réinitialiser le formulaire et fermer le dialog
         setNewCustomMed({ name: "", pathology: "", posology: "", strength: "" })
+        setShowCustomDialog(false)
         loadCatalog()
       }
     } catch (error) {
@@ -215,8 +219,7 @@ export const useStep2Medications = (formData: TreatmentFormData, setFormData: (d
     showCustomDialog,
     setShowCustomDialog,
     newCustomMed,
-    setNewCustomMed,
-    handlePathologyChange,
+    handleMedicationFieldChange,
     selectPathology,
     addMedicationFromCatalog,
     addCustomMedication,

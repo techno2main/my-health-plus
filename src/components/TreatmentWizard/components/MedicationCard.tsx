@@ -92,6 +92,7 @@ export const MedicationCard = ({
           id={`dosage-${index}`}
           value={medication.posology}
           onChange={(e) => onUpdatePosology(index, e.target.value)}
+          onFocus={(e) => e.target.select()}
           placeholder="Ex: 1 comprimé matin et soir"
           className="bg-surface"
         />

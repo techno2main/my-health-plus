@@ -21,8 +21,7 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
     showCustomDialog,
     setShowCustomDialog,
     newCustomMed,
-    setNewCustomMed,
-    handlePathologyChange,
+    handleMedicationFieldChange,
     selectPathology,
     addMedicationFromCatalog,
     addCustomMedication,
@@ -32,10 +31,6 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
     updateTimeSlot,
     updateTakesPerDay
   } = useStep2Medications(formData, setFormData)
-
-  const handleMedicationFieldChange = (field: string, value: string) => {
-    setNewCustomMed({ ...newCustomMed, [field]: value })
-  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -77,14 +72,22 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
       />
 
       <CustomMedicationDialog
-        open={showCustomDialog}
-        onOpenChange={setShowCustomDialog}
-        newMedication={newCustomMed}
-        onMedicationChange={handleMedicationFieldChange}
-        onPathologyChange={handlePathologyChange}
-        pathologySuggestions={pathologySuggestions}
-        showSuggestions={showPathologySuggestions}
-        onSelectPathology={selectPathology}
+        dialog={{
+          open: showCustomDialog,
+          onOpenChange: setShowCustomDialog
+        }}
+        formData={{
+          name: newCustomMed.name,
+          pathology: newCustomMed.pathology,
+          posology: newCustomMed.posology,
+          strength: newCustomMed.strength
+        }}
+        pathology={{
+          suggestions: pathologySuggestions,
+          showSuggestions: showPathologySuggestions,
+          onSelect: selectPathology
+        }}
+        onFieldChange={handleMedicationFieldChange}
         onSubmit={addCustomMedication}
       />
     </div>

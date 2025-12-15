@@ -9,7 +9,7 @@
 
 ## 📊 TABLEAU DE SUIVI - REFACTORISATION
 
-**Dernière mise à jour :** 15 décembre 2025 - ✅ Phase 1 TERMINÉE
+**Dernière mise à jour :** 15 décembre 2025 - 🔄 Phase 2 EN COURS
 
 ### Légende
 - ✅ **VALIDÉ** - Développé, testé et approuvé
@@ -33,14 +33,14 @@
 ### 🎯 Phase 2 : Réduction des paramètres (Priorité HAUTE)
 | Étape | Status | Composant | Objectif |
 |-------|--------|-----------|----------|
-| **2.1** | ⏳ À FAIRE | CustomMedicationDialog | 9 → 3 paramètres |
+| **2.1** | ✅ **VALIDÉ** | CustomMedicationDialog | 9 → 5 paramètres |
 | **2.2** | ⏳ À FAIRE | MedicationCard | 7 → 3 paramètres |
 | **2.3** | ⏳ À FAIRE | MedicationsList | 6 → Context |
 | **2.4** | ⏳ À FAIRE | StockCard | 6 → 3 paramètres |
 | **2.5** | ⏳ À FAIRE | EmptyState | 7 → 3 paramètres |
 | **2.6** | ⏳ À FAIRE | AvatarWithBadge | 6 → 2 paramètres |
 
-**Progression Phase 2 :** 0% (0/6)
+**Progression Phase 2 :** 17% (1/6)
 
 ---
 
@@ -79,9 +79,9 @@
 ### 📈 PROGRESSION GLOBALE
 
 ```
-Total : 4/18 étapes validées (22%)
+Total : 5/18 étapes validées (28%)
 Phase 1 : ✅ 100% (4/4 validées) - TERMINÉE
-Phase 2 : ⏳  0% (0/6)
+Phase 2 : 🔄  17% (1/6) - EN COURS
 Phase 3 : ⏳  0% (0/2)
 Phase 4 : ⏳  0% (0/3)
 Phase 5 : ⏳  0% (0/3)
@@ -94,9 +94,16 @@ Phase 5 : ⏳  0% (0/3)
 - 5 bugs critiques corrigés
 - Warnings console éliminés
 
+**🔄 PHASE 2 EN COURS (15/12/2025)**
+- Step 2.1 : CustomMedicationDialog validé
+- 9 → 5 paramètres groupés
+- UX améliorée (sélection auto, boutons)
+- Header mobile corrigé
+
 **⚠️ NOTES :**
 - Warnings React Select uncontrolled/controlled : ✅ CORRIGÉS
 - Étape 1.3 : 5 bugs majeurs détectés et corrigés pendant tests
+- Étape 2.1 : Corrections layout mobile + bouton Annuler wizard
 
 ---
 
@@ -618,67 +625,80 @@ Total : ~1200 lignes bien organisées vs 365 lignes monolithiques
 
 ---
 
-### Étape 2.1 : CustomMedicationDialog (9 paramètres → 3)
+### Étape 2.1 : CustomMedicationDialog (9 paramètres → 5)
 
-**Fichier :** `src/components/TreatmentWizard/components/CustomMedicationDialog.tsx`  
-**Ligne :** 23
+**✅ VALIDÉE - 15 décembre 2025**
 
-#### Avant (9 paramètres)
+**Fichier :** `src/components/TreatmentWizard/components/CustomMedicationDialog.tsx`
+
+#### Résultats obtenus
+
+**Paramètres :** 9 → 5 (-44%)
+
+**Fichiers modifiés :**
+- ✅ `src/components/TreatmentWizard/components/CustomMedicationDialog.tsx`
+- ✅ `src/components/TreatmentWizard/hooks/useStep2Medications.ts`
+- ✅ `src/components/TreatmentWizard/Step2Medications.tsx`
+- ✅ `src/components/TreatmentWizard/components/MedicationCard.tsx`
+- ✅ `src/components/Layout/AppHeader.tsx`
+- ✅ `src/components/TreatmentWizard/components/TreatmentWizardActions.tsx`
+- ✅ `src/pages/treatment-form/TreatmentForm.tsx`
+
+**Interfaces créées :**
 ```typescript
-export const CustomMedicationDialog = ({
-  open,
-  onOpenChange,
-  customName,
-  setCustomName,
-  customDosage,
-  setCustomDosage,
-  customUnit,
-  setCustomUnit,
-  onAdd
-}: CustomMedicationDialogProps) => { ... }
-```
-
-#### Après (3 paramètres groupés)
-```typescript
-// Interfaces groupées
 interface DialogState {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
 interface MedicationFormData {
-  name: string;
-  dosage: string;
-  unit: string;
-  form: string;
+  name: string
+  pathology: string
+  posology: string
+  strength: string
 }
 
-interface MedicationFormHandlers {
-  onChange: (field: keyof MedicationFormData, value: string) => void;
-  onSubmit: (medication: CustomMedication) => void;
+interface PathologySuggestions {
+  suggestions: string[]
+  showSuggestions: boolean
+  onSelect: (pathology: string) => void
 }
 
 interface CustomMedicationDialogProps {
-  dialog: DialogState;
-  formData: MedicationFormData;
-  handlers: MedicationFormHandlers;
+  dialog: DialogState                                    // 1
+  formData: MedicationFormData                          // 2
+  pathology: PathologySuggestions                       // 3
+  onFieldChange: (field: keyof MedicationFormData, value: string) => void  // 4
+  onSubmit: () => void                                  // 5
 }
-
-export const CustomMedicationDialog = ({
-  dialog,
-  formData,
-  handlers
-}: CustomMedicationDialogProps) => { ... }
 ```
 
-**Usage :**
+**Usage simplifié :**
 ```typescript
 <CustomMedicationDialog
-  dialog={{ open, onOpenChange }}
-  formData={{ name, dosage, unit, form }}
-  handlers={{ onChange: handleFieldChange, onSubmit: handleAdd }}
+  dialog={{ open: showCustomDialog, onOpenChange: setShowCustomDialog }}
+  formData={{ name, pathology, posology, strength }}
+  pathology={{ suggestions, showSuggestions, onSelect }}
+  onFieldChange={handleMedicationFieldChange}
+  onSubmit={addCustomMedication}
 />
 ```
+
+**Améliorations UX ajoutées :**
+- ✅ Sélection automatique au focus sur tous les champs texte
+- ✅ Bouton "Annuler" ajouté dans le dialog
+- ✅ Réinitialisation automatique du formulaire après création
+- ✅ Bouton "Annuler" à l'étape 1 du wizard (avec confirmation)
+- ✅ Correction décalage header mobile au scroll (`pt-safe`)
+
+**Tests fonctionnels :**
+- ✅ Ouverture/fermeture du dialog
+- ✅ Saisie dans tous les champs
+- ✅ Autocomplétion des pathologies
+- ✅ Sélection d'une suggestion
+- ✅ Ajout du médicament à la liste
+- ✅ Réinitialisation du formulaire
+- ✅ Annulation création wizard étape 1
 
 ---
 
