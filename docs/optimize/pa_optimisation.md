@@ -37,10 +37,10 @@
 | **2.2** | ✅ **VALIDÉ** | MedicationCard | 7 → 2 paramètres |
 | **2.3** | ✅ **VALIDÉ** | MedicationsList | 6 → Context |
 | **2.4** | ✅ **VALIDÉ** | StockCard | 5 → 2 paramètres |
-| **2.5** | ⏳ À FAIRE | EmptyState | 7 → 3 paramètres |
+| **2.5** | ✅ **VALIDÉ** | EmptyState | 7 → 3 paramètres |
 | **2.6** | ⏳ À FAIRE | AvatarWithBadge | 6 → 2 paramètres |
 
-**Progression Phase 2 :** 67% (4/6)
+**Progression Phase 2 :** 83% (5/6)
 
 ---
 
@@ -79,9 +79,9 @@
 ### 📈 PROGRESSION GLOBALE
 
 ```
-Total : 8/18 étapes validées (44%)
+Total : 9/18 étapes validées (50%)
 Phase 1 : ✅ 100% (4/4 validées) - TERMINÉE
-Phase 2 : 🔄  67% (4/6) - EN COURS
+Phase 2 : 🔄  83% (5/6) - EN COURS
 Phase 3 : ⏳  0% (0/2)
 Phase 4 : ⏳  0% (0/3)
 Phase 5 : ⏳  0% (0/3)
@@ -99,6 +99,7 @@ Phase 5 : ⏳  0% (0/3)
 - Step 2.2 : MedicationCard validé (7→2)
 - Step 2.3 : MedicationsList validé (6→Context API)
 - Step 2.4 : StockCard validé (5→2)
+- Step 2.5 : EmptyState validé (7→3)
 - Bugs critiques corrigés :
   - Confirmation suppression normalisée (AlertDialog)
   - Médicaments personnalisés non insérés prématurément
