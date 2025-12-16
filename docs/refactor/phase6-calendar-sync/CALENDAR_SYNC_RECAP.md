@@ -5,6 +5,7 @@
 ### 📦 Ce qui a été fait
 
 #### Phase 1 : Architecture (✅ COMPLÉTÉ)
+
 - 14 fichiers créés dans `src/pages/calendar-sync/`
 - Types TypeScript définis
 - Hooks implémentés (useNativeCalendar, useSyncConfig, useCalendarSync)
@@ -15,6 +16,7 @@
 - Menu Admin avec accès "Synchronisation calendrier"
 
 #### Phase 2 : Plugin Capacitor (✅ COMPLÉTÉ)
+
 - Plugin `@ebarooni/capacitor-calendar` v7.2.0 installé
 - Permissions Android READ_CALENDAR + WRITE_CALENDAR ajoutées
 - Hooks entièrement implémentés (plus de mocks) :
@@ -26,7 +28,9 @@
   - `deleteEvent()`
 
 #### Phase 3 : Couleurs et Alertes (✅ COMPLÉTÉ)
+
 **Couleurs par type et statut** :
+
 - 🟢 Prise à l'heure : #10B981 (green)
 - 🟠 Prise en retard : #F59E0B (amber)
 - 🔴 Prise manquée : #EF4444 (red)
@@ -36,11 +40,13 @@
 - 🩷 Renouvellement : #EC4899 (pink)
 
 **Alertes par type** :
+
 - Prises : 15 min avant
 - RDV/Pharmacie : 24h + 1h avant
 - Renouvellements : 7 jours + 1 jour avant
 
 #### Phase 4 : Synchronisation Intelligente (✅ COMPLÉTÉ)
+
 - **Mapping persistent** : app_event_id → native_event_id (localStorage)
 - **CREATE** : Nouveaux événements non synchronisés
 - **UPDATE** : Événements modifiés (ex: statut prise changé)
@@ -49,7 +55,9 @@
 - **Pas de doublons** : Le mapping empêche les re-créations
 
 #### Phase 5 : Fix Fuseau Horaire (✅ CRITIQUE - COMPLÉTÉ)
+
 **⚠️ FIX MAJEUR** : `getCurrentDateInParis()` garantit l'heure Paris partout
+
 - Utilise `Intl.DateTimeFormat` avec `timeZone: 'Europe/Paris'`
 - Remplace tous les `new Date()` dans :
   - TodaySection.tsx
@@ -59,6 +67,7 @@
 - **Résout** : Bug "Aujourd'hui" incorrect sur émulateurs en PST/EST/etc.
 
 #### Phase 7 : Documentation (✅ COMPLÉTÉ)
+
 - `docs/calendar_sync.md` : 421 lignes de doc complète
   - Toutes les phases détaillées
   - Guide utilisateur step-by-step
@@ -75,6 +84,7 @@
 ## 📊 Métriques
 
 ### Build Production
+
 ```
 Build time: 5.05s
 Total size: 1,014.45 kB
@@ -84,6 +94,7 @@ PWA precache: 1,106 KiB (15 entries)
 ```
 
 ### Capacitor Sync
+
 ```
 Sync time: 0.326s
 Plugins detected: 6
@@ -96,6 +107,7 @@ Plugins detected: 6
 ```
 
 ### Git Stats
+
 ```
 Branch: feat/calendar-sync
 Commits: 9
@@ -108,6 +120,7 @@ Lines added: ~2,500
 ## 🚀 Prochaines étapes
 
 ### Phase 6 : Tests (EN ATTENTE)
+
 1. **Émulateur Android**
    - Ouvrir Android Studio : `npx cap open android`
    - Lancer sur émulateur API 33+
@@ -130,7 +143,9 @@ Lines added: ~2,500
    - [ ] Sync incrémentale (update/delete)
 
 ### Phase 8 : Déploiement (PRÊT)
+
 1. **Après tests device réussis** :
+
    ```bash
    git checkout dev
    git merge feat/calendar-sync
@@ -150,11 +165,13 @@ Lines added: ~2,500
 ## 🔗 Ressources
 
 ### Documentation
+
 - `docs/calendar_sync.md` : Guide complet
 - `CALENDAR_SYNC_CHECKLIST.md` : Checklist suivi
 - Plugin : https://www.npmjs.com/package/@ebarooni/capacitor-calendar
 
 ### Architecture
+
 ```
 src/pages/calendar-sync/
 ├── CalendarSync.tsx              # Page principale
@@ -178,22 +195,26 @@ src/pages/calendar-sync/
 ## 🎯 Points clés de l'implémentation
 
 ### ✅ Robustesse
+
 - Gestion d'erreurs complète
 - Logs détaillés pour debugging
 - Fallbacks pour échecs API
 
 ### ✅ Performance
+
 - Mapping persistent (pas de re-fetch)
 - Sync incrémentale seulement
 - Filtrage depuis 13/10/2025
 
 ### ✅ UX
+
 - Couleurs visuelles par type
 - Alertes intelligentes
 - Pas de doublons
 - Sync bidirectionnelle future-ready
 
 ### ✅ Maintenabilité
+
 - Code modulaire (hooks séparés)
 - Types stricts TypeScript
 - Documentation exhaustive

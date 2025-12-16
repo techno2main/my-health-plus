@@ -50,7 +50,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
         
         // Verrouiller UNIQUEMENT au premier chargement si l'option est activée
         // ET si on n'a pas déjà déverrouillé manuellement
-        if (prefs.require_auth_on_open && !initialLockSetRef.current && !justUnlockedRef.current) {
+        const shouldLockOnOpen = prefs.require_auth_on_open && !initialLockSetRef.current && !justUnlockedRef.current;
+        if (shouldLockOnOpen) {
           initialLockSetRef.current = true;
           setIsLocked(true);
         }
@@ -78,7 +79,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     });
 
     return () => {
-      listener.then(l => l.remove());
+      listener.then(l => l.remove()).catch(console.error);
     };
   }, [requireAuthOnOpen]);
 

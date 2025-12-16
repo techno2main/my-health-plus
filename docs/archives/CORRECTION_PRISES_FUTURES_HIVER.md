@@ -3,6 +3,7 @@
 ## 📋 Problème identifié
 
 Les prises futures (27/10 au 02/11) affichent **1h de plus** :
+
 - ❌ Affiche **10:30** au lieu de **09:30**
 - ❌ Affiche **21:00** au lieu de **20:00**
 - ❌ Affiche **23:00** au lieu de **22:00**
@@ -30,8 +31,9 @@ Les prises futures (27/10 au 02/11) affichent **1h de plus** :
 **Fichier** : `fix_future_intakes_utc.sql`
 
 **Avant correction** (visualisation) :
+
 ```sql
-SELECT 
+SELECT
   TO_CHAR(mi.scheduled_time AT TIME ZONE 'Europe/Paris', 'DD/MM HH24:MI') as paris_time,
   m.name
 FROM medication_intakes mi
@@ -42,11 +44,13 @@ ORDER BY mi.scheduled_time;
 ```
 
 **Résultat attendu AVANT** :
+
 - 27/10 **10:30** Xigduo ❌
 - 27/10 **21:00** Simvastatine ❌
 - 27/10 **23:00** Quviviq ❌
 
 **Exécuter la correction** :
+
 ```sql
 UPDATE medication_intakes
 SET scheduled_time = scheduled_time - INTERVAL '1 hour',
@@ -57,6 +61,7 @@ WHERE scheduled_time >= '2025-10-27'
 ```
 
 **Résultat attendu APRÈS** :
+
 - 27/10 **09:30** Xigduo ✅
 - 27/10 **20:00** Simvastatine ✅
 - 27/10 **22:00** Quviviq ✅
@@ -78,6 +83,7 @@ WHERE scheduled_time >= '2025-10-27'
 ### **Comportement corrigé** :
 
 Quand vous modifiez les horaires d'un médicament dans l'interface :
+
 1. Le trigger détecte le changement
 2. Supprime les prises futures `pending`
 3. Les régénère avec **conversion automatique Paris → UTC**
@@ -86,6 +92,7 @@ Quand vous modifiez les horaires d'un médicament dans l'interface :
 ### **Exemple** :
 
 Si vous stockez `["09:30"]` dans `times` :
+
 - **En hiver (UTC+1)** : 09:30 Paris → `08:30:00+00` en base
 - **En été (UTC+2)** : 09:30 Paris → `07:30:00+00` en base
 
@@ -129,6 +136,6 @@ L'affichage frontend reconvertit toujours **UTC → Paris** avec `formatToFrench
 ✅ **Historique** (13/10-19/10) : Corrigé avec scripts individuels  
 ✅ **Présent** (20/10-26/10) : Déjà correct  
 ✅ **Futur** (27/10+) : Corrigé avec ce script  
-✅ **Génération auto** : Trigger PostgreSQL corrigé définitivement  
+✅ **Génération auto** : Trigger PostgreSQL corrigé définitivement
 
 **L'app est maintenant 100% cohérente UTC ↔ Paris avec gestion automatique été/hiver !** 🎉

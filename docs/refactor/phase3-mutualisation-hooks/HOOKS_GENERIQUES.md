@@ -11,6 +11,7 @@ Phase 3 a introduit 2 hooks génériques réutilisables pour éliminer la duplic
 Hook générique pour les opérations CRUD avec React Query et Supabase.
 
 #### Types génériques
+
 - `T` : Type de l'entité complète (ex: `Pathology`)
 - `C` : Type pour la création (par défaut : `Omit<T, 'id' | 'user_id'>`)
 - `U` : Type pour la mise à jour (par défaut : `C`)
@@ -19,12 +20,13 @@ Hook générique pour les opérations CRUD avec React Query et Supabase.
 
 ```typescript
 interface EntityCrudConfig<T> {
-  tableName: SupabaseTable;           // Nom de la table Supabase
-  queryKey: string[];                  // Clé React Query (ex: ["pathologies"])
-  entityName: string;                  // Nom d'affichage (ex: "Pathologie")
-  orderBy?: keyof T;                   // Champ de tri (défaut: "name")
-  addUserId?: boolean;                 // Ajouter user_id auto (défaut: true)
-  messages?: {                         // Messages personnalisés
+  tableName: SupabaseTable; // Nom de la table Supabase
+  queryKey: string[]; // Clé React Query (ex: ["pathologies"])
+  entityName: string; // Nom d'affichage (ex: "Pathologie")
+  orderBy?: keyof T; // Champ de tri (défaut: "name")
+  addUserId?: boolean; // Ajouter user_id auto (défaut: true)
+  messages?: {
+    // Messages personnalisés
     createSuccess?: string;
     updateSuccess?: string;
     deleteSuccess?: string;
@@ -66,23 +68,26 @@ interface EntityCrudConfig<T> {
 import { useEntityCrud } from "@/hooks/generic/useEntityCrud";
 import type { Pathology, PathologyFormData } from "./utils/pathologyUtils";
 
-const { 
-  items: pathologies, 
-  isLoading, 
-  create: createPathology, 
-  update: updatePathology, 
-  deleteEntity: deletePathology 
+const {
+  items: pathologies,
+  isLoading,
+  create: createPathology,
+  update: updatePathology,
+  deleteEntity: deletePathology,
 } = useEntityCrud<Pathology, PathologyFormData>({
   tableName: "pathologies",
   queryKey: ["pathologies"],
   entityName: "Pathologie",
   orderBy: "name",
-  addUserId: false  // Référentiel admin, pas de user_id
+  addUserId: false, // Référentiel admin, pas de user_id
 });
 
 // Utilisation
 await createPathology({ name: "Diabète", description: "Type 2" });
-await updatePathology(id, { name: "Diabète", description: "Type 2 insulino-dépendant" });
+await updatePathology(id, {
+  name: "Diabète",
+  description: "Type 2 insulino-dépendant",
+});
 await deletePathology(id);
 ```
 
@@ -91,20 +96,23 @@ await deletePathology(id);
 ```typescript
 // health-professionals/HealthProfessionals.tsx
 import { useEntityCrud } from "@/hooks/generic/useEntityCrud";
-import type { HealthProfessional, HealthProfessionalFormData } from "./utils/professionalUtils";
+import type {
+  HealthProfessional,
+  HealthProfessionalFormData,
+} from "./utils/professionalUtils";
 
-const { 
-  items: professionals, 
-  isLoading, 
-  create: createProfessional, 
-  update: updateProfessional, 
-  deleteEntity: deleteProfessional 
+const {
+  items: professionals,
+  isLoading,
+  create: createProfessional,
+  update: updateProfessional,
+  deleteEntity: deleteProfessional,
 } = useEntityCrud<HealthProfessional, HealthProfessionalFormData>({
   tableName: "health_professionals",
   queryKey: ["health_professionals"],
   entityName: "Professionnel",
   orderBy: "name",
-  addUserId: true  // Données user-owned, user_id requis (défaut)
+  addUserId: true, // Données user-owned, user_id requis (défaut)
 });
 
 // user_id ajouté automatiquement lors de la création
@@ -112,7 +120,7 @@ await createProfessional({
   type: "doctor",
   name: "Dr Martin",
   specialty: "Généraliste",
-  phone: "01 23 45 67 89"
+  phone: "01 23 45 67 89",
 });
 ```
 
@@ -126,8 +134,8 @@ const { create, update } = useEntityCrud<Medication, MedicationFormData>({
   messages: {
     createSuccess: "Médicament ajouté au traitement",
     updateSuccess: "Posologie mise à jour",
-    deleteSuccess: "Médicament retiré du traitement"
-  }
+    deleteSuccess: "Médicament retiré du traitement",
+  },
 });
 ```
 
@@ -138,6 +146,7 @@ const { create, update } = useEntityCrud<Medication, MedicationFormData>({
 Hook générique pour gérer l'état d'un dialogue CRUD (Create/Edit).
 
 #### Types génériques
+
 - `T` : Type de l'entité avec `id` (ex: `Pathology`)
 - `F` : Type du formulaire (par défaut : `Omit<T, 'id' | 'user_id'>`)
 
@@ -147,7 +156,7 @@ Hook générique pour gérer l'état d'un dialogue CRUD (Create/Edit).
 // Fournir les valeurs initiales du formulaire
 useEntityDialog<Pathology, PathologyFormData>({
   name: "",
-  description: ""
+  description: "",
 });
 ```
 
@@ -181,13 +190,13 @@ useEntityDialog<Pathology, PathologyFormData>({
 import { useEntityDialog } from "@/hooks/generic/useEntityDialog";
 import type { Pathology, PathologyFormData } from "./utils/pathologyUtils";
 
-const { 
-  showDialog, 
-  editingItem, 
-  formData, 
-  setFormData, 
-  openDialog, 
-  closeDialog 
+const {
+  showDialog,
+  editingItem,
+  formData,
+  setFormData,
+  openDialog,
+  closeDialog
 } = useEntityDialog<Pathology, PathologyFormData>({
   name: "",
   description: ""
@@ -205,8 +214,8 @@ const handleEdit = (pathology: Pathology) => {
 
 // Dans le dialogue
 <Dialog open={showDialog} onOpenChange={closeDialog}>
-  <Input 
-    value={formData.name} 
+  <Input
+    value={formData.name}
     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
   />
 </Dialog>
@@ -216,13 +225,13 @@ const handleEdit = (pathology: Pathology) => {
 
 ```typescript
 // health-professionals/HealthProfessionals.tsx
-const { 
-  showDialog, 
-  editingItem, 
-  formData, 
-  setFormData, 
-  openDialog, 
-  closeDialog 
+const {
+  showDialog,
+  editingItem,
+  formData,
+  setFormData,
+  openDialog,
+  closeDialog,
 } = useEntityDialog<HealthProfessional, HealthProfessionalFormData>({
   type: "",
   name: "",
@@ -232,7 +241,7 @@ const {
   street_address: "",
   postal_code: "",
   city: "",
-  is_primary_doctor: false
+  is_primary_doctor: false,
 });
 
 // Pré-remplir certains champs avant ouverture
@@ -260,12 +269,12 @@ import { useEntityDialog } from "@/hooks/generic/useEntityDialog";
 
 const MyEntityPage = () => {
   // Hook CRUD
-  const { 
-    items, 
-    isLoading, 
-    create, 
-    update, 
-    deleteEntity 
+  const {
+    items,
+    isLoading,
+    create,
+    update,
+    deleteEntity
   } = useEntityCrud<MyEntity, MyEntityFormData>({
     tableName: "my_entities",
     queryKey: ["my_entities"],
@@ -274,13 +283,13 @@ const MyEntityPage = () => {
   });
 
   // Hook Dialog
-  const { 
-    showDialog, 
-    editingItem, 
-    formData, 
-    setFormData, 
-    openDialog, 
-    closeDialog 
+  const {
+    showDialog,
+    editingItem,
+    formData,
+    setFormData,
+    openDialog,
+    closeDialog
   } = useEntityDialog<MyEntity, MyEntityFormData>({
     field1: "",
     field2: ""
@@ -303,13 +312,13 @@ const MyEntityPage = () => {
   return (
     <div>
       <Button onClick={() => openDialog()}>Ajouter</Button>
-      
-      <MyEntityList 
-        items={items} 
-        onEdit={openDialog} 
+
+      <MyEntityList
+        items={items}
+        onEdit={openDialog}
         onDelete={deleteEntity}
       />
-      
+
       <MyEntityDialog
         open={showDialog}
         onClose={closeDialog}
@@ -404,7 +413,10 @@ export interface MyEntity {
   updated_at?: string;
 }
 
-export type MyEntityFormData = Omit<MyEntity, 'id' | 'user_id' | 'created_at' | 'updated_at'>;
+export type MyEntityFormData = Omit<
+  MyEntity,
+  "id" | "user_id" | "created_at" | "updated_at"
+>;
 ```
 
 ### 2. Gérer les champs nullable
@@ -413,7 +425,7 @@ export type MyEntityFormData = Omit<MyEntity, 'id' | 'user_id' | 'created_at' | 
 // Initialiser avec "" pour les inputs
 const dialog = useEntityDialog<MyEntity, MyEntityFormData>({
   name: "",
-  description: ""  // Pas null, même si nullable en DB
+  description: "", // Pas null, même si nullable en DB
 });
 
 // Le hook convertit automatiquement "" → null lors de l'insert/update
@@ -448,12 +460,12 @@ const handleSubmit = async () => {
 ```typescript
 // Accord féminin automatique si entityName se termine par 'e'
 useEntityCrud<Allergy, AllergyFormData>({
-  entityName: "Allergie"  // → "Allergie ajoutée avec succès"
+  entityName: "Allergie", // → "Allergie ajoutée avec succès"
 });
 
 // Accord masculin sinon
 useEntityCrud<Treatment, TreatmentFormData>({
-  entityName: "Traitement"  // → "Traitement ajouté avec succès"
+  entityName: "Traitement", // → "Traitement ajouté avec succès"
 });
 ```
 
@@ -466,6 +478,7 @@ useEntityCrud<Treatment, TreatmentFormData>({
 **Cause** : Politiques RLS manquantes ou `addUserId` mal configuré.
 
 **Solution** :
+
 ```typescript
 // Si table a user_id NOT NULL
 useEntityCrud({ ..., addUserId: true });

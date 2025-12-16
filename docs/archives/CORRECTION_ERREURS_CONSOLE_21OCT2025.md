@@ -3,13 +3,16 @@
 ## Problèmes identifiés
 
 ### 1. Erreur "Invalid Refresh Token" au démarrage
+
 **Symptôme** : L'application affichait une erreur `AuthApiError: Invalid Refresh Token: Refresh Token Not Found` avant même que l'utilisateur ne se connecte.
 
-**Cause** : 
+**Cause** :
+
 - Supabase essayait automatiquement de restaurer une session avec `getSession()` au démarrage
 - Si un refresh token invalide ou corrompu était présent dans le localStorage, cela générait une erreur visible dans la console
 
 **Solution appliquée** :
+
 1. Ajout de la gestion d'erreur dans `useAuth.tsx` :
    - Capture des erreurs lors de `getSession()`
    - Détection des tokens invalides (`refresh_token_not_found`, `Invalid Refresh Token`)
@@ -25,23 +28,28 @@
    - Ajout d'un header personnalisé `x-application-name`
 
 ### 2. Messages console répétitifs en boucle infinie
+
 **Symptôme** : Des centaines de messages identiques apparaissaient dans la console :
+
 - "Utilisateur déconnecté, planificateur désactivé"
 - "Aucun utilisateur connecté - planification ignorée"
 - Ces messages se répétaient sans cesse, même sans action de l'utilisateur
 
-**Cause** : 
+**Cause** :
+
 - Le hook `useMedicationNotificationScheduler` créait de nouvelles instances de fonctions à chaque rendu
 - Le `NotificationSchedulerProvider` avait `rescheduleAll` dans ses dépendances
 - Cela créait une boucle infinie : changement de fonction → re-render → nouvelle fonction → re-render...
 
 **Solution appliquée** :
+
 1. Mémorisation des fonctions avec `useCallback` dans `useMedicationNotificationScheduler.tsx` :
+
    ```typescript
    const scheduleUpcomingNotifications = useCallback(async (...) => {
      // ...
    }, [preferences.pushEnabled, preferences.medicationReminders, ...]);
-   
+
    const rescheduleAll = useCallback(async (...) => {
      // ...
    }, [scheduleUpcomingNotifications]);
@@ -87,15 +95,18 @@
 ## Résultats attendus
 
 ✅ **Plus d'erreurs de refresh token au démarrage**
+
 - Les tokens invalides sont nettoyés silencieusement
 - L'application démarre proprement sans erreur d'authentification
 
 ✅ **Console propre et lisible**
+
 - Suppression des messages répétitifs
 - Logs informatifs uniquement quand nécessaire
 - Pas de boucle infinie de messages
 
 ✅ **Meilleure performance**
+
 - Moins de re-renders inutiles
 - Planification des notifications optimisée
 - Utilisation de `useCallback` pour mémoriser les fonctions

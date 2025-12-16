@@ -7,6 +7,7 @@
 **Complexité** : Haute
 
 ### Responsabilités actuelles (TROP !)
+
 1. Chargement historique complet (medication_intakes + treatments)
 2. Gestion tabs (Historique / Statistiques)
 3. Filtrage par statut (tous/manquées/à l'heure/en retard)
@@ -17,39 +18,40 @@
 8. Rendu UI (cards, accordions, badges, stats)
 
 ### Interfaces actuelles
+
 ```typescript
 interface MedicationIntake {
-  id: string
-  medication_id: string
-  scheduled_time: string
-  taken_at: string | null
-  status: 'pending' | 'taken' | 'skipped'
+  id: string;
+  medication_id: string;
+  scheduled_time: string;
+  taken_at: string | null;
+  status: "pending" | "taken" | "skipped";
   medications: {
-    name: string
-    catalog_id?: string
+    name: string;
+    catalog_id?: string;
     medication_catalog?: {
-      strength?: string
-      default_posology?: string
-    }
-  }
+      strength?: string;
+      default_posology?: string;
+    };
+  };
 }
 
 interface GroupedIntakes {
-  date: Date
+  date: Date;
   intakes: {
-    id: string
-    time: string
-    medication: string
-    dosage: string
-    status: string
-    takenAt?: string
-    scheduledTimestamp?: string
-    takenAtTimestamp?: string
-    treatment: string
-    treatmentId: string
-    treatmentQspDays?: number | null
-    treatmentEndDate?: string | null
-  }[]
+    id: string;
+    time: string;
+    medication: string;
+    dosage: string;
+    status: string;
+    takenAt?: string;
+    scheduledTimestamp?: string;
+    takenAtTimestamp?: string;
+    treatment: string;
+    treatmentId: string;
+    treatmentQspDays?: number | null;
+    treatmentEndDate?: string | null;
+  }[];
 }
 ```
 
@@ -76,51 +78,53 @@ src/pages/history/
 ## 📝 Décomposition Détaillée
 
 ### 1. types.ts
+
 ```typescript
 export interface MedicationIntake {
-  id: string
-  medication_id: string
-  scheduled_time: string
-  taken_at: string | null
-  status: 'pending' | 'taken' | 'skipped'
+  id: string;
+  medication_id: string;
+  scheduled_time: string;
+  taken_at: string | null;
+  status: "pending" | "taken" | "skipped";
   medications: {
-    name: string
-    catalog_id?: string
+    name: string;
+    catalog_id?: string;
     medication_catalog?: {
-      strength?: string
-      default_posology?: string
-    }
-  }
+      strength?: string;
+      default_posology?: string;
+    };
+  };
 }
 
 export interface IntakeHistoryItem {
-  id: string
-  time: string
-  medication: string
-  dosage: string
-  status: string
-  takenAt?: string
-  scheduledTimestamp?: string
-  takenAtTimestamp?: string
-  treatment: string
-  treatmentId: string
-  treatmentQspDays?: number | null
-  treatmentEndDate?: string | null
+  id: string;
+  time: string;
+  medication: string;
+  dosage: string;
+  status: string;
+  takenAt?: string;
+  scheduledTimestamp?: string;
+  takenAtTimestamp?: string;
+  treatment: string;
+  treatmentId: string;
+  treatmentQspDays?: number | null;
+  treatmentEndDate?: string | null;
 }
 
 export interface GroupedIntakes {
-  date: Date
-  intakes: IntakeHistoryItem[]
+  date: Date;
+  intakes: IntakeHistoryItem[];
 }
 
-export type FilterStatus = 'all' | 'missed' | 'ontime' | 'late'
-export type ActiveTab = 'history' | 'stats'
+export type FilterStatus = "all" | "missed" | "ontime" | "late";
+export type ActiveTab = "history" | "stats";
 ```
 
 ### 2. hooks/useHistoryData.ts
 
 **Responsabilité** : Charger l'historique complet depuis Supabase
 **Returns** :
+
 ```typescript
 {
   historyData: GroupedIntakes[]
@@ -130,6 +134,7 @@ export type ActiveTab = 'history' | 'stats'
 ```
 
 **Logique extraite** :
+
 - Lignes 174-265 actuelles (loadHistory)
 - Query Supabase medication_intakes + treatments
 - Calcul QSP par traitement
@@ -139,7 +144,8 @@ export type ActiveTab = 'history' | 'stats'
 ### 3. hooks/useFilteredHistory.ts
 
 **Responsabilité** : Filtrer l'historique selon critères
-**Params** : 
+**Params** :
+
 ```typescript
 {
   historyData: GroupedIntakes[]
@@ -148,6 +154,7 @@ export type ActiveTab = 'history' | 'stats'
 ```
 
 **Returns** :
+
 ```typescript
 {
   filteredData: GroupedIntakes[]
@@ -156,6 +163,7 @@ export type ActiveTab = 'history' | 'stats'
 ```
 
 **Logique extraite** :
+
 - Lignes 95-127 actuelles (logique de filtrage)
 - Calcul différence minutes (retard/avance)
 - Filtrage selon status (missed/ontime/late)
@@ -164,6 +172,7 @@ export type ActiveTab = 'history' | 'stats'
 
 **Responsabilité** : Auto-expand aujourd'hui + gestion collapse
 **Params** :
+
 ```typescript
 {
   historyData: GroupedIntakes[]
@@ -173,6 +182,7 @@ export type ActiveTab = 'history' | 'stats'
 ```
 
 **Returns** :
+
 ```typescript
 {
   expandedDays: Set<string>
@@ -181,6 +191,7 @@ export type ActiveTab = 'history' | 'stats'
 ```
 
 **Logique extraite** :
+
 - Lignes 76-93 (auto-expand today)
 - Lignes 95-146 (auto-expand first match on filter)
 - Gestion Set<string> pour expanded days
@@ -188,14 +199,16 @@ export type ActiveTab = 'history' | 'stats'
 ### 5. components/HistoryTabs.tsx
 
 **Props** :
+
 ```typescript
 interface HistoryTabsProps {
-  activeTab: ActiveTab
-  onChange: (tab: ActiveTab) => void
+  activeTab: ActiveTab;
+  onChange: (tab: ActiveTab) => void;
 }
 ```
 
 **Contenu** :
+
 - Tabs Historique / Statistiques
 - Navigation entre vues
 
@@ -204,14 +217,16 @@ interface HistoryTabsProps {
 ### 6. components/FilterButtons.tsx
 
 **Props** :
+
 ```typescript
 interface FilterButtonsProps {
-  filterStatus: FilterStatus
-  onChange: (status: FilterStatus) => void
+  filterStatus: FilterStatus;
+  onChange: (status: FilterStatus) => void;
 }
 ```
 
 **Contenu** :
+
 - 4 boutons : Tous / Manquées / À l'heure / En retard
 - Active state styling
 
@@ -220,17 +235,19 @@ interface FilterButtonsProps {
 ### 7. components/DaySection.tsx
 
 **Props** :
+
 ```typescript
 interface DaySectionProps {
-  day: GroupedIntakes
-  isExpanded: boolean
-  onToggle: () => void
-  filterStatus: FilterStatus
-  dayRef?: React.RefObject<HTMLDivElement>
+  day: GroupedIntakes;
+  isExpanded: boolean;
+  onToggle: () => void;
+  filterStatus: FilterStatus;
+  dayRef?: React.RefObject<HTMLDivElement>;
 }
 ```
 
 **Contenu** :
+
 - Card avec header date + stats jour
 - Bouton expand/collapse
 - Liste TreatmentGroup
@@ -240,16 +257,18 @@ interface DaySectionProps {
 ### 8. components/TreatmentGroup.tsx
 
 **Props** :
+
 ```typescript
 interface TreatmentGroupProps {
-  treatmentName: string
-  qspDays?: number | null
-  endDate?: string | null
-  intakes: IntakeHistoryItem[]
+  treatmentName: string;
+  qspDays?: number | null;
+  endDate?: string | null;
+  intakes: IntakeHistoryItem[];
 }
 ```
 
 **Contenu** :
+
 - Header traitement avec QSP/Date fin
 - Liste IntakeHistoryCard
 
@@ -258,14 +277,16 @@ interface TreatmentGroupProps {
 ### 9. components/IntakeHistoryCard.tsx
 
 **Props** :
+
 ```typescript
 interface IntakeHistoryCardProps {
-  intake: IntakeHistoryItem
-  filterStatus: FilterStatus
+  intake: IntakeHistoryItem;
+  filterStatus: FilterStatus;
 }
 ```
 
 **Contenu** :
+
 - Card avec heure, médication, dosage
 - Badge status (pris/manqué)
 - Badge retard/avance si applicable
@@ -276,23 +297,25 @@ interface IntakeHistoryCardProps {
 ### 10. components/StatsCards.tsx
 
 **Props** :
+
 ```typescript
 interface StatsCardsProps {
   stats: {
-    total: number
-    taken: number
-    missed: number
-    onTime: number
-    late: number
-    adherenceRate: number
-    last7Days: any
-    last30Days: any
-  }
-  loading: boolean
+    total: number;
+    taken: number;
+    missed: number;
+    onTime: number;
+    late: number;
+    adherenceRate: number;
+    last7Days: any;
+    last30Days: any;
+  };
+  loading: boolean;
 }
 ```
 
 **Contenu** :
+
 - Grid de cards statistiques
 - Badges avec icônes
 - Pourcentages
@@ -302,13 +325,15 @@ interface StatsCardsProps {
 ### 11. components/EmptyState.tsx
 
 **Props** :
+
 ```typescript
 interface EmptyStateProps {
-  message: string
+  message: string;
 }
 ```
 
 **Contenu** :
+
 - Card vide centrée
 - Message personnalisé
 - Icône
@@ -320,6 +345,7 @@ interface EmptyStateProps {
 **Taille cible** : ~100 lignes
 
 **Contenu** :
+
 ```typescript
 import { useState, useRef } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
@@ -340,50 +366,50 @@ const History = () => {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const todayRef = useRef<HTMLDivElement>(null)
-  
+
   // State
   const [activeTab, setActiveTab] = useState<ActiveTab>(
     (searchParams.get("tab") as ActiveTab) || "history"
   )
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all")
-  
+
   // Hooks
   const { historyData, loading } = useHistoryData()
   const { filteredData } = useFilteredHistory({ historyData, filterStatus })
-  const { expandedDays, toggleDay } = useExpandedDays({ 
-    historyData, 
+  const { expandedDays, toggleDay } = useExpandedDays({
+    historyData,
     filterStatus,
-    todayRef 
+    todayRef
   })
   const { stats, loading: statsLoading } = useAdherenceStats()
-  
+
   // Handlers
   const handleTabChange = (tab: ActiveTab) => {
     setActiveTab(tab)
     setSearchParams(tab === "history" ? {} : { tab })
   }
-  
+
   if (loading) return <AppLayout><Loader /></AppLayout>
-  
+
   return (
     <AppLayout>
-      <PageHeader 
-        title="Historique" 
+      <PageHeader
+        title="Historique"
         onBack={() => navigate("/")}
       />
-      
-      <HistoryTabs 
+
+      <HistoryTabs
         activeTab={activeTab}
         onChange={handleTabChange}
       />
-      
+
       {activeTab === "history" ? (
         <>
-          <FilterButtons 
+          <FilterButtons
             filterStatus={filterStatus}
             onChange={setFilterStatus}
           />
-          
+
           {filteredData.length === 0 ? (
             <EmptyState message="Aucune prise trouvée" />
           ) : (

@@ -23,9 +23,11 @@
 ## 🎯 Contexte et Problématique
 
 ### Question Centrale
+
 **Quelle est la légitimité de la table `medication_catalog` si on peut récupérer directement les fiches médicaments depuis une source officielle ?**
 
 ### Constat Actuel
+
 - Le référentiel `medication_catalog` stocke manuellement des médicaments disponibles
 - Risque de données obsolètes, incomplètes ou incorrectes
 - Duplication des données entre `medication_catalog` et `medications`
@@ -33,7 +35,9 @@
 - QR Code DataMatrix non exploité pour récupération automatique des données
 
 ### Vision Cible
+
 Système permettant de :
+
 1. **Récupérer automatiquement** les fiches médicaments officielles (via API ou QR Code)
 2. **Stocker localement** dans un cache pour performance et mode offline
 3. **Personnaliser** les données au niveau du traitement utilisateur (posologie, stock, seuil, etc.)
@@ -46,6 +50,7 @@ Système permettant de :
 ### 1. Architecture Actuelle
 
 #### Table `medication_catalog` (Référentiel)
+
 ```sql
 medication_catalog
 ├── id (uuid)
@@ -66,6 +71,7 @@ medication_catalog
 ```
 
 #### Table `medications` (Médicaments Utilisateur)
+
 ```sql
 medications
 ├── id (uuid)
@@ -85,26 +91,31 @@ medications
 ### 2. Problèmes Identifiés
 
 #### ❌ Duplication de Données
+
 - `name`, `strength`, `posology` sont copiés de `medication_catalog` vers `medications`
 - Si on met à jour le catalog, les médicaments existants ne sont pas mis à jour
 - Incohérence possible entre les deux tables
 
 #### ❌ Lien Faible
+
 - `catalog_id` est **nullable** dans `medications`
 - On peut créer un médicament sans lien vers le catalog (médicament custom)
 - Difficile de tracer l'origine des données
 
 #### ❌ Incohérences Schéma
+
 - `pathology` en TEXT dans `medication_catalog` alors qu'on a une table `pathologies`
 - `pathology_id` existe mais souvent NULL
 - `initial_stock` et `min_threshold` dans `medication_catalog` ne servent à rien (c'est user-specific)
 
 #### ❌ Pas de Source Officielle
+
 - Toutes les données sont saisies manuellement
 - Risque d'erreurs (fautes de frappe, dosages incorrects, etc.)
 - Pas de garantie de conformité réglementaire
 
 #### ❌ Maintenance Complexe
+
 - 17 fichiers dans le code utilisent `catalog_id` ou `medication_catalog`
 - Logique split entre "from catalog" et "custom medication"
 - Code complexe avec beaucoup de conditions
@@ -163,36 +174,36 @@ src/pages/treatments/
 
 #### ✅ DOIT être dupliquée en v2
 
-| Table | Raison | Nouveaux champs | FK impactées |
-|-------|--------|-----------------|--------------|
-| **medications** → **medications_v2** | Structure change (ajout champs officiels) | `reference_cache_id`, `official_name`, `official_strength`, `pharmaceutical_form`, `cis_code`, `user_name`, `batch_number`, `photo_url` | FK vers `medication_reference_cache`, `treatments_v2`, `pathologies_v2` |
-| **medication_intakes** → **medication_intakes_v2** | FK vers medications_v2 | Aucun nouveau champ | FK vers `medications_v2` |
-| **treatments** → **treatments_v2** | Référencé par medications_v2 | Aucun nouveau champ | FK vers `prescriptions_v2`, `health_professionals_v2` (pharmacy_id) |
-| **pathologies** → **pathologies_v2** | Référencé par medications_v2 | Aucun nouveau champ | Aucune |
-| **prescriptions** → **prescriptions_v2** | Référencé par treatments_v2 | Aucun nouveau champ | FK vers `health_professionals_v2` (prescribing_doctor_id) |
-| **health_professionals** → **health_professionals_v2** | Référencé par treatments_v2 et prescriptions_v2 | Aucun nouveau champ | Aucune |
-| **pharmacy_visits** → **pharmacy_visits_v2** | FK vers treatments_v2 | Aucun nouveau champ | FK vers `treatments_v2`, `health_professionals_v2` (pharmacy_id) |
+| Table                                                  | Raison                                          | Nouveaux champs                                                                                                                         | FK impactées                                                            |
+| ------------------------------------------------------ | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| **medications** → **medications_v2**                   | Structure change (ajout champs officiels)       | `reference_cache_id`, `official_name`, `official_strength`, `pharmaceutical_form`, `cis_code`, `user_name`, `batch_number`, `photo_url` | FK vers `medication_reference_cache`, `treatments_v2`, `pathologies_v2` |
+| **medication_intakes** → **medication_intakes_v2**     | FK vers medications_v2                          | Aucun nouveau champ                                                                                                                     | FK vers `medications_v2`                                                |
+| **treatments** → **treatments_v2**                     | Référencé par medications_v2                    | Aucun nouveau champ                                                                                                                     | FK vers `prescriptions_v2`, `health_professionals_v2` (pharmacy_id)     |
+| **pathologies** → **pathologies_v2**                   | Référencé par medications_v2                    | Aucun nouveau champ                                                                                                                     | Aucune                                                                  |
+| **prescriptions** → **prescriptions_v2**               | Référencé par treatments_v2                     | Aucun nouveau champ                                                                                                                     | FK vers `health_professionals_v2` (prescribing_doctor_id)               |
+| **health_professionals** → **health_professionals_v2** | Référencé par treatments_v2 et prescriptions_v2 | Aucun nouveau champ                                                                                                                     | Aucune                                                                  |
+| **pharmacy_visits** → **pharmacy_visits_v2**           | FK vers treatments_v2                           | Aucun nouveau champ                                                                                                                     | FK vers `treatments_v2`, `health_professionals_v2` (pharmacy_id)        |
 
 #### ✅ NOUVELLE table (pas de v1)
 
-| Table | Raison | Champs principaux |
-|-------|--------|-------------------|
+| Table                          | Raison               | Champs principaux                                                                       |
+| ------------------------------ | -------------------- | --------------------------------------------------------------------------------------- |
 | **medication_reference_cache** | Cache API officielle | `cis_code`, `official_name`, `strength`, `pharmaceutical_form`, `official_data` (JSONB) |
 
 #### ❌ Tables NON dupliquées (conservées telles quelles)
 
-| Table | Raison | Impact |
-|-------|--------|--------|
-| **profiles** | Pas concernée par la refonte | Aucun - treatments_v2 pointe toujours vers profiles via user_id |
-| **user_preferences** | Pas concernée | Aucun |
-| **user_roles** | Pas concernée | Aucun |
-| **allergies** | Pas concernée par medications | Aucun |
-| **navigation_items** | Pas concernée | Aucun |
+| Table                | Raison                        | Impact                                                          |
+| -------------------- | ----------------------------- | --------------------------------------------------------------- |
+| **profiles**         | Pas concernée par la refonte  | Aucun - treatments_v2 pointe toujours vers profiles via user_id |
+| **user_preferences** | Pas concernée                 | Aucun                                                           |
+| **user_roles**       | Pas concernée                 | Aucun                                                           |
+| **allergies**        | Pas concernée par medications | Aucun                                                           |
+| **navigation_items** | Pas concernée                 | Aucun                                                           |
 
 #### 🗑️ Table OBSOLÈTE (archivée uniquement)
 
-| Table | Raison |
-|-------|--------|
+| Table                  | Raison                                                                  |
+| ---------------------- | ----------------------------------------------------------------------- |
 | **medication_catalog** | Remplacée par `medication_reference_cache` + intégration API officielle |
 
 ### Graphe de Dépendances v2
@@ -230,6 +241,7 @@ treatments_v2
 **Ordre de création des tables v2 :**
 
 1. **Tables sans FK externes** (feuilles)
+
    ```sql
    CREATE TABLE pathologies_v2 (COPY FROM pathologies);
    CREATE TABLE health_professionals_v2 (COPY FROM health_professionals);
@@ -237,27 +249,30 @@ treatments_v2
    ```
 
 2. **Tables avec 1 niveau de FK**
+
    ```sql
    CREATE TABLE prescriptions_v2 (FK → health_professionals_v2);
    ```
 
 3. **Tables avec 2 niveaux de FK**
+
    ```sql
    CREATE TABLE treatments_v2 (
-     FK → prescriptions_v2, 
+     FK → prescriptions_v2,
      FK → health_professionals_v2,
      FK → profiles (v1 conservée)
    );
    ```
 
 4. **Tables avec 3+ niveaux de FK**
+
    ```sql
    CREATE TABLE medications_v2 (
      FK → treatments_v2,
      FK → pathologies_v2,
      FK → medication_reference_cache
    );
-   
+
    CREATE TABLE medication_intakes_v2 (FK → medications_v2);
    CREATE TABLE pharmacy_visits_v2 (
      FK → treatments_v2,
@@ -290,6 +305,7 @@ SELECT COUNT(*) FROM medications = SELECT COUNT(*) FROM medications_v2;
 ### Bascule du Code Frontend
 
 **Stratégie :**
+
 1. **Pointer toutes les queries vers tables v2**
    - `supabase.from('medications')` → `supabase.from('medications_v2')`
    - `supabase.from('treatments')` → `supabase.from('treatments_v2')`
@@ -310,7 +326,8 @@ SELECT COUNT(*) FROM medications = SELECT COUNT(*) FROM medications_v2;
 **Tables archivées :** 1 table (medication_catalog)  
 **Tables conservées v1 :** 5 tables (profiles, user_preferences, user_roles, allergies, navigation_items)
 
-**Impact BDD :**  
+**Impact BDD :**
+
 - Duplication temporaire : ~2x espace disque (le temps de la migration)
 - Après purge v1 : espace identique + medication_reference_cache
 
@@ -327,30 +344,30 @@ Table de **cache local** des fiches médicaments officielles récupérées via A
 ```sql
 CREATE TABLE medication_reference_cache (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  
+
   -- Identifiants officiels
   cis_code TEXT UNIQUE NOT NULL, -- Code CIS (base médicaments.gouv.fr)
   cis13_code TEXT, -- Code DataMatrix (13 chiffres)
-  
+
   -- Données officielles (non modifiables par utilisateur)
   official_name TEXT NOT NULL, -- Nom officiel du médicament
   strength TEXT, -- Dosage (ex: "5mg/1000mg")
   pharmaceutical_form TEXT, -- Forme (comprimé, gélule, sirop, etc.)
   administration_route TEXT, -- Voie d'administration
   atc_code TEXT, -- Code ATC (classification thérapeutique)
-  
+
   -- Données complémentaires officielles
   marketing_authorization_holder TEXT, -- Titulaire AMM
   marketing_status TEXT, -- Statut commercialisation
   marketing_authorization_date DATE, -- Date AMM
-  
+
   -- Cache des données brutes API (JSONB pour flexibilité)
   official_data JSONB, -- Toutes les données API brutes
-  
+
   -- Métadonnées cache
   last_synced_at TIMESTAMPTZ DEFAULT NOW(),
   cache_source TEXT, -- 'api', 'datamatrix', 'manual'
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -382,48 +399,48 @@ Combine **données officielles** (readonly) + **personnalisation utilisateur** (
 CREATE TABLE medications_v2 (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   treatment_id UUID NOT NULL REFERENCES treatments(id) ON DELETE CASCADE,
-  
+
   -- ============================================
   -- PARTIE 1: LIEN VERS DONNÉES OFFICIELLES
   -- ============================================
   reference_cache_id UUID REFERENCES medication_reference_cache(id), -- Peut être NULL si médicament custom
-  
+
   -- Copie locale des champs essentiels (pour offline + performance)
   official_name TEXT, -- Copié depuis reference_cache
   official_strength TEXT, -- Copié depuis reference_cache
   pharmaceutical_form TEXT, -- Copié depuis reference_cache
   cis_code TEXT, -- Copié depuis reference_cache
-  
+
   -- ============================================
   -- PARTIE 2: PERSONNALISATION UTILISATEUR
   -- ============================================
-  
+
   -- Nom personnalisé (si l'utilisateur veut renommer)
   user_name TEXT, -- Ex: "Mon Doliprane" au lieu de "PARACETAMOL 1000MG"
-  
+
   -- Association pathologie (pour CE traitement spécifiquement)
   pathology_id UUID REFERENCES pathologies(id),
-  
+
   -- Posologie et horaires
   posology TEXT NOT NULL, -- Saisie langage naturel: "1 le matin et le soir"
   times TEXT[] NOT NULL, -- Horaires calculés: ["08:00", "20:00"]
   units_per_take INTEGER DEFAULT 1, -- Nombre d'unités par prise
-  
+
   -- Gestion des stocks
   initial_stock INTEGER DEFAULT 0, -- Stock initial à l'ajout
   current_stock INTEGER DEFAULT 0, -- Stock actuel (décrémenté automatiquement)
   min_threshold INTEGER DEFAULT 10, -- Seuil d'alerte
   expiry_date DATE, -- Date de péremption de la boîte actuelle
   batch_number TEXT, -- Numéro de lot (optionnel)
-  
+
   -- Informations complémentaires utilisateur
   user_notes TEXT, -- Ex: "À prendre après repas"
   photo_url TEXT, -- Photo de la boîte (optionnel)
-  
+
   -- Métadonnées
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   -- Contraintes
   CONSTRAINT valid_stock CHECK (current_stock >= 0),
   CONSTRAINT valid_threshold CHECK (min_threshold >= 0)
@@ -440,7 +457,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.status = 'taken' AND OLD.status = 'pending' THEN
     UPDATE medications_v2
-    SET current_stock = GREATEST(current_stock - 
+    SET current_stock = GREATEST(current_stock -
       (SELECT units_per_take FROM medications_v2 WHERE id = NEW.medication_id), 0
     )
     WHERE id = NEW.medication_id;
@@ -474,6 +491,7 @@ CREATE POLICY "Users can view own medications"
 ### Workflow d'Ajout d'un Médicament
 
 #### Scénario 1: Via QR Code DataMatrix
+
 ```
 1. User scanne le DataMatrix sur la boîte
    └─> Contient: CIS13, lot, péremption, etc.
@@ -495,6 +513,7 @@ CREATE POLICY "Users can view own medications"
 ```
 
 #### Scénario 2: Via Recherche Manuelle
+
 ```
 1. User tape "xigduo" dans la recherche
 
@@ -513,6 +532,7 @@ CREATE POLICY "Users can view own medications"
 ```
 
 #### Scénario 3: Médicament Custom (fallback)
+
 ```
 1. User ne trouve pas son médicament
 
@@ -529,6 +549,7 @@ CREATE POLICY "Users can view own medications"
 ### API Officielle Recommandée
 
 **Base de Données Publique des Médicaments (Santé.fr)**
+
 - **URL base** : https://www.data.gouv.fr/reuses/api-rest-base-de-donnees-publique-des-medicaments/
 - **Documentation** : https://base-donnees-publique.medicaments.gouv.fr/docs
 - **⚠️ Endpoints à identifier** :
@@ -548,12 +569,15 @@ CREATE POLICY "Users can view own medications"
 **IMPÉRATIF** : Avant toute modification, créer une nouvelle branche Git et utiliser de NOUVELLES tables pour préserver l'historique utilisateur existant.
 
 #### Pourquoi ?
+
 - **Préservation des données** : Ne pas perdre l'historique actuel des utilisateurs
 - **Migration sécurisée** : Copier méthodiquement les données existantes dans le nouveau système
 - **Rollback possible** : Possibilité de revenir en arrière si problème
 
 #### Action Préalable
+
 1. **Créer branche dédiée** : `feature/medication-refactor-v2`
+
    ```bash
    git checkout -b feature/medication-refactor-v2
    ```
@@ -580,12 +604,14 @@ CREATE POLICY "Users can view own medications"
 ### Phase 1: Infrastructure API (2-3 jours)
 
 #### 1.1 Créer Table `medication_reference_cache`
+
 ```sql
 -- Migration: 20250103_create_medication_reference_cache.sql
 -- Voir schéma détaillé ci-dessus (NOUVELLE table)
 ```
 
 #### 1.2 Installer Dépendances pour QR Code
+
 ```bash
 # Installer @zxing/library pour le scan DataMatrix
 npm install @zxing/library
@@ -597,6 +623,7 @@ npm install @zxing/library
 #### 1.3 Créer Edge Functions
 
 **Edge Function: `medication-search`**
+
 ```typescript
 // supabase/functions/medication-search/index.ts
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
@@ -604,7 +631,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 serve(async (req) => {
   const { searchTerm } = await req.json()
-  
+
   // 1. Chercher d'abord dans le cache local
   const supabase = createClient(...)
   const { data: cached } = await supabase
@@ -612,17 +639,17 @@ serve(async (req) => {
     .select('*')
     .ilike('official_name', `%${searchTerm}%`)
     .limit(10)
-  
+
   if (cached && cached.length > 0) {
     return new Response(JSON.stringify({ source: 'cache', results: cached }))
   }
-  
+
   // 2. Sinon, appeler l'API officielle (⚠️ URL exacte à déterminer)
   const apiResponse = await fetch(
     `https://[API_URL_TO_DETERMINE]/search?nom=${searchTerm}`
   )
   const apiData = await apiResponse.json()
-  
+
   // 3. Insérer dans le cache pour prochaine fois
   for (const med of apiData.results) {
     await supabase.from('medication_reference_cache').upsert({
@@ -635,12 +662,13 @@ serve(async (req) => {
       last_synced_at: new Date().toISOString()
     }, { onConflict: 'cis_code' })
   }
-  
+
   return new Response(JSON.stringify({ source: 'api', results: apiData.results }))
 })
 ```
 
 **Edge Function: `medication-details`**
+
 ```typescript
 // supabase/functions/medication-details/index.ts
 // Récupère fiche détaillée par code CIS
@@ -648,6 +676,7 @@ serve(async (req) => {
 ```
 
 **Edge Function: `medication-datamatrix`**
+
 ```typescript
 // supabase/functions/medication-datamatrix/index.ts
 // Parse le code DataMatrix scanné (via @zxing/library côté frontend)
@@ -656,6 +685,7 @@ serve(async (req) => {
 ```
 
 #### 1.4 Tests Edge Functions
+
 - Tests unitaires avec Deno
 - Tests d'intégration avec vraie API
 - Mock de l'API pour tests offline
@@ -764,37 +794,37 @@ ALTER TABLE treatments_v2 ENABLE ROW LEVEL SECURITY;
 CREATE TABLE medications_v2 (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   treatment_id UUID NOT NULL REFERENCES treatments_v2(id) ON DELETE CASCADE, -- FK v2!
-  
+
   -- Lien vers cache API officielle
   reference_cache_id UUID REFERENCES medication_reference_cache(id),
-  
+
   -- Copie locale des champs officiels (pour offline)
   official_name TEXT,
   official_strength TEXT,
   pharmaceutical_form TEXT,
   cis_code TEXT,
-  
+
   -- Personnalisation utilisateur
   user_name TEXT, -- Nom custom si différent
   pathology_id UUID REFERENCES pathologies_v2(id), -- FK v2!
   posology TEXT NOT NULL,
   times TEXT[] NOT NULL,
   units_per_take INTEGER DEFAULT 1,
-  
+
   -- Gestion stocks
   initial_stock INTEGER DEFAULT 0,
   current_stock INTEGER DEFAULT 0,
   min_threshold INTEGER DEFAULT 10,
   expiry_date DATE,
   batch_number TEXT,
-  
+
   -- Informations complémentaires
   user_notes TEXT,
   photo_url TEXT,
-  
+
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   CONSTRAINT valid_stock CHECK (current_stock >= 0),
   CONSTRAINT valid_threshold CHECK (min_threshold >= 0)
 );
@@ -817,7 +847,7 @@ CREATE TABLE medication_intakes_v2 (
   notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
+
   UNIQUE(medication_id, scheduled_time)
 );
 
@@ -854,7 +884,7 @@ RETURNS TRIGGER AS $$
 BEGIN
   IF NEW.status = 'taken' AND OLD.status = 'pending' THEN
     UPDATE medications_v2
-    SET current_stock = GREATEST(current_stock - 
+    SET current_stock = GREATEST(current_stock -
       (SELECT units_per_take FROM medications_v2 WHERE id = NEW.medication_id), 0
     )
     WHERE id = NEW.medication_id;
@@ -912,11 +942,12 @@ CREATE TRIGGER medication_v2_times_changed
 ```
 
 #### 2.2 Validation Création Tables
+
 ```sql
 -- Vérifier que toutes les tables v2 ont été créées
-SELECT table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
+SELECT table_name
+FROM information_schema.tables
+WHERE table_schema = 'public'
   AND table_name LIKE '%_v2'
 ORDER BY table_name;
 
@@ -959,11 +990,11 @@ FROM pathologies;
 
 -- 1.2 Copie health_professionals → health_professionals_v2 (copie directe)
 INSERT INTO health_professionals_v2 (
-  id, user_id, type, name, specialty, email, phone, 
-  street_address, postal_code, city, is_primary_doctor, 
+  id, user_id, type, name, specialty, email, phone,
+  street_address, postal_code, city, is_primary_doctor,
   created_at, updated_at
 )
-SELECT 
+SELECT
   id, user_id, type, name, specialty, email, phone,
   street_address, postal_code, city, is_primary_doctor,
   created_at, updated_at
@@ -1033,38 +1064,38 @@ SELECT
   m.id,
   m.treatment_id, -- FK vers treatments_v2 (mêmes IDs)
   NULL as reference_cache_id, -- À matcher avec API officielle dans étape suivante
-  
+
   -- Données officielles (depuis catalog si dispo, sinon depuis medications)
   COALESCE(mc.name, m.name) as official_name,
   COALESCE(mc.strength, m.strength) as official_strength,
   mc.form as pharmaceutical_form, -- Nouveau champ
   NULL as cis_code, -- Nouveau champ (à récupérer via API)
-  
+
   -- Si le nom dans medications diffère du catalog, on le garde en user_name
-  CASE 
+  CASE
     WHEN m.name != mc.name THEN m.name
     ELSE NULL
   END as user_name,
-  
+
   -- Pathologie (essayer d'abord pathology_id, sinon créer depuis pathology text)
   mc.pathology_id,
-  
+
   -- Posologie et horaires
   m.posology,
   m.times,
   1 as units_per_take, -- Default (nouveau champ)
-  
+
   -- Stocks
   m.initial_stock,
   m.current_stock,
   m.min_threshold,
   m.expiry_date,
   NULL as batch_number, -- Nouveau champ
-  
+
   -- Notes (vide pour l'instant)
   NULL as user_notes, -- Nouveau champ
   NULL as photo_url, -- Nouveau champ
-  
+
   m.created_at,
   m.updated_at
 FROM medications m
@@ -1096,7 +1127,7 @@ FROM pharmacy_visits;
 
 -- Créer les entrées manquantes dans pathologies_v2 depuis medication_catalog
 INSERT INTO pathologies_v2 (name, created_by, is_approved)
-SELECT DISTINCT 
+SELECT DISTINCT
   mc.pathology,
   mc.created_by,
   mc.is_approved
@@ -1116,6 +1147,7 @@ WHERE m.pathology_id IS NULL
 ```
 
 #### 2.4 Validation Intégrité Données Copiées
+
 ```sql
 -- Validation: 20250105_validate_copied_data.sql
 
@@ -1124,49 +1156,49 @@ WHERE m.pathology_id IS NULL
 -- ==============================================
 
 -- Pathologies
-SELECT 
+SELECT
   'pathologies' as table_name,
   (SELECT COUNT(*) FROM pathologies) as v1_count,
   (SELECT COUNT(*) FROM pathologies_v2) as v2_count,
   (SELECT COUNT(*) FROM pathologies) - (SELECT COUNT(*) FROM pathologies_v2) as difference;
 
 -- Health Professionals
-SELECT 
+SELECT
   'health_professionals' as table_name,
   (SELECT COUNT(*) FROM health_professionals) as v1_count,
   (SELECT COUNT(*) FROM health_professionals_v2) as v2_count,
   (SELECT COUNT(*) FROM health_professionals) - (SELECT COUNT(*) FROM health_professionals_v2) as difference;
 
 -- Prescriptions
-SELECT 
+SELECT
   'prescriptions' as table_name,
   (SELECT COUNT(*) FROM prescriptions) as v1_count,
   (SELECT COUNT(*) FROM prescriptions_v2) as v2_count,
   (SELECT COUNT(*) FROM prescriptions) - (SELECT COUNT(*) FROM prescriptions_v2) as difference;
 
 -- Treatments
-SELECT 
+SELECT
   'treatments' as table_name,
   (SELECT COUNT(*) FROM treatments) as v1_count,
   (SELECT COUNT(*) FROM treatments_v2) as v2_count,
   (SELECT COUNT(*) FROM treatments) - (SELECT COUNT(*) FROM treatments_v2) as difference;
 
 -- Medications (la plus critique)
-SELECT 
+SELECT
   'medications' as table_name,
   (SELECT COUNT(*) FROM medications) as v1_count,
   (SELECT COUNT(*) FROM medications_v2) as v2_count,
   (SELECT COUNT(*) FROM medications) - (SELECT COUNT(*) FROM medications_v2) as difference;
 
 -- Medication Intakes
-SELECT 
+SELECT
   'medication_intakes' as table_name,
   (SELECT COUNT(*) FROM medication_intakes) as v1_count,
   (SELECT COUNT(*) FROM medication_intakes_v2) as v2_count,
   (SELECT COUNT(*) FROM medication_intakes) - (SELECT COUNT(*) FROM medication_intakes_v2) as difference;
 
 -- Pharmacy Visits
-SELECT 
+SELECT
   'pharmacy_visits' as table_name,
   (SELECT COUNT(*) FROM pharmacy_visits) as v1_count,
   (SELECT COUNT(*) FROM pharmacy_visits_v2) as v2_count,
@@ -1199,7 +1231,7 @@ WHERE p.id IS NULL;
 -- ==============================================
 
 -- Vérifier que les stocks sont identiques
-SELECT 
+SELECT
   'Stock validation' as check_name,
   SUM(m.current_stock) as v1_total_stock,
   SUM(m2.current_stock) as v2_total_stock,
@@ -1212,7 +1244,7 @@ JOIN medications_v2 m2 ON m.id = m2.id;
 -- ==============================================
 
 -- Vérifier que tous les users ont bien leurs données
-SELECT 
+SELECT
   u.id as user_id,
   u.full_name,
   (SELECT COUNT(*) FROM treatments WHERE user_id = u.id) as v1_treatments,
@@ -1220,11 +1252,12 @@ SELECT
 FROM profiles u
 WHERE EXISTS (SELECT 1 FROM treatments WHERE user_id = u.id);
 
--- ⚠️ Si toutes les validations retournent 0 pour "difference" et "broken_count", 
+-- ⚠️ Si toutes les validations retournent 0 pour "difference" et "broken_count",
 -- la copie est réussie à 100%
 ```
 
 #### 2.5 Basculer vers les Nouvelles Tables (SANS supprimer les anciennes)
+
 ```sql
 -- Une fois validation OK, basculer le code pour pointer vers les nouvelles tables
 -- Les anciennes tables restent en place (archivage) pour rollback possible
@@ -1239,53 +1272,54 @@ WHERE EXISTS (SELECT 1 FROM treatments WHERE user_id = u.id);
 ### Phase 3: Adapter le Frontend (3-4 jours)
 
 #### 3.1 Pointer vers les NOUVELLES tables v2
+
 **IMPORTANT** : Tout le code frontend doit maintenant pointer vers `medications_v2` et `medication_intakes_v2` au lieu des anciennes tables.
 
 #### 3.2 Refonte `useStep2Medications` Hook
 
 **AVANT:**
+
 ```typescript
 // Logique complexe avec catalog + custom
 const loadCatalog = async () => {
-  const { data } = await supabase
-    .from('medication_catalog')
-    .select('*')
-  setCatalog(data || [])
-}
+  const { data } = await supabase.from("medication_catalog").select("*");
+  setCatalog(data || []);
+};
 
 const addMedicationFromCatalog = (med: CatalogMedication) => {
   // Copie les données du catalog vers formData.medications
-}
+};
 
 const addCustomMedication = () => {
   // Crée d'abord dans medication_catalog
   // Puis ajoute dans formData.medications
-}
+};
 ```
 
 **APRÈS:**
+
 ```typescript
 // Logique simplifiée avec API
 const searchMedications = async (query: string) => {
-  const { data } = await supabase.functions.invoke('medication-search', {
-    body: { searchTerm: query }
-  })
-  return data.results
-}
+  const { data } = await supabase.functions.invoke("medication-search", {
+    body: { searchTerm: query },
+  });
+  return data.results;
+};
 
 const getMedicationDetails = async (cisCode: string) => {
-  const { data } = await supabase.functions.invoke('medication-details', {
-    body: { cisCode }
-  })
-  return data
-}
+  const { data } = await supabase.functions.invoke("medication-details", {
+    body: { cisCode },
+  });
+  return data;
+};
 
 const scanDataMatrix = async (dataMatrixCode: string) => {
-  const { data } = await supabase.functions.invoke('medication-datamatrix', {
-    body: { dataMatrixCode }
-  })
-  return data
-}
+  const { data } = await supabase.functions.invoke("medication-datamatrix", {
+    body: { dataMatrixCode },
+  });
+  return data;
+};
 
 const addMedication = (officialData: any, userInputs: any) => {
   // Combine données officielles + saisie utilisateur
@@ -1294,9 +1328,9 @@ const addMedication = (officialData: any, userInputs: any) => {
     official_name: officialData.official_name,
     official_strength: officialData.strength,
     pharmaceutical_form: officialData.pharmaceutical_form,
-    ...userInputs // pathology, posology, times, stock, threshold
-  })
-}
+    ...userInputs, // pathology, posology, times, stock, threshold
+  });
+};
 ```
 
 #### 3.3 Nouveau Composant `MedicationSearchDialog`
@@ -1321,7 +1355,7 @@ export const MedicationSearchDialog = ({ onSelect }) => {
         <DialogHeader>
           <DialogTitle>Rechercher un médicament</DialogTitle>
         </DialogHeader>
-        
+
         <div className="space-y-4">
           {/* Barre de recherche */}
           <Input
@@ -1330,11 +1364,11 @@ export const MedicationSearchDialog = ({ onSelect }) => {
             placeholder="Nom du médicament..."
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
           />
-          
+
           <Button onClick={handleSearch} disabled={loading}>
             {loading ? 'Recherche...' : 'Rechercher'}
           </Button>
-          
+
           {/* Résultats */}
           <ScrollArea className="h-[400px]">
             {results.map((med) => (
@@ -1366,11 +1400,11 @@ export const QRCodeScanner = ({ onScan }) => {
   const startScan = async () => {
     // Utilisation de @zxing/library pour le scan DataMatrix
     const codeReader = new BrowserMultiFormatReader()
-    
+
     try {
       // Demander permission caméra
       const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-      
+
       // Scanner
       const result = await codeReader.decodeFromVideoDevice(
         undefined, // Default video device
@@ -1380,7 +1414,7 @@ export const QRCodeScanner = ({ onScan }) => {
             // Arrêter scan
             codeReader.reset()
             stream.getTracks().forEach(track => track.stop())
-            
+
             // Envoyer le code scanné à l'Edge Function
             scanDataMatrix(result.getText()).then(onScan)
           }
@@ -1406,6 +1440,7 @@ export const QRCodeScanner = ({ onScan }) => {
 #### 3.5 Mise à Jour des 17 Fichiers
 
 **Stratégie:**
+
 1. **Pointer vers les nouvelles tables** : `medications` → `medications_v2`, `medication_intakes` → `medication_intakes_v2`
 2. Remplacer toutes les références à `catalog_id` par `reference_cache_id`
 3. Adapter les queries Supabase pour joindre `medication_reference_cache` si besoin
@@ -1415,6 +1450,7 @@ export const QRCodeScanner = ({ onScan }) => {
 **Exemple: `HistoryMedicationList.tsx`**
 
 **AVANT:**
+
 ```typescript
 const { data: medications } = await supabase
   .from('medications')
@@ -1428,6 +1464,7 @@ const { data: medications } = await supabase
 ```
 
 **APRÈS:**
+
 ```typescript
 const { data: medications } = await supabase
   .from('medications_v2')  // ⚠️ Pointer vers medications_v2
@@ -1438,7 +1475,7 @@ const { data: medications } = await supabase
 
 // Affichage avec fallback sur champs locaux
 <p>
-  {med.reference?.official_name || med.official_name} - 
+  {med.reference?.official_name || med.official_name} -
   {med.reference?.strength || med.official_strength}
 </p>
 ```
@@ -1446,6 +1483,7 @@ const { data: medications } = await supabase
 ### Phase 4: Cleanup et Archivage (1 jour)
 
 #### 4.1 Archiver les Anciennes Tables (NE PAS SUPPRIMER)
+
 ```sql
 -- Migration: 20250107_archive_old_tables.sql
 
@@ -1471,6 +1509,7 @@ COMMENT ON TABLE medication_catalog_archived IS 'Table obsolète - Remplacée pa
 ```
 
 #### 4.2 Supprimer le Code Frontend Obsolète
+
 ```bash
 # Supprimer le dossier entier
 rm -rf src/pages/medication-catalog/
@@ -1481,30 +1520,38 @@ rm -rf src/pages/medication-catalog/
 ```
 
 #### 4.3 Supprimer l'Entrée Menu (si existe)
+
 ```sql
 -- Supprimer l'entrée "Médicaments" du menu navigation
 DELETE FROM navigation_items WHERE path = '/medication-catalog';
 ```
 
 #### 4.4 Documentation de l'Archivage
+
 ```markdown
 # Tables Archivées - Migration v2
 
 ## Tables concernées
+
 - `medications_archived` (anciennement `medications`)
 - `medication_intakes_archived` (anciennement `medication_intakes`)
 - `medication_catalog_archived` (anciennement `medication_catalog`)
 
 ## Date d'archivage
+
 2025-01-XX
 
 ## Raison
+
 Migration vers nouveau système avec:
+
 - `medications_v2` + `medication_intakes_v2` (nouvelles tables utilisateur)
 - `medication_reference_cache` (cache API officielle)
 
 ## Conservation
+
 Ces tables sont conservées indéfiniment pour:
+
 - Rollback en cas de problème
 - Historique et audit
 - Référence pour support utilisateur
@@ -1513,6 +1560,7 @@ Ces tables sont conservées indéfiniment pour:
 ```
 
 #### 4.5 Nettoyer les Imports
+
 ```bash
 # Rechercher toutes les références restantes
 grep -r "medication_catalog" src/
@@ -1526,154 +1574,168 @@ grep -r "CatalogMedication" src/
 #### 5.1 Tests E2E
 
 **Test 1: Ajout médicament via recherche**
+
 ```typescript
-test('User can add medication via search', async () => {
+test("User can add medication via search", async () => {
   // 1. Ouvrir wizard traitement
-  await page.goto('/treatments/new')
-  
+  await page.goto("/treatments/new");
+
   // 2. Remplir step 1
-  await fillStep1()
-  await page.click('button:has-text("Suivant")')
-  
+  await fillStep1();
+  await page.click('button:has-text("Suivant")');
+
   // 3. Cliquer sur "Rechercher un médicament"
-  await page.click('button:has-text("Rechercher")')
-  
+  await page.click('button:has-text("Rechercher")');
+
   // 4. Taper "xigduo" et rechercher
-  await page.fill('input[placeholder*="médicament"]', 'xigduo')
-  await page.press('input[placeholder*="médicament"]', 'Enter')
-  
+  await page.fill('input[placeholder*="médicament"]', "xigduo");
+  await page.press('input[placeholder*="médicament"]', "Enter");
+
   // 5. Attendre résultats
-  await page.waitForSelector('text=XIGDUO')
-  
+  await page.waitForSelector("text=XIGDUO");
+
   // 6. Sélectionner premier résultat
-  await page.click('text=XIGDUO >> nth=0')
-  
+  await page.click("text=XIGDUO >> nth=0");
+
   // 7. Compléter les champs utilisateur
-  await page.fill('input[name="posology"]', '1 matin et soir')
-  await page.fill('input[name="initial_stock"]', '60')
-  await page.fill('input[name="min_threshold"]', '10')
-  
+  await page.fill('input[name="posology"]', "1 matin et soir");
+  await page.fill('input[name="initial_stock"]', "60");
+  await page.fill('input[name="min_threshold"]', "10");
+
   // 8. Valider
-  await page.click('button:has-text("Ajouter")')
-  
+  await page.click('button:has-text("Ajouter")');
+
   // 9. Vérifier que le médicament apparaît dans la liste
-  await expect(page.locator('text=XIGDUO')).toBeVisible()
-})
+  await expect(page.locator("text=XIGDUO")).toBeVisible();
+});
 ```
 
 **Test 2: Ajout médicament via QR Code**
+
 ```typescript
-test('User can add medication via QR scan', async () => {
+test("User can add medication via QR scan", async () => {
   // Mock du scanner
   await page.evaluate(() => {
     window.BarcodeScanner = {
-      startScan: () => Promise.resolve({ 
-        hasContent: true, 
-        content: '01234567890123' // Code DataMatrix fictif
-      })
-    }
-  })
-  
+      startScan: () =>
+        Promise.resolve({
+          hasContent: true,
+          content: "01234567890123", // Code DataMatrix fictif
+        }),
+    };
+  });
+
   // 1. Ouvrir wizard
-  await page.goto('/treatments/new/step2')
-  
+  await page.goto("/treatments/new/step2");
+
   // 2. Cliquer sur "Scanner"
-  await page.click('button:has-text("Scanner")')
-  
+  await page.click('button:has-text("Scanner")');
+
   // 3. Vérifier que les données sont pré-remplies
-  await expect(page.locator('input[name="official_name"]')).toHaveValue(/XIGDUO/i)
-  
+  await expect(page.locator('input[name="official_name"]')).toHaveValue(
+    /XIGDUO/i,
+  );
+
   // 4. Compléter et valider
   // ... (suite identique au test 1)
-})
+});
 ```
 
 **Test 3: Vérifier aucune régression sur prises médicaments**
+
 ```typescript
-test('Medication intakes still work correctly', async () => {
+test("Medication intakes still work correctly", async () => {
   // 1. Créer un traitement avec médicaments
-  const treatment = await createTestTreatment()
-  
+  const treatment = await createTestTreatment();
+
   // 2. Aller sur la page de prise
-  await page.goto('/')
-  
+  await page.goto("/");
+
   // 3. Vérifier que les prises apparaissent
-  await expect(page.locator('[data-testid="medication-intake"]')).toHaveCount(2)
-  
+  await expect(page.locator('[data-testid="medication-intake"]')).toHaveCount(
+    2,
+  );
+
   // 4. Valider une prise
-  await page.click('[data-testid="validate-intake"]')
-  
+  await page.click('[data-testid="validate-intake"]');
+
   // 5. Vérifier que le stock a été décrémenté
   const { data } = await supabase
-    .from('medications')
-    .select('current_stock')
-    .eq('id', treatment.medication_id)
-    .single()
-  
-  expect(data.current_stock).toBe(59) // 60 - 1
-})
+    .from("medications")
+    .select("current_stock")
+    .eq("id", treatment.medication_id)
+    .single();
+
+  expect(data.current_stock).toBe(59); // 60 - 1
+});
 ```
 
 **Test 4: Vérifier alertes stocks**
+
 ```typescript
-test('Stock alerts work correctly', async () => {
+test("Stock alerts work correctly", async () => {
   // 1. Créer un médicament avec stock faible
-  const med = await createMedication({ current_stock: 5, min_threshold: 10 })
-  
+  const med = await createMedication({ current_stock: 5, min_threshold: 10 });
+
   // 2. Aller sur la page stocks
-  await page.goto('/stocks')
-  
+  await page.goto("/stocks");
+
   // 3. Vérifier que l'alerte apparaît
-  await expect(page.locator('[data-testid="stock-alert"]')).toBeVisible()
-  await expect(page.locator('text=/stock faible/i')).toBeVisible()
-})
+  await expect(page.locator('[data-testid="stock-alert"]')).toBeVisible();
+  await expect(page.locator("text=/stock faible/i")).toBeVisible();
+});
 ```
 
 #### 5.2 Tests Unitaires
 
 **Test Edge Function: `medication-search`**
+
 ```typescript
-Deno.test('medication-search returns cached results first', async () => {
+Deno.test("medication-search returns cached results first", async () => {
   // Mock Supabase
   const mockSupabase = {
     from: () => ({
       select: () => ({
         ilike: () => ({
-          limit: () => Promise.resolve({
-            data: [{ official_name: 'XIGDUO', cis_code: '12345' }]
-          })
-        })
-      })
-    })
-  }
-  
+          limit: () =>
+            Promise.resolve({
+              data: [{ official_name: "XIGDUO", cis_code: "12345" }],
+            }),
+        }),
+      }),
+    }),
+  };
+
   // Mock fetch (ne devrait pas être appelé)
-  const fetchCalled = false
-  
+  const fetchCalled = false;
+
   // Appeler la fonction
   const response = await handler(
-    new Request('http://localhost', {
-      method: 'POST',
-      body: JSON.stringify({ searchTerm: 'xigduo' })
-    })
-  )
-  
-  const data = await response.json()
-  
-  assertEquals(data.source, 'cache')
-  assertEquals(data.results.length, 1)
-  assertEquals(fetchCalled, false) // Fetch ne doit pas être appelé
-})
+    new Request("http://localhost", {
+      method: "POST",
+      body: JSON.stringify({ searchTerm: "xigduo" }),
+    }),
+  );
+
+  const data = await response.json();
+
+  assertEquals(data.source, "cache");
+  assertEquals(data.results.length, 1);
+  assertEquals(fetchCalled, false); // Fetch ne doit pas être appelé
+});
 ```
 
 #### 5.3 Documentation
 
 **Créer CR Final**
+
 ```markdown
 # CR - Refonte Système Médicaments - Phase 8
 
 ## Résumé
+
 Refonte complète du système de gestion des médicaments avec:
+
 - Suppression de `medication_catalog`
 - Intégration API officielle
 - Support QR Code DataMatrix
@@ -1681,30 +1743,35 @@ Refonte complète du système de gestion des médicaments avec:
 - Table `medications` refondée
 
 ## Changements Techniques
+
 - 3 nouvelles Edge Functions
 - 2 nouvelles tables (reference_cache, medications_v2)
 - 1 table supprimée (medication_catalog)
 - 17 fichiers frontend refactorés
 
 ## Migration Données
+
 - 100% des données migrées avec succès
 - Aucune perte de données
 - Stocks conservés
 - Relations préservées
 
 ## Tests
+
 - 15 tests E2E passés ✅
 - 8 tests unitaires passés ✅
 - Performance: Recherche <500ms
 - Offline mode: OK
 
 ## Documentation
+
 - Guide utilisateur mis à jour
 - Guide développeur créé
 - API documentation complète
 ```
 
 **Mettre à Jour Guide Utilisateur**
+
 ```markdown
 # Guide Utilisateur - Ajout de Médicaments
 
@@ -1713,18 +1780,21 @@ Refonte complète du système de gestion des médicaments avec:
 Vous pouvez maintenant ajouter des médicaments de 3 façons:
 
 ### 1. Scanner le code-barre (Recommandé)
+
 1. Cliquez sur "Scanner le code-barre"
 2. Pointez votre caméra vers le DataMatrix sur la boîte
 3. Les informations sont automatiquement remplies
 4. Complétez juste la posologie et le stock
 
 ### 2. Rechercher par nom
+
 1. Cliquez sur "Rechercher un médicament"
 2. Tapez le nom (ex: "xigduo")
 3. Sélectionnez dans la liste officielle
 4. Complétez la posologie et le stock
 
 ### 3. Saisie manuelle (si médicament introuvable)
+
 1. Cliquez sur "Ajouter manuellement"
 2. Remplissez tous les champs
 3. Validez
@@ -1737,16 +1807,19 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ### Bénéfices Utilisateur
 
 #### ✅ Saisie Plus Rapide
+
 - **Avant:** 2-3 minutes pour ajouter un médicament (saisie manuelle complète)
 - **Après:** 30 secondes avec QR Code, 1 minute avec recherche
 - **Gain:** 50-80% de temps économisé
 
 #### ✅ Données Plus Fiables
+
 - **Avant:** Risque d'erreurs de frappe, dosages incorrects
 - **Après:** Données officielles validées par l'ANSM
 - **Gain:** 0 erreur sur nom/dosage/forme
 
 #### ✅ Expérience Moderne
+
 - **Avant:** Interface basique avec listes statiques
 - **Après:** Recherche dynamique + scan QR Code
 - **Gain:** UX alignée avec standards mobiles 2025
@@ -1754,43 +1827,49 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ### Bénéfices Technique
 
 #### ✅ Architecture Simplifiée
+
 - **Avant:** 2 tables (catalog + medications) avec duplication
 - **Après:** 2 tables mais séparation claire (cache + user data)
 - **Gain:** Moins de bugs, maintenance plus facile
 
 #### ✅ Code Maintenable
+
 - **Avant:** 17 fichiers avec logique complexe catalog vs custom
 - **Après:** Logique unifiée, plus de conditions sur `catalog_id`
 - **Gain:** Onboarding nouveaux devs plus rapide
 
 #### ✅ Scalabilité
+
 - **Avant:** Croissance linéaire du catalog (saisie manuelle)
 - **Après:** Base officielle (12 000+ médicaments) disponible instantanément
 - **Gain:** Pas de limite à la croissance
 
 #### ✅ Conformité Réglementaire
+
 - **Avant:** Aucune garantie sur la véracité des données
 - **Après:** Données officielles ANSM, traçabilité CIS
 - **Gain:** Conforme pour usage médical
 
 ### Métriques de Succès
 
-| Métrique | Avant | Après | Objectif |
-|----------|-------|-------|----------|
-| Temps ajout médicament | 2-3 min | 30s-1min | <1min |
-| Taux d'erreur données | 5-10% | <1% | <2% |
-| Couverture médicaments | ~50 | 12 000+ | 100% |
-| Satisfaction utilisateur | 6/10 | 9/10 | >8/10 |
-| Dette technique | Élevée | Faible | Faible |
+| Métrique                 | Avant   | Après    | Objectif |
+| ------------------------ | ------- | -------- | -------- |
+| Temps ajout médicament   | 2-3 min | 30s-1min | <1min    |
+| Taux d'erreur données    | 5-10%   | <1%      | <2%      |
+| Couverture médicaments   | ~50     | 12 000+  | 100%     |
+| Satisfaction utilisateur | 6/10    | 9/10     | >8/10    |
+| Dette technique          | Élevée  | Faible   | Faible   |
 
 ---
 
 ## ⚠️ Risques et Mitigation
 
 ### Risque 1: Perte de Données lors Migration
+
 **Probabilité:** Faible (grâce aux nouvelles tables)  
 **Impact:** Critique  
 **Mitigation:**
+
 - **Nouvelles tables v2** : Aucune suppression des anciennes tables (copie méthodique uniquement)
 - Backup complet avant migration (`medications_backup`, `medication_catalog_backup`, `medication_intakes_backup`)
 - Tests sur copie de la BDD en environnement de staging
@@ -1799,9 +1878,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - Archivage permanent des anciennes tables pour audit
 
 ### Risque 2: Endpoints API Non Documentés
+
 **Probabilité:** Moyenne  
 **Impact:** Moyen  
 **Mitigation:**
+
 - Analyse approfondie de la documentation officielle avant Phase 1
 - Contacter support data.gouv.fr si endpoints non clairs
 - Tests API exhaustifs avant intégration
@@ -1809,9 +1890,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - Fallback sur autre source de données officielle (Vidal API)
 
 ### Risque 3: API Externe Indisponible
+
 **Probabilité:** Faible  
 **Impact:** Moyen  
 **Mitigation:**
+
 - Cache local `medication_reference_cache` pour performance et offline
 - Mode dégradé: saisie manuelle toujours possible
 - Retry automatique avec backoff exponentiel
@@ -1819,9 +1902,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - Fallback sur plusieurs sources de données (API backup)
 
 ### Risque 4: Régressions Fonctionnelles
+
 **Probabilité:** Moyenne  
 **Impact:** Élevé  
 **Mitigation:**
+
 - Suite de tests E2E complète (15+ tests)
 - Tests de non-régression sur prises médicaments
 - Tests de non-régression sur stocks
@@ -1830,9 +1915,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - Déploiement canary (10% users → 50% → 100%)
 
 ### Risque 5: Utilisateurs Perdus (Changement UI)
+
 **Probabilité:** Moyenne  
 **Impact:** Moyen  
 **Mitigation:**
+
 - Guide utilisateur détaillé avec screenshots
 - Tooltips explicatifs sur nouveaux boutons
 - Onboarding lors première utilisation
@@ -1840,9 +1927,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - Changelog visible dans l'app
 
 ### Risque 6: Performance Dégradée
+
 **Probabilité:** Faible  
 **Impact:** Moyen  
 **Mitigation:**
+
 - Index sur tous les champs de recherche
 - Cache Redis pour requêtes fréquentes
 - Pagination des résultats de recherche
@@ -1850,9 +1939,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - Monitoring des temps de réponse
 
 ### Risque 7: QR Code Scanner Non Fonctionnel
+
 **Probabilité:** Moyenne (selon devices)  
 **Impact:** Faible  
 **Mitigation:**
+
 - Toujours proposer alternative recherche manuelle
 - Tests sur large panel de devices (iOS/Android)
 - Fallback sur saisie manuelle du code CIS
@@ -1863,9 +1954,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ## 🤔 Décisions à Trancher
 
 ### 1. API Officielle Disponible ?
+
 **Question:** Quelle API allons-nous utiliser pour récupérer les données officielles ?
 
 **Options:**
+
 - ✅ **Recommandé:** API Médicaments (data.gouv.fr)
   - URL base: https://www.data.gouv.fr/reuses/api-rest-base-de-donnees-publique-des-medicaments/
   - ⚠️ Endpoints exacts à déterminer via documentation
@@ -1873,13 +1966,13 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
   - 12 000+ médicaments
   - Mise à jour mensuelle
   - Support DataMatrix possible
-  
 - Alternative: API privée (ex: Vidal, Thériaque)
   - Payant
   - Plus de données (interactions, posologies détaillées)
   - Nécessite contrat commercial
 
 **Décision Requise:**
+
 - [ ] Utiliser API data.gouv.fr (gratuite)
 - [ ] Utiliser API privée (payante) - laquelle ?
 - [ ] Les deux (API privée en priorité, data.gouv.fr en fallback)
@@ -1887,9 +1980,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ---
 
 ### 2. QR Code DataMatrix ?
+
 **Question:** Doit-on implémenter le scan de QR Code DataMatrix dès le MVP ?
 
 **Solution technique recommandée:**
+
 - **Librairie** : `@zxing/library` (gratuite, open-source)
   - Support DataMatrix, QR Code, Code-barres
   - Compatible web + mobile
@@ -1897,6 +1992,7 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - **Alternative** : `html5-qrcode` (plus simple mais moins de formats)
 
 **Pour:**
+
 - ✅ Expérience utilisateur optimale
 - ✅ Différenciation concurrentielle
 - ✅ Réduit drastiquement le temps de saisie (30s vs 2-3min)
@@ -1904,11 +2000,13 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 - ✅ Solution gratuite disponible (@zxing/library)
 
 **Contre:**
+
 - ❌ Complexité technique (permissions caméra, parsing DataMatrix)
 - ❌ Nécessite tests sur multiples devices
 - ❌ Peut ralentir le déploiement initial
 
 **Décision Requise:**
+
 - [ ] Oui, implémenter dès le MVP avec @zxing/library (recommandé)
 - [ ] Non, prévoir pour V2
 - [ ] Oui mais uniquement pour iOS/Android via Capacitor (pas web)
@@ -1916,19 +2014,23 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ---
 
 ### 3. Priorisation ?
+
 **Question:** Quelle stratégie de migration adopter ?
 
 **Option A: Big Bang** (tout en une fois)
+
 - Avantages: Finit rapidement, pas d'état intermédiaire
 - Inconvénients: Risqué, difficile de rollback
 - Durée: 8-12 jours d'affilée
 
 **Option B: Incrémentale** (phase par phase)
+
 - Avantages: Moins risqué, rollback facile
 - Inconvénients: Plus long (état intermédiaire), complexité technique
 - Durée: 3-4 semaines avec pauses entre phases
 
 **Décision Requise:**
+
 - [ ] Big Bang (recommandé pour ce projet vu la taille)
 - [ ] Incrémentale avec feature flags
 - [ ] Hybride (infra API d'abord, puis frontend progressivement)
@@ -1936,9 +2038,11 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ---
 
 ### 4. Migration Urgente ?
+
 **Question:** Quel est le timeline souhaité pour cette refonte ?
 
 **Décision Requise:**
+
 - [ ] Urgent - Déploiement dans 2 semaines
 - [ ] Normal - Déploiement dans 1 mois
 - [ ] Flexible - Déploiement quand prêt (pas de deadline)
@@ -1948,6 +2052,7 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ## 📝 Prochaines Étapes
 
 ### Actions Immédiates
+
 1. **Valider les 4 décisions** ci-dessus
 2. **Créer backup complet** de la BDD de prod
 3. **Configurer environnement de staging** pour tests migration
@@ -1956,6 +2061,7 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 6. **⚠️ Installer @zxing/library** : `npm install @zxing/library`
 
 ### Ordre d'Exécution Recommandé
+
 1. Phase 1: Infrastructure API (bloquer 3 jours)
 2. Phase 2: Refonte BDD (bloquer 2 jours)
 3. Phase 3: Frontend (bloquer 4 jours)
@@ -1963,6 +2069,7 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 5. Phase 5: Tests (bloquer 2 jours)
 
 ### Jalons de Validation
+
 - ✅ **Jalon 1 (Fin Phase 1):** API fonctionne, cache se remplit
 - ✅ **Jalon 2 (Fin Phase 2):** Migration données OK, aucune perte
 - ✅ **Jalon 3 (Fin Phase 3):** Wizard fonctionne avec nouvelle logique
@@ -1976,6 +2083,7 @@ Vous pouvez maintenant ajouter des médicaments de 3 façons:
 ### A. Schéma de Données Comparatif
 
 **AVANT:**
+
 ```
 medication_catalog (référentiel partagé)
 ├── Données "officielles" (mais saisies manuellement)
@@ -1988,6 +2096,7 @@ medications (données utilisateur)
 ```
 
 **APRÈS:**
+
 ```
 medication_reference_cache (cache API officielle) - NOUVELLE
 ├── Données 100% officielles (ANSM)
@@ -2026,10 +2135,12 @@ GET https://[API_URL_TO_DETERMINE]/datamatrix/0123456789012
 ```
 
 **Documentation officielle à consulter:**
+
 - https://www.data.gouv.fr/reuses/api-rest-base-de-donnees-publique-des-medicaments/
 - https://base-donnees-publique.medicaments.gouv.fr/docs
 
 **Réponse Type:**
+
 ```json
 {
   "cis": "62137228",

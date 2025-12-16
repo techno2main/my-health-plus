@@ -3,6 +3,7 @@
 ## ✨ Fonctionnalités Implémentées
 
 ### 1. **Sélection Rapide Mois/Année**
+
 - ✅ Clic sur le mois → Ouverture du sélecteur de mois
 - ✅ Clic sur l'année → Ouverture du sélecteur d'année
 - ✅ Bouton retour discret (flèche) pour revenir au calendrier
@@ -10,12 +11,14 @@
 - ✅ Affichage par défaut sur le mois et l'année en cours
 
 ### 2. **Navigation Tactile/Souris**
+
 - ✅ Swipe gauche/droite pour changer de mois
 - ✅ Boutons fléchés pour navigation précédent/suivant
 - ✅ Distance minimale de swipe configurée (50px)
 - ✅ Support touch et mouse events
 
 ### 3. **Saisie Clavier**
+
 - ✅ Mode saisie directe JJ/MM/AAAA
 - ✅ Bouton toggle (icône crayon) pour basculer calendrier ↔ saisie
 - ✅ Auto-focus et navigation automatique entre champs
@@ -26,17 +29,20 @@
   - Desktop : Champs horizontaux avec séparateurs
 
 ### 4. **Bouton "Aujourd'hui"**
+
 - ✅ Icône calendrier avec label "Aujourd'hui"
 - ✅ Retour instantané à la date du jour
 - ✅ Sélection automatique de la date actuelle
 
 ### 5. **Alignement des Jours**
+
 - ✅ Utilisation de `flex-1` pour distribution égale
 - ✅ Cellules centrées avec `text-center`
 - ✅ Largeur fixe pour les jours (40px)
 - ✅ En-têtes alignés avec les colonnes
 
 ### 6. **Design Material 3**
+
 - ✅ Bordures arrondies (rounded-full pour boutons)
 - ✅ Animations fluides (scale, fade)
 - ✅ États hover/focus/selected bien définis
@@ -46,32 +52,32 @@
 ## 📱 Variantes Disponibles
 
 ### Modal (par défaut)
+
 ```tsx
 <DatePickerM3 value={date} onChange={setDate} />
 ```
 
 ### Popover
+
 ```tsx
-<DatePickerM3 
-  variant="popover" 
-  value={date} 
+<DatePickerM3
+  variant="popover"
+  value={date}
   onChange={setDate}
   placeholder="Choisir une date"
 />
 ```
 
 ### Inline
+
 ```tsx
-<DatePickerM3 
-  variant="inline" 
-  value={date} 
-  onChange={setDate}
-/>
+<DatePickerM3 variant="inline" value={date} onChange={setDate} />
 ```
 
 ## 🎨 Personnalisation
 
 ### Props disponibles
+
 - `value`: Date sélectionnée
 - `onChange`: Callback lors du changement
 - `disabled`: Désactiver le picker
@@ -85,11 +91,11 @@
 ## 🔧 Utilisation
 
 ```tsx
-import { useState } from "react"
-import { DatePickerM3 } from "@/components/ui/date-picker-m3"
+import { useState } from "react";
+import { DatePickerM3 } from "@/components/ui/date-picker-m3";
 
 function MyComponent() {
-  const [date, setDate] = useState<Date>()
+  const [date, setDate] = useState<Date>();
 
   return (
     <DatePickerM3
@@ -100,7 +106,7 @@ function MyComponent() {
       minDate={new Date(2020, 0, 1)}
       maxDate={new Date(2030, 11, 31)}
     />
-  )
+  );
 }
 ```
 
@@ -139,6 +145,7 @@ Pour tester le composant, ouvrir la page de démonstration :
 `/src/pages/DatePickerDemo.tsx`
 
 Cette page contient :
+
 - Exemples de toutes les variantes
 - Instructions d'utilisation
 - Code d'exemple

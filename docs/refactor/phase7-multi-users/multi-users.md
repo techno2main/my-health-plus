@@ -1,9 +1,11 @@
 # Implémentation Multi-Utilisateurs - Référentiels Personnels
 
 ## Objectif
+
 Permettre à chaque utilisateur de gérer ses propres référentiels (pathologies, medication_catalog, allergies) sans être admin.
 
 ## Principe
+
 - Chaque utilisateur a ses propres entrées dans les référentiels
 - Isolation complète des données entre utilisateurs
 - Propriété individuelle via le champ `created_by`
@@ -16,11 +18,11 @@ Permettre à chaque utilisateur de gérer ses propres référentiels (pathologie
 
 ```sql
 -- Ajouter la colonne created_by à allergies
-ALTER TABLE public.allergies 
+ALTER TABLE public.allergies
 ADD COLUMN created_by uuid REFERENCES auth.users(id) ON DELETE CASCADE;
 
 -- Optionnel : Ajouter is_approved pour cohérence avec les autres tables
-ALTER TABLE public.allergies 
+ALTER TABLE public.allergies
 ADD COLUMN is_approved boolean DEFAULT false;
 
 -- Mettre à jour les entrées existantes (attribuer à un admin ou laisser NULL)
@@ -43,8 +45,8 @@ CREATE POLICY "pathologies_read" ON public.pathologies
 FOR SELECT
 TO authenticated
 USING (
-  created_by = auth.uid() 
-  OR is_approved = true 
+  created_by = auth.uid()
+  OR is_approved = true
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 
@@ -61,7 +63,7 @@ CREATE POLICY "pathologies_modify" ON public.pathologies
 FOR UPDATE
 TO authenticated
 USING (
-  created_by = auth.uid() 
+  created_by = auth.uid()
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 
@@ -70,7 +72,7 @@ CREATE POLICY "pathologies_remove" ON public.pathologies
 FOR DELETE
 TO authenticated
 USING (
-  created_by = auth.uid() 
+  created_by = auth.uid()
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 ```
@@ -89,8 +91,8 @@ CREATE POLICY "medication_catalog_read" ON public.medication_catalog
 FOR SELECT
 TO authenticated
 USING (
-  created_by = auth.uid() 
-  OR is_approved = true 
+  created_by = auth.uid()
+  OR is_approved = true
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 
@@ -107,7 +109,7 @@ CREATE POLICY "medication_catalog_modify" ON public.medication_catalog
 FOR UPDATE
 TO authenticated
 USING (
-  created_by = auth.uid() 
+  created_by = auth.uid()
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 
@@ -116,7 +118,7 @@ CREATE POLICY "medication_catalog_remove" ON public.medication_catalog
 FOR DELETE
 TO authenticated
 USING (
-  created_by = auth.uid() 
+  created_by = auth.uid()
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 ```
@@ -135,8 +137,8 @@ CREATE POLICY "allergies_read" ON public.allergies
 FOR SELECT
 TO authenticated
 USING (
-  created_by = auth.uid() 
-  OR is_approved = true 
+  created_by = auth.uid()
+  OR is_approved = true
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 
@@ -153,7 +155,7 @@ CREATE POLICY "allergies_modify" ON public.allergies
 FOR UPDATE
 TO authenticated
 USING (
-  created_by = auth.uid() 
+  created_by = auth.uid()
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 
@@ -162,7 +164,7 @@ CREATE POLICY "allergies_remove" ON public.allergies
 FOR DELETE
 TO authenticated
 USING (
-  created_by = auth.uid() 
+  created_by = auth.uid()
   OR has_role(auth.uid(), 'admin'::app_role)
 );
 ```
@@ -174,6 +176,7 @@ USING (
 ### 2.1 Pathologies
 
 **Fichiers à modifier :**
+
 - `src/pages/pathologies/utils/pathologyUtils.ts` - Interface déjà à jour ✅
 - `src/pages/pathologies/hooks/usePathologies.ts` (ou équivalent)
 
@@ -183,26 +186,24 @@ USING (
 // Dans le hook de création de pathologie
 const createPathology = async (data: PathologyFormData) => {
   const { data: userData } = await supabase.auth.getUser();
-  
-  const { error } = await supabase
-    .from('pathologies')
-    .insert({
-      ...data,
-      created_by: userData?.user?.id, // AJOUTER CETTE LIGNE
-      is_approved: false, // Par défaut non approuvé
-    });
-  
+
+  const { error } = await supabase.from("pathologies").insert({
+    ...data,
+    created_by: userData?.user?.id, // AJOUTER CETTE LIGNE
+    is_approved: false, // Par défaut non approuvé
+  });
+
   if (error) throw error;
 };
 
 // Dans le SELECT, filtrer pour voir uniquement les siennes + les approuvées
 const loadPathologies = async () => {
   const { data, error } = await supabase
-    .from('pathologies')
-    .select('*')
+    .from("pathologies")
+    .select("*")
     .or(`created_by.eq.${userId},is_approved.eq.true`) // Voir les siennes + approuvées
-    .order('name');
-  
+    .order("name");
+
   // La RLS policy s'occupe déjà du filtrage, mais c'est plus explicite
 };
 ```
@@ -210,6 +211,7 @@ const loadPathologies = async () => {
 ### 2.2 Medication Catalog
 
 **Fichiers à modifier :**
+
 - `src/pages/medication-catalog/hooks/useMedicationCatalog.ts` (ligne 164-173)
 
 **Modifications nécessaires :**
@@ -233,7 +235,8 @@ const handleSubmit = async () => {
           description: formData.description || null,
           initial_stock: parseInt(formData.initial_stock) || 0,
           min_threshold: parseInt(formData.min_threshold) || 10,
-          default_times: formData.default_times.length > 0 ? formData.default_times : null,
+          default_times:
+            formData.default_times.length > 0 ? formData.default_times : null,
         })
         .eq("id", editingMed.id);
 
@@ -242,7 +245,7 @@ const handleSubmit = async () => {
     } else {
       // INSERT - AJOUTER created_by
       const { data: userData } = await supabase.auth.getUser();
-      
+
       const { error } = await supabase.from("medication_catalog").insert({
         name: formData.name,
         pathology_id: formData.pathology_id || null,
@@ -251,7 +254,8 @@ const handleSubmit = async () => {
         description: formData.description || null,
         initial_stock: parseInt(formData.initial_stock) || 0,
         min_threshold: parseInt(formData.min_threshold) || 10,
-        default_times: formData.default_times.length > 0 ? formData.default_times : null,
+        default_times:
+          formData.default_times.length > 0 ? formData.default_times : null,
         created_by: userData?.user?.id, // ← AJOUTER CETTE LIGNE
         is_approved: false, // ← AJOUTER CETTE LIGNE
       });
@@ -272,17 +276,19 @@ const handleSubmit = async () => {
 const loadMedications = async () => {
   try {
     const { data: userData } = await supabase.auth.getUser();
-    
+
     const { data, error } = await supabase
       .from("medication_catalog")
-      .select(`
+      .select(
+        `
         *,
         pathologies (
           id,
           name,
           description
         )
-      `)
+      `,
+      )
       // La RLS s'en occupe, mais pour être explicite :
       // .or(`created_by.eq.${userData?.user?.id},is_approved.eq.true`)
       .order("name");
@@ -302,6 +308,7 @@ const loadMedications = async () => {
 ### 2.3 Allergies
 
 **Fichiers à modifier :**
+
 - Trouver le hook/page qui gère les allergies (probablement dans `src/pages/allergies/` ou `src/hooks/`)
 
 **Modifications nécessaires :**
@@ -310,25 +317,23 @@ const loadMedications = async () => {
 // Dans le hook de création d'allergie
 const createAllergy = async (data: AllergyFormData) => {
   const { data: userData } = await supabase.auth.getUser();
-  
-  const { error } = await supabase
-    .from('allergies')
-    .insert({
-      ...data,
-      created_by: userData?.user?.id, // AJOUTER CETTE LIGNE
-      is_approved: false, // AJOUTER CETTE LIGNE (si colonne ajoutée)
-    });
-  
+
+  const { error } = await supabase.from("allergies").insert({
+    ...data,
+    created_by: userData?.user?.id, // AJOUTER CETTE LIGNE
+    is_approved: false, // AJOUTER CETTE LIGNE (si colonne ajoutée)
+  });
+
   if (error) throw error;
 };
 
 // Dans le SELECT
 const loadAllergies = async () => {
   const { data, error } = await supabase
-    .from('allergies')
-    .select('*')
-    .order('name');
-  
+    .from("allergies")
+    .select("*")
+    .order("name");
+
   // La RLS policy filtre automatiquement
 };
 ```
@@ -358,7 +363,9 @@ const create = async (item: C) => {
   const newItem = {
     ...item,
     ...(config.addUserId && userId ? { user_id: userId } : {}),
-    ...(config.addCreatedBy && userId ? { created_by: userId, is_approved: false } : {}), // ← AJOUTER CETTE LIGNE
+    ...(config.addCreatedBy && userId
+      ? { created_by: userId, is_approved: false }
+      : {}), // ← AJOUTER CETTE LIGNE
   };
 
   // ... reste du code ...
@@ -370,25 +377,25 @@ Puis dans les pages :
 ```typescript
 // Page pathologies
 const { items, create, update, deleteEntity } = useEntityCrud({
-  tableName: 'pathologies',
-  queryKey: 'pathologies',
-  entityName: 'pathologie',
+  tableName: "pathologies",
+  queryKey: "pathologies",
+  entityName: "pathologie",
   addCreatedBy: true, // ← ACTIVER CETTE OPTION
 });
 
 // Page medication_catalog
 const { items, create, update, deleteEntity } = useEntityCrud({
-  tableName: 'medication_catalog',
-  queryKey: 'medication_catalog',
-  entityName: 'médicament',
+  tableName: "medication_catalog",
+  queryKey: "medication_catalog",
+  entityName: "médicament",
   addCreatedBy: true, // ← ACTIVER CETTE OPTION
 });
 
 // Page allergies
 const { items, create, update, deleteEntity } = useEntityCrud({
-  tableName: 'allergies',
-  queryKey: 'allergies',
-  entityName: 'allergie',
+  tableName: "allergies",
+  queryKey: "allergies",
+  entityName: "allergie",
   addCreatedBy: true, // ← ACTIVER CETTE OPTION
 });
 ```
@@ -398,6 +405,7 @@ const { items, create, update, deleteEntity } = useEntityCrud({
 ## 3. TESTS À EFFECTUER
 
 ### 3.1 Test User Normal
+
 1. Se connecter avec un compte **user** (non-admin)
 2. Créer une pathologie → Doit réussir
 3. Créer un médicament du catalogue → Doit réussir
@@ -406,6 +414,7 @@ const { items, create, update, deleteEntity } = useEntityCrud({
 6. Supprimer sa propre pathologie → Doit réussir
 
 ### 3.2 Test Isolation
+
 1. Se connecter avec User A
 2. Créer "Paracétamol"
 3. Se déconnecter
@@ -415,6 +424,7 @@ const { items, create, update, deleteEntity } = useEntityCrud({
 7. Vérifier qu'il n'y a pas de conflit
 
 ### 3.3 Test Admin
+
 1. Se connecter avec un compte **admin**
 2. Vérifier qu'on peut modifier/supprimer les entrées de tous les users
 3. Approuver une entrée (mettre `is_approved = true`)
@@ -426,6 +436,7 @@ const { items, create, update, deleteEntity } = useEntityCrud({
 ## 4. POINTS D'ATTENTION
 
 ### ⚠️ Données existantes
+
 - Les entrées existantes dans les référentiels ont `created_by = NULL`
 - Options :
   1. Les laisser NULL → Seuls les admins pourront les modifier
@@ -433,10 +444,12 @@ const { items, create, update, deleteEntity } = useEntityCrud({
   3. Les supprimer et laisser chaque user recréer les siennes
 
 ### ⚠️ TypeScript
+
 - Mettre à jour les interfaces TypeScript si nécessaire
 - Vérifier que `created_by` est bien dans les types
 
 ### ⚠️ UI
+
 - Optionnel : Afficher un badge "Approuvé" pour les entrées `is_approved = true`
 - Optionnel : Ajouter un filtre "Mes référentiels / Tous les approuvés"
 
@@ -481,6 +494,7 @@ CREATE POLICY "pathologies_remove" ON public.pathologies FOR DELETE TO authentic
 ## 7. AMÉLIORATIONS FUTURES (Optionnel)
 
 ### 7.1 Référentiel pré-rempli au signup
+
 Créer un trigger pour ajouter des référentiels par défaut lors de la création d'un utilisateur :
 
 ```sql
@@ -489,16 +503,16 @@ RETURNS TRIGGER AS $$
 BEGIN
   -- Insérer quelques pathologies par défaut
   INSERT INTO public.pathologies (name, description, created_by, is_approved)
-  VALUES 
+  VALUES
     ('Hypertension', 'Pression artérielle élevée', NEW.id, true),
     ('Diabète', 'Trouble de la régulation du glucose', NEW.id, true);
-  
+
   -- Insérer quelques médicaments par défaut
   INSERT INTO public.medication_catalog (name, strength, created_by, is_approved)
-  VALUES 
+  VALUES
     ('Paracétamol', '1000mg', NEW.id, true),
     ('Ibuprofène', '400mg', NEW.id, true);
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
@@ -510,9 +524,11 @@ CREATE TRIGGER on_user_created_add_referentials
 ```
 
 ### 7.2 Import/Export de référentiels
+
 Permettre aux users d'exporter leurs référentiels et de les importer dans un autre compte.
 
 ### 7.3 Partage de référentiels
+
 Ajouter une table `referential_shares` pour permettre à un user de partager certaines entrées avec d'autres users.
 
 ---

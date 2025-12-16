@@ -10,18 +10,23 @@
 ## 🚨 Problème Critique Découvert
 
 ### Symptômes
+
 L'utilisateur admin (tyson.nomansa@gmail.com) pouvait voir les référentiels personnels **non approuvés** de l'utilisateur test (test.user@example.com) :
+
 - ✅ Pathologies personnelles visibles par l'admin
-- ✅ Allergies personnelles visibles par l'admin  
+- ✅ Allergies personnelles visibles par l'admin
 - ✅ Médicaments (catalog) personnels visibles par l'admin
 - ❌ Professionnels de santé NON visibles (RLS correct)
 
 ### Comportement Asymétrique
+
 - **Admin → User test** : Voit TOUTES les données (approved + non-approved)
 - **User test → Admin** : Voit uniquement ses propres données + données approved
 
 ### Impact Sécurité
+
 🔴 **VIOLATION RGPD CRITIQUE**
+
 - Exposition de données de santé personnelles non approuvées
 - Non-respect du principe de minimisation des données
 - Accès non justifié aux données personnelles par les admins
@@ -32,6 +37,7 @@ L'utilisateur admin (tyson.nomansa@gmail.com) pouvait voir les référentiels pe
 ## 🔍 Analyse Technique
 
 ### Cause Racine
+
 Les RLS policies des tables `pathologies`, `allergies` et `medication_catalog` contenaient une clause permettant aux admins de voir **TOUTES** les données, y compris les données personnelles non approuvées :
 
 ```sql
@@ -39,19 +45,22 @@ Les RLS policies des tables `pathologies`, `allergies` et `medication_catalog` c
 CREATE POLICY "pathologies_read"
   ON public.pathologies FOR SELECT
   USING (
-    (created_by = auth.uid()) OR 
-    (is_approved = true) OR 
+    (created_by = auth.uid()) OR
+    (is_approved = true) OR
     has_role(auth.uid(), 'admin'::app_role)  -- ⚠️ Accès global admin
   );
 ```
 
 ### Tables Affectées
+
 1. **`pathologies`** - Policy `pathologies_read`
 2. **`allergies`** - Policy `allergies_read`
 3. **`medication_catalog`** - Policy `medication_catalog_read`
 
 ### Pourquoi `health_professionals` n'était pas affecté ?
+
 La table `health_professionals` avait déjà une RLS correcte sans clause admin globale :
+
 ```sql
 CREATE POLICY "Users can view own health professionals"
   ON public.health_professionals FOR SELECT
@@ -63,6 +72,7 @@ CREATE POLICY "Users can view own health professionals"
 ## ✅ Solution Implémentée
 
 ### Migration SQL Appliquée
+
 Correction des 3 policies SELECT pour retirer l'accès global admin :
 
 ```sql
@@ -78,9 +88,11 @@ CREATE POLICY "pathologies_read"
 ```
 
 ### Principe de Sécurité Appliqué
+
 **Principe de moindre privilège** : Les admins conservent leurs droits de **modération** (UPDATE/DELETE) pour valider/supprimer des données, mais ne peuvent plus voir les données personnelles non approuvées dans un contexte d'usage normal.
 
 ### Droits Conservés par les Admins
+
 - ✅ **UPDATE** : Peuvent modifier (approuver/rejeter) les données
 - ✅ **DELETE** : Peuvent supprimer les données
 - ❌ **SELECT** : Ne voient plus les données personnelles non approuvées
@@ -91,14 +103,15 @@ CREATE POLICY "pathologies_read"
 
 ### Scénarios Testés
 
-| Utilisateur | Action | Données Visibles | Résultat Attendu |
-|-------------|--------|------------------|------------------|
-| User test | SELECT pathologies | Ses pathologies + approved publiques | ✅ Correct |
-| Admin | SELECT pathologies | Ses pathologies + approved publiques | ✅ Correct |
-| Admin | SELECT pathologies user test | ❌ Données non-approved cachées | ✅ RGPD OK |
-| Admin | UPDATE pathologie user test | ✅ Peut approuver | ✅ Modération OK |
+| Utilisateur | Action                       | Données Visibles                     | Résultat Attendu |
+| ----------- | ---------------------------- | ------------------------------------ | ---------------- |
+| User test   | SELECT pathologies           | Ses pathologies + approved publiques | ✅ Correct       |
+| Admin       | SELECT pathologies           | Ses pathologies + approved publiques | ✅ Correct       |
+| Admin       | SELECT pathologies user test | ❌ Données non-approved cachées      | ✅ RGPD OK       |
+| Admin       | UPDATE pathologie user test  | ✅ Peut approuver                    | ✅ Modération OK |
 
 ### Commandes de Test SQL
+
 ```sql
 -- Test 1: En tant qu'user test
 SET LOCAL "request.jwt.claim.sub" = 'test-user-uuid';
@@ -116,17 +129,20 @@ SELECT * FROM pathologies WHERE created_by != auth.uid();
 ## 📊 Impact et Bénéfices
 
 ### Sécurité
+
 - ✅ Conformité RGPD restaurée
 - ✅ Isolation stricte des données personnelles
 - ✅ Principe de moindre privilège appliqué
 - ✅ Réduction de la surface d'attaque
 
 ### Fonctionnel
+
 - ✅ **Pas d'impact sur les utilisateurs normaux** (comportement identique)
 - ✅ **Admins gardent la capacité de modération** (UPDATE/DELETE)
 - ✅ Cohérence avec la table `health_professionals`
 
 ### Légal
+
 - ✅ Respect du RGPD Article 5.1.c (minimisation des données)
 - ✅ Respect du RGPD Article 25 (privacy by design)
 - ✅ Traçabilité via `created_by` maintenue
@@ -141,9 +157,9 @@ Pour qu'un admin puisse modérer les données, il faudra créer une interface d�
 // Interface de modération (à créer si besoin)
 const moderatePathology = async (pathologyId: string, approve: boolean) => {
   const { error } = await supabase
-    .from('pathologies')
+    .from("pathologies")
     .update({ is_approved: approve })
-    .eq('id', pathologyId);
+    .eq("id", pathologyId);
   // ✅ Admin peut UPDATE même s'il ne voit pas la ligne en SELECT
 };
 ```
@@ -153,6 +169,7 @@ const moderatePathology = async (pathologyId: string, approve: boolean) => {
 ## 📝 Avertissement Sécurité Supabase
 
 ⚠️ Un avertissement de sécurité non-critique a été détecté :
+
 ```
 WARN: Leaked Password Protection Disabled
 ```

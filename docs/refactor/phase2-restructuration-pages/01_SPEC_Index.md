@@ -7,6 +7,7 @@
 **Complexité** : Très haute
 
 ### Responsabilités actuelles (TROP !)
+
 1. Chargement des données dashboard (traitements, prises, stocks)
 2. Gestion de l'état local (dialogs, filtres, accordions)
 3. Logique métier (détection retards, calcul QSP)
@@ -16,36 +17,37 @@
 7. Statistiques d'adhérence
 
 ### Interfaces actuelles
+
 ```typescript
 interface UpcomingIntake {
-  id: string
-  medicationId: string
-  medication: string
-  dosage: string
-  time: string
-  date: Date
-  treatment: string
-  treatmentId: string
-  pathology: string
-  currentStock: number
-  minThreshold: number
-  treatmentQspDays?: number | null
-  treatmentEndDate?: string | null
+  id: string;
+  medicationId: string;
+  medication: string;
+  dosage: string;
+  time: string;
+  date: Date;
+  treatment: string;
+  treatmentId: string;
+  pathology: string;
+  currentStock: number;
+  minThreshold: number;
+  treatmentQspDays?: number | null;
+  treatmentEndDate?: string | null;
 }
 
 interface StockAlert {
-  id: string
-  medication: string
-  remaining: number
-  daysLeft: number
+  id: string;
+  medication: string;
+  remaining: number;
+  daysLeft: number;
 }
 
 interface ActiveTreatment {
-  id: string
-  name: string
-  startDate: string
-  endDate: string
-  qspDays: number | null
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  qspDays: number | null;
 }
 ```
 
@@ -72,36 +74,37 @@ src/pages/index/
 ## 📝 Décomposition Détaillée
 
 ### 1. types.ts
+
 ```typescript
 export interface UpcomingIntake {
-  id: string
-  medicationId: string
-  medication: string
-  dosage: string
-  time: string
-  date: Date
-  treatment: string
-  treatmentId: string
-  pathology: string
-  currentStock: number
-  minThreshold: number
-  treatmentQspDays?: number | null
-  treatmentEndDate?: string | null
+  id: string;
+  medicationId: string;
+  medication: string;
+  dosage: string;
+  time: string;
+  date: Date;
+  treatment: string;
+  treatmentId: string;
+  pathology: string;
+  currentStock: number;
+  minThreshold: number;
+  treatmentQspDays?: number | null;
+  treatmentEndDate?: string | null;
 }
 
 export interface StockAlert {
-  id: string
-  medication: string
-  remaining: number
-  daysLeft: number
+  id: string;
+  medication: string;
+  remaining: number;
+  daysLeft: number;
 }
 
 export interface ActiveTreatment {
-  id: string
-  name: string
-  startDate: string
-  endDate: string
-  qspDays: number | null
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+  qspDays: number | null;
 }
 ```
 
@@ -109,6 +112,7 @@ export interface ActiveTreatment {
 
 **Responsabilité** : Charger toutes les données du dashboard
 **Returns** :
+
 ```typescript
 {
   upcomingIntakes: UpcomingIntake[]
@@ -120,6 +124,7 @@ export interface ActiveTreatment {
 ```
 
 **Logique extraite** :
+
 - Lignes 103-300 actuelles (loadDashboardData)
 - Requêtes Supabase (treatments, medications, intakes)
 - Calcul QSP
@@ -129,14 +134,16 @@ export interface ActiveTreatment {
 
 **Responsabilité** : Gérer la prise d'un médicament
 **Returns** :
+
 ```typescript
 {
-  takeIntake: (intake: UpcomingIntake) => Promise<void>
-  isProcessing: boolean
+  takeIntake: (intake: UpcomingIntake) => Promise<void>;
+  isProcessing: boolean;
 }
 ```
 
 **Logique extraite** :
+
 - Lignes 302-397 actuelles (handleTakeIntake)
 - Update Supabase medication_intakes
 - Update stock
@@ -147,6 +154,7 @@ export interface ActiveTreatment {
 
 **Responsabilité** : Auto-expand accordions "Aujourd'hui"
 **Returns** :
+
 ```typescript
 {
   openAccordions: string[]
@@ -155,6 +163,7 @@ export interface ActiveTreatment {
 ```
 
 **Logique extraite** :
+
 - Lignes 82-100 actuelles (useEffect)
 - Détection intakes d'aujourd'hui
 - Construction des IDs accordions
@@ -162,15 +171,17 @@ export interface ActiveTreatment {
 ### 5. components/DashboardHeader.tsx
 
 **Props** :
+
 ```typescript
 interface DashboardHeaderProps {
-  adherenceStats: AdherenceStats
-  missedCount: number
-  onMissedClick: () => void
+  adherenceStats: AdherenceStats;
+  missedCount: number;
+  onMissedClick: () => void;
 }
 ```
 
 **Contenu** :
+
 - Titre "MyHealth+"
 - Badge prises manquées
 - Cards statistiques (À l'heure, Manquées, Pourcentage)
@@ -180,15 +191,17 @@ interface DashboardHeaderProps {
 ### 6. components/TreatmentFilter.tsx
 
 **Props** :
+
 ```typescript
 interface TreatmentFilterProps {
-  treatments: ActiveTreatment[]
-  selectedId: string | null
-  onChange: (id: string | null) => void
+  treatments: ActiveTreatment[];
+  selectedId: string | null;
+  onChange: (id: string | null) => void;
 }
 ```
 
 **Contenu** :
+
 - Select pour filtrer par traitement
 - Option "Tous les traitements"
 
@@ -197,17 +210,19 @@ interface TreatmentFilterProps {
 ### 7. components/TodaySection.tsx
 
 **Props** :
+
 ```typescript
 interface TodaySectionProps {
-  intakes: UpcomingIntake[]
-  openAccordions: string[]
-  onAccordionChange: (ids: string[]) => void
-  onTakeIntake: (intake: UpcomingIntake) => void
-  sectionRef: React.RefObject<HTMLDivElement>
+  intakes: UpcomingIntake[];
+  openAccordions: string[];
+  onAccordionChange: (ids: string[]) => void;
+  onTakeIntake: (intake: UpcomingIntake) => void;
+  sectionRef: React.RefObject<HTMLDivElement>;
 }
 ```
 
 **Contenu** :
+
 - Titre "Aujourd'hui"
 - Grouping par traitement
 - Accordions avec IntakeCard
@@ -219,6 +234,7 @@ interface TodaySectionProps {
 **Props** : Identiques à TodaySection
 
 **Contenu** :
+
 - Titre "Demain"
 - Grouping par traitement
 - Accordions avec IntakeCard
@@ -228,15 +244,17 @@ interface TodaySectionProps {
 ### 9. components/IntakeCard.tsx
 
 **Props** :
+
 ```typescript
 interface IntakeCardProps {
-  intake: UpcomingIntake
-  onTake: () => void
-  isOverdue: boolean
+  intake: UpcomingIntake;
+  onTake: () => void;
+  isOverdue: boolean;
 }
 ```
 
 **Contenu** :
+
 - Card avec heure, médication, dosage
 - Badge pathologie
 - Badge stock
@@ -248,19 +266,21 @@ interface IntakeCardProps {
 ### 10. components/TreatmentAccordion.tsx
 
 **Props** :
+
 ```typescript
 interface TreatmentAccordionProps {
-  treatmentId: string
-  treatmentName: string
-  qspDays?: number | null
-  endDate?: string | null
-  intakes: UpcomingIntake[]
-  onTakeIntake: (intake: UpcomingIntake) => void
-  prefix: 'today' | 'tomorrow'
+  treatmentId: string;
+  treatmentName: string;
+  qspDays?: number | null;
+  endDate?: string | null;
+  intakes: UpcomingIntake[];
+  onTakeIntake: (intake: UpcomingIntake) => void;
+  prefix: "today" | "tomorrow";
 }
 ```
 
 **Contenu** :
+
 - AccordionItem avec trigger custom
 - Info QSP / Date fin
 - Liste IntakeCard
@@ -268,17 +288,19 @@ interface TreatmentAccordionProps {
 ### 11. components/TakeIntakeDialog.tsx
 
 **Props** :
+
 ```typescript
 interface TakeIntakeDialogProps {
-  intake: UpcomingIntake | null
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: (intake: UpcomingIntake) => Promise<void>
-  isProcessing: boolean
+  intake: UpcomingIntake | null;
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: (intake: UpcomingIntake) => Promise<void>;
+  isProcessing: boolean;
 }
 ```
 
 **Contenu** :
+
 - Dialog de confirmation
 - Affichage info médicament
 - Boutons Annuler / Confirmer
@@ -290,6 +312,7 @@ interface TakeIntakeDialogProps {
 **Taille cible** : ~120 lignes
 
 **Contenu** :
+
 ```typescript
 import { AppLayout } from "@/components/Layout/AppLayout"
 import { useDashboardData } from "./hooks/useDashboardData"
@@ -311,58 +334,58 @@ const Index = () => {
   const { openAccordions, setOpenAccordions } = useAccordionState(upcomingIntakes, loading)
   const { stats: adherenceStats } = useAdherenceStats()
   const { missedIntakes, totalMissed } = useMissedIntakesDetection()
-  
+
   // Local state
   const [selectedTreatmentId, setSelectedTreatmentId] = useState<string | null>(null)
   const [showDialog, setShowDialog] = useState(false)
   const [selectedIntake, setSelectedIntake] = useState<UpcomingIntake | null>(null)
-  
+
   // Handlers
   const handleTakeClick = (intake: UpcomingIntake) => {
     setSelectedIntake(intake)
     setShowDialog(true)
   }
-  
+
   const handleConfirm = async (intake: UpcomingIntake) => {
     await takeIntake(intake)
     setShowDialog(false)
   }
-  
+
   // Filtrage
   const filteredIntakes = selectedTreatmentId
     ? upcomingIntakes.filter(i => i.treatmentId === selectedTreatmentId)
     : upcomingIntakes
-  
+
   if (loading) return <AppLayout><Loader /></AppLayout>
-  
+
   return (
     <AppLayout>
-      <DashboardHeader 
+      <DashboardHeader
         adherenceStats={adherenceStats}
         missedCount={totalMissed}
         onMissedClick={() => navigate('/history')}
       />
-      
+
       <TreatmentFilter
         treatments={activeTreatments}
         selectedId={selectedTreatmentId}
         onChange={setSelectedTreatmentId}
       />
-      
+
       <TodaySection
         intakes={filteredIntakes}
         openAccordions={openAccordions}
         onAccordionChange={setOpenAccordions}
         onTakeIntake={handleTakeClick}
       />
-      
+
       <TomorrowSection
         intakes={filteredIntakes}
         openAccordions={openAccordions}
         onAccordionChange={setOpenAccordions}
         onTakeIntake={handleTakeClick}
       />
-      
+
       <TakeIntakeDialog
         intake={selectedIntake}
         isOpen={showDialog}

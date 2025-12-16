@@ -14,55 +14,55 @@
 
 #### Pages Publiques (User Space) - 27 pages
 
-| Page | Lignes | Complexité | Priorité | Cible |
-|------|--------|------------|----------|-------|
-| Index.tsx | ~834 | Très haute | 🔴 P1 | pages/index/ |
-| History.tsx | ~663 | Très haute | 🔴 P1 | pages/history/ |
-| Calendar.tsx | ~608 | Très haute | 🔴 P1 | pages/calendar/ |
-| Prescriptions.tsx | ~434 | Haute | 🟡 P2 | pages/prescriptions/ |
-| MedicationCatalog.tsx | ~400 | Haute | 🟡 P2 | pages/medications/ |
-| Treatments.tsx | ~353 | Haute | 🟡 P2 | pages/treatments/ |
-| Auth.tsx | ~319 | Moyenne | 🟡 P2 | pages/auth/ |
-| TreatmentEdit.tsx | ~500 | Haute | 🟡 P2 | pages/treatment-edit/ |
-| Stock.tsx | ~171 | Faible | 🟢 P3 | pages/stock/ |
-| StockDetails.tsx | ~150 | Faible | 🟢 P3 | pages/stock-details/ |
-| StockForm.tsx | ~200 | Faible | 🟢 P3 | pages/stock-form/ |
-| TreatmentForm.tsx | ~200 | Faible | 🟢 P3 | pages/treatment-form/ |
-| Pros.tsx | ~150 | Faible | 🟢 P3 | pages/pros/ |
-| ProForm.tsx | ~150 | Faible | 🟢 P3 | pages/pro-form/ |
-| Pathologies.tsx | ~150 | Faible | 🟢 P3 | pages/pathologies/ |
-| Allergies.tsx | ~150 | Faible | 🟢 P3 | pages/allergies/ |
-| HealthProfessionals.tsx | ~150 | Faible | 🟢 P3 | pages/health-professionals/ |
-| Referentials.tsx | ~100 | Faible | 🟢 P3 | pages/referentials/ |
-| Profile.tsx | ~150 | Faible | 🟢 P3 | pages/profile/ |
-| Settings.tsx | ~150 | Faible | 🟢 P3 | pages/settings/ |
-| NavigationManager.tsx | ~150 | Faible | 🟢 P3 | pages/navigation-manager/ |
-| NotificationSettings.tsx | ~150 | Faible | 🟢 P3 | pages/notification-settings/ |
-| NotificationDebug.tsx | ~100 | Faible | 🟢 P3 | pages/notification-debug/ |
-| Rattrapage.tsx | ~100 | Faible | 🟢 P3 | pages/rattrapage/ |
-| Privacy.tsx | ~50 | Faible | 🟢 P3 | pages/privacy/ |
-| About.tsx | ~50 | Faible | 🟢 P3 | pages/about/ |
-| NotFound.tsx | ~30 | Faible | 🟢 P3 | pages/not-found/ |
+| Page                     | Lignes | Complexité | Priorité | Cible                        |
+| ------------------------ | ------ | ---------- | -------- | ---------------------------- |
+| Index.tsx                | ~834   | Très haute | 🔴 P1    | pages/index/                 |
+| History.tsx              | ~663   | Très haute | 🔴 P1    | pages/history/               |
+| Calendar.tsx             | ~608   | Très haute | 🔴 P1    | pages/calendar/              |
+| Prescriptions.tsx        | ~434   | Haute      | 🟡 P2    | pages/prescriptions/         |
+| MedicationCatalog.tsx    | ~400   | Haute      | 🟡 P2    | pages/medications/           |
+| Treatments.tsx           | ~353   | Haute      | 🟡 P2    | pages/treatments/            |
+| Auth.tsx                 | ~319   | Moyenne    | 🟡 P2    | pages/auth/                  |
+| TreatmentEdit.tsx        | ~500   | Haute      | 🟡 P2    | pages/treatment-edit/        |
+| Stock.tsx                | ~171   | Faible     | 🟢 P3    | pages/stock/                 |
+| StockDetails.tsx         | ~150   | Faible     | 🟢 P3    | pages/stock-details/         |
+| StockForm.tsx            | ~200   | Faible     | 🟢 P3    | pages/stock-form/            |
+| TreatmentForm.tsx        | ~200   | Faible     | 🟢 P3    | pages/treatment-form/        |
+| Pros.tsx                 | ~150   | Faible     | 🟢 P3    | pages/pros/                  |
+| ProForm.tsx              | ~150   | Faible     | 🟢 P3    | pages/pro-form/              |
+| Pathologies.tsx          | ~150   | Faible     | 🟢 P3    | pages/pathologies/           |
+| Allergies.tsx            | ~150   | Faible     | 🟢 P3    | pages/allergies/             |
+| HealthProfessionals.tsx  | ~150   | Faible     | 🟢 P3    | pages/health-professionals/  |
+| Referentials.tsx         | ~100   | Faible     | 🟢 P3    | pages/referentials/          |
+| Profile.tsx              | ~150   | Faible     | 🟢 P3    | pages/profile/               |
+| Settings.tsx             | ~150   | Faible     | 🟢 P3    | pages/settings/              |
+| NavigationManager.tsx    | ~150   | Faible     | 🟢 P3    | pages/navigation-manager/    |
+| NotificationSettings.tsx | ~150   | Faible     | 🟢 P3    | pages/notification-settings/ |
+| NotificationDebug.tsx    | ~100   | Faible     | 🟢 P3    | pages/notification-debug/    |
+| Rattrapage.tsx           | ~100   | Faible     | 🟢 P3    | pages/rattrapage/            |
+| Privacy.tsx              | ~50    | Faible     | 🟢 P3    | pages/privacy/               |
+| About.tsx                | ~50    | Faible     | 🟢 P3    | pages/about/                 |
+| NotFound.tsx             | ~30    | Faible     | 🟢 P3    | pages/not-found/             |
 
 #### Pages Admin (Admin Space) - 1 page + sous-structure
 
-| Page | Lignes | Complexité | Priorité | Cible |
-|------|--------|------------|----------|-------|
-| Admin.tsx | ~115 | Faible | 🟡 P2 | pages/admin/dashboard/ |
+| Page      | Lignes | Complexité | Priorité | Cible                  |
+| --------- | ------ | ---------- | -------- | ---------------------- |
+| Admin.tsx | ~115   | Faible     | 🟡 P2    | pages/admin/dashboard/ |
 
 **IMPORTANT** : L'espace admin sera un sous-dossier dédié `pages/admin/` avec sa propre arborescence complète (dashboard, users, settings, logs, etc.)
 
 ### Pages à restructurer (priorité par taille) :
 
-| Page | Lignes actuelles | Complexité | Priorité |
-|------|------------------|------------|----------|
-| Index.tsx | ~840 | Très haute | 🔴 P1 |
-| History.tsx | ~670 | Haute | 🔴 P1 |
-| Calendar.tsx | ~615 | Haute | 🔴 P1 |
-| MedicationCatalog.tsx | ~760 | Haute | 🟡 P2 |
-| TreatmentEdit.tsx | ~470 | Moyenne | 🟡 P2 |
-| Treatments.tsx | ~375 | Moyenne | 🟡 P2 |
-| TreatmentForm.tsx | ~? | Moyenne | 🟢 P3 |
+| Page                  | Lignes actuelles | Complexité | Priorité |
+| --------------------- | ---------------- | ---------- | -------- |
+| Index.tsx             | ~840             | Très haute | 🔴 P1    |
+| History.tsx           | ~670             | Haute      | 🔴 P1    |
+| Calendar.tsx          | ~615             | Haute      | 🔴 P1    |
+| MedicationCatalog.tsx | ~760             | Haute      | 🟡 P2    |
+| TreatmentEdit.tsx     | ~470             | Moyenne    | 🟡 P2    |
+| Treatments.tsx        | ~375             | Moyenne    | 🟡 P2    |
+| TreatmentForm.tsx     | ~?               | Moyenne    | 🟢 P3    |
 
 ### Problèmes identifiés :
 
@@ -180,17 +180,19 @@ src/pages/
 ```
 
 **Principe** : Chaque page (publique ou admin) a sa propre structure identique :
+
 - 📄 `[PageName].tsx` : Orchestrateur (~100-150 lignes)
 - 📁 `components/` : Composants UI spécifiques
 - 🪝 `hooks/` : Hooks métier locaux
 - 🏷️ `types.ts` : Interfaces TypeScript
 - ⚙️ `utils.ts` : Helpers (si nécessaire)
-  │   ├── History.tsx
-  │   ├── components/
-  │   ├── hooks/
-  │   └── types.ts
+  │ ├── History.tsx
+  │ ├── components/
+  │ ├── hooks/
+  │ └── types.ts
   │
   └── ... (autres pages)
+
 ```
 
 ## 📋 Plan d'Exécution
@@ -296,21 +298,21 @@ Pour chaque page :
 
 ## ✅ PHASE 2 TERMINÉE - BILAN FINAL
 
-**Date de complétion** : 27 octobre 2025  
-**Branche** : `phase2/restructuration-pages`  
+**Date de complétion** : 27 octobre 2025
+**Branche** : `phase2/restructuration-pages`
 **Commits** : ae5b2b1, 2eb2d7b
 
 ### 📊 Résultats Globaux
 
-**18 pages refactorisées** avec architecture modulaire complète  
-**2 pages admin déplacées** (NavigationManager, NotificationDebug)  
+**18 pages refactorisées** avec architecture modulaire complète
+**2 pages admin déplacées** (NavigationManager, NotificationDebug)
 **Réduction totale** : ~3500 lignes → ~1800 lignes orchestrateurs + ~70 composants modulaires
 
 ### 📈 Pages Orchestratrices - État Final
 
 #### Pages < 50 lignes (Excellentes) ✅
 - **Prescriptions** : 23 lignes
-- **NotFound** : 24 lignes  
+- **NotFound** : 24 lignes
 - **Stock** : 36 lignes
 - **Treatments** : 47 lignes
 - **Settings** : 49 lignes (refactorisée 151→49, 2 composants)
@@ -345,48 +347,50 @@ Pour chaque page :
 Toutes les pages sont maintenant organisées dans des dossiers dédiés :
 
 ```
+
 src/pages/
-  ├── about/About.tsx (115 lignes)
-  ├── admin/
-  │   ├── dashboard/AdminDashboard.tsx (65 lignes)
-  │   ├── NavigationManager.tsx (571 lignes)
-  │   └── NotificationDebug.tsx (373 lignes)
-  ├── allergies/
-  │   ├── components/ (5 composants)
-  │   └── Allergies.tsx (92 lignes)
-  ├── auth/Auth.tsx (112 lignes)
-  ├── calendar/Calendar.tsx (64 lignes)
-  ├── health-professionals/
-  │   ├── components/ (4 composants)
-  │   └── HealthProfessionals.tsx (117 lignes)
-  ├── history/History.tsx (148 lignes)
-  ├── index/Index.tsx (176 lignes)
-  ├── medication-catalog/MedicationCatalog.tsx (83 lignes)
-  ├── not-found/NotFound.tsx (24 lignes)
-  ├── notification-settings/
-  │   ├── components/ (7 composants)
-  │   └── NotificationSettings.tsx (122 lignes)
-  ├── pathologies/
-  │   ├── components/ (6 composants)
-  │   └── Pathologies.tsx (93 lignes)
-  ├── prescriptions/Prescriptions.tsx (23 lignes)
-  ├── privacy/
-  │   ├── components/ (5 composants)
-  │   └── Privacy.tsx (160 lignes)
-  ├── profile/
-  │   ├── components/ (5 composants)
-  │   └── Profile.tsx (127 lignes)
-  ├── rattrapage/
-  │   ├── components/ (4 composants)
-  │   ├── hooks/useRattrapageActions.ts
-  │   ├── utils/rattrapageTypes.ts
-  │   └── Rattrapage.tsx (78 lignes)
-  ├── referentials/Referentials.tsx (74 lignes)
-  ├── settings/
-  │   ├── components/ (2 composants)
-  │   └── Settings.tsx (49 lignes)
-  ├── stock/Stock.tsx (36 lignes)
-  └── treatments/Treatments.tsx (47 lignes)
+├── about/About.tsx (115 lignes)
+├── admin/
+│ ├── dashboard/AdminDashboard.tsx (65 lignes)
+│ ├── NavigationManager.tsx (571 lignes)
+│ └── NotificationDebug.tsx (373 lignes)
+├── allergies/
+│ ├── components/ (5 composants)
+│ └── Allergies.tsx (92 lignes)
+├── auth/Auth.tsx (112 lignes)
+├── calendar/Calendar.tsx (64 lignes)
+├── health-professionals/
+│ ├── components/ (4 composants)
+│ └── HealthProfessionals.tsx (117 lignes)
+├── history/History.tsx (148 lignes)
+├── index/Index.tsx (176 lignes)
+├── medication-catalog/MedicationCatalog.tsx (83 lignes)
+├── not-found/NotFound.tsx (24 lignes)
+├── notification-settings/
+│ ├── components/ (7 composants)
+│ └── NotificationSettings.tsx (122 lignes)
+├── pathologies/
+│ ├── components/ (6 composants)
+│ └── Pathologies.tsx (93 lignes)
+├── prescriptions/Prescriptions.tsx (23 lignes)
+├── privacy/
+│ ├── components/ (5 composants)
+│ └── Privacy.tsx (160 lignes)
+├── profile/
+│ ├── components/ (5 composants)
+│ └── Profile.tsx (127 lignes)
+├── rattrapage/
+│ ├── components/ (4 composants)
+│ ├── hooks/useRattrapageActions.ts
+│ ├── utils/rattrapageTypes.ts
+│ └── Rattrapage.tsx (78 lignes)
+├── referentials/Referentials.tsx (74 lignes)
+├── settings/
+│ ├── components/ (2 composants)
+│ └── Settings.tsx (49 lignes)
+├── stock/Stock.tsx (36 lignes)
+└── treatments/Treatments.tsx (47 lignes)
+
 ```
 
 ### 📦 Détail des Refactorisations
@@ -493,6 +497,7 @@ src/pages/
 
 Toutes les pages utilisateur sont maintenant **bien organisées et maintenables**. Les seules pages > 200 lignes sont des outils admin (NavigationManager 571 lignes, NotificationDebug 373 lignes) qui ne nécessitent pas de refactorisation urgente.
 
-**Réduction totale codebase** : ~3500 lignes → ~1800 lignes orchestrateurs + ~70 composants modulaires  
-**Gain de maintenabilité** : Architecture claire, responsabilités séparées, composants réutilisables  
+**Réduction totale codebase** : ~3500 lignes → ~1800 lignes orchestrateurs + ~70 composants modulaires
+**Gain de maintenabilité** : Architecture claire, responsabilités séparées, composants réutilisables
 **Qualité code** : 0 erreur TypeScript, fonctionnalités intactes, tests manuels validés
+```

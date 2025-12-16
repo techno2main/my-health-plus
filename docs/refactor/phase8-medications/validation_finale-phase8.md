@@ -21,11 +21,13 @@
 ---
 
 <a name="synthese"></a>
+
 ## 1. Synthèse Exécutive
 
 ### Verdict Global
 
 **✅ FAISABLE** avec les conditions suivantes:
+
 - Clarification des endpoints BDPM officiels
 - Implémentation progressive par phase
 - Validation à chaque étape critique
@@ -33,37 +35,40 @@
 
 ### Score de Confiance par Composant
 
-| Composant | Faisabilité | Score | Commentaire |
-|-----------|-------------|-------|-------------|
-| Migration BDD v2 | ✅ Excellent | 9.5/10 | Approche ultra-sécurisée bien pensée |
-| Architecture Cache | ✅ Excellent | 9/10 | Architecture hybride robuste |
-| Parsing DataMatrix | ✅ Bon | 8/10 | Technologie éprouvée (@zxing/library) |
-| **Intégration BDPM** | ⚠️ **CRITIQUE** | **5/10** | **URLs API non confirmées** |
-| Services Backend | ✅ Bon | 8.5/10 | Architecture claire et testable |
-| Frontend Wizard | ✅ Bon | 8/10 | Refonte importante mais cadrée |
-| RLS & Sécurité | ✅ Excellent | 9/10 | Politiques bien définies |
-| Tests & Monitoring | ✅ Bon | 8/10 | Suite complète proposée |
+| Composant            | Faisabilité     | Score    | Commentaire                           |
+| -------------------- | --------------- | -------- | ------------------------------------- |
+| Migration BDD v2     | ✅ Excellent    | 9.5/10   | Approche ultra-sécurisée bien pensée  |
+| Architecture Cache   | ✅ Excellent    | 9/10     | Architecture hybride robuste          |
+| Parsing DataMatrix   | ✅ Bon          | 8/10     | Technologie éprouvée (@zxing/library) |
+| **Intégration BDPM** | ⚠️ **CRITIQUE** | **5/10** | **URLs API non confirmées**           |
+| Services Backend     | ✅ Bon          | 8.5/10   | Architecture claire et testable       |
+| Frontend Wizard      | ✅ Bon          | 8/10     | Refonte importante mais cadrée        |
+| RLS & Sécurité       | ✅ Excellent    | 9/10     | Politiques bien définies              |
+| Tests & Monitoring   | ✅ Bon          | 8/10     | Suite complète proposée               |
 
 ### Estimation Calendrier
 
-| Estimation Plan | Estimation Réaliste | Écart | Justification |
-|-----------------|---------------------|-------|---------------|
-| 7-10 jours | **12-15 jours** | +5 jours | Intégration BDPM + imprévus + tests |
+| Estimation Plan | Estimation Réaliste | Écart    | Justification                       |
+| --------------- | ------------------- | -------- | ----------------------------------- |
+| 7-10 jours      | **12-15 jours**     | +5 jours | Intégration BDPM + imprévus + tests |
 
 ---
 
 <a name="validation"></a>
+
 ## 2. Validation par Composant
 
 ### 2.1. Migration BDD (v2 + Rollback)
 
 #### ✅ Points Forts
+
 - **Architecture v2 excellente**: Création de tables parallèles avec conservation v1 pour rollback
 - **Scripts SQL complets**: Backups, création tables, index, triggers, RLS bien définis
 - **Validation exhaustive**: Checks de counts, FK orphelines, validation manuelle
 - **Rollback instantané**: Simple repointage sans perte de données
 
 #### ⚠️ Points d'Attention
+
 1. **Duplication complète nécessaire?**
    - Le plan prévoit `pathologiesv2`, `healthprofessionalsv2`, `prescriptionsv2`, `treatmentsv2`
    - **Question**: Est-ce que TOUTES ces tables nécessitent une v2 ou seulement `medications` et `medicationintakes`?
@@ -86,12 +91,14 @@
 ### 2.2. Architecture Cache BDPM
 
 #### ✅ Points Forts
+
 - **Cache-first strategy**: Latence < 500ms pour les hits cache (excellent)
 - **Référentiel officiel**: Source ANSM fiable et légale
 - **Synchronisation différée**: Refresh 30 jours intelligent, évite surcharge
 - **Copies minimales offline**: Garantit consultation hors ligne
 
 #### ⚠️ Points d'Attention
+
 1. **Initialisation du cache**
    - Le plan prévoit un téléchargement initial des fichiers BDPM
    - **Question**: Quelle taille? Combien d'enregistrements? Temps d'import?
@@ -117,10 +124,12 @@
 #### 🔴 POINT CRITIQUE — BLOQUANT POTENTIEL
 
 **Constat Utilisateur:**
+
 > Les URLs proposées par Lovable sont FAUSSES! L'URL correcte est:
 > https://www.data.gouv.fr/reuses/api-rest-base-de-donnees-publique-des-medicaments/
 
 **Problèmes Identifiés:**
+
 1. ❌ **Endpoints API non documentés officiellement**
    - Le plan prévoit des appels API pour recherche et récupération par CIS
    - **Réalité**: L'ANSM ne fournit QUE des fichiers CSV à télécharger
@@ -138,6 +147,7 @@
 #### Solutions Proposées
 
 **Option A: Parser les fichiers CSV (Recommandé)**
+
 ```typescript
 // 1. Télécharger CIS_bdpm.txt, CIS_CIP_bdpm.txt lors de l'initialisation
 // 2. Parser et importer dans medicationreferencecache
@@ -146,16 +156,19 @@
 ```
 
 **Avantages:**
+
 - ✅ Gratuit et légal
 - ✅ Données officielles complètes
 - ✅ Pas de dépendance externe (API tierce)
 
 **Inconvénients:**
+
 - ⚠️ Import initial long (potentiellement 30min-1h)
 - ⚠️ Parsing CSV à implémenter
 - ⚠️ Refresh nécessite re-téléchargement complet
 
 **Option B: API tierce payante (Fallback)**
+
 - Utiliser https://medicaments.api.gouv.fr (si disponible)
 - Ou service tiers comme OpenMedicament
 - **Coût**: Variable selon usage
@@ -163,6 +176,7 @@
 #### ⚠️ Faisabilité: MOYENNE (5/10) — CLARIFICATION URGENTE REQUISE
 
 **Actions Bloquantes:**
+
 1. ✅ Confirmer l'URL exacte de téléchargement des fichiers BDPM
 2. ✅ Implémenter un parser CSV robuste pour fichiers TSV
 3. ✅ Tester l'import complet sur environnement de dev
@@ -173,12 +187,14 @@
 ### 2.4. Parsing DataMatrix GS1
 
 #### ✅ Points Forts
+
 - **Technologie éprouvée**: `@zxing/library` compatible web + mobile
 - **Format standardisé**: GS1 DataMatrix bien documenté
 - **Parsing simple**: Regex pour extraire (01), (17), (10)
 - **Code fourni**: Exemple de fonction `parseGS1()` dans le plan
 
 #### ⚠️ Points d'Attention
+
 1. **Permissions caméra**
    - Scanner nécessite accès caméra (permission mobile + web)
    - **Action**: Implémenter gestion des permissions avec fallback
@@ -199,12 +215,14 @@
 ### 2.5. Services Backend (Edge Functions)
 
 #### ✅ Points Forts
+
 - **Architecture claire**: Séparation `searchMedications`, `getMedicationByCIS`, `createFromDataMatrix`
 - **Cache-first**: Optimisation latence bien pensée
 - **Upsert intelligent**: Gestion des conflits sur `ciscode`
 - **Code fourni**: Exemples TypeScript complets dans le plan
 
 #### ⚠️ Points d'Attention
+
 1. **Parsing BDPM à implémenter**
    - Fonctions `bdpm.search()`, `bdpm.getByCIS()`, `bdpm.mapCIP13toCIS()` marquées `TODO`
    - **Action**: Développer ces fonctions en priorité (Phase 8.2 Jour 1)
@@ -224,12 +242,14 @@
 ### 2.6. Frontend (Wizard + Refonte)
 
 #### ✅ Points Forts
+
 - **Wizard unifié**: 4 étapes bien définies (Méthode → Résultats → Personnalisation → Confirmation)
 - **Modes multiples**: Scan/Recherche/Saisie manuelle
 - **Offline ready**: Affichage depuis copies minimales
 - **17 fichiers identifiés**: Liste claire des composants à refactoriser
 
 #### ⚠️ Points d'Attention
+
 1. **Complexité de la refonte**
    - 17 fichiers à modifier + suppression écrans catalogue
    - **Estimation**: 2-3 jours optimiste, plutôt 3-4 jours réaliste
@@ -251,12 +271,14 @@
 ### 2.7. Sécurité & RLS
 
 #### ✅ Points Forts
+
 - **RLS complet**: Toutes les tables v2 avec politiques bien définies
 - **Séparation nette**: Cache public vs données personnelles
 - **Chaînage sécurisé**: `medicationsv2 → treatments → userid`
 - **service_role only**: Écriture cache réservée au backend
 
 #### ⚠️ Points d'Attention
+
 1. **Tests RLS obligatoires**
    - Vérifier qu'un user ne peut pas lire les données d'un autre
    - **Action**: Suite de tests E2E avec plusieurs utilisateurs
@@ -273,12 +295,14 @@
 ### 2.8. Tests & Monitoring
 
 #### ✅ Points Forts
+
 - **Suite complète**: Unitaires + E2E bien documentés
 - **Scénarios critiques**: Parsing GS1, mapping CIP13, stock, alertes, offline
 - **Performance**: Latence < 500ms cache validée
 - **Non-régression**: Tests sur prises et stocks existants
 
 #### ⚠️ Points d'Attention
+
 1. **Coverage cible**
    - Viser 80% minimum de coverage backend
    - **Action**: Intégrer CI/CD avec rapport coverage
@@ -292,6 +316,7 @@
 ---
 
 <a name="critiques"></a>
+
 ## 3. Points Critiques Identifiés
 
 ### 🔴 CRITIQUE 1: URLs BDPM Non Validées
@@ -301,11 +326,13 @@
 **Statut:** ⚠️ NON RÉSOLU
 
 **Problème:**
+
 - Les endpoints API BDPM proposés dans le plan ne sont pas confirmés
 - L'ANSM ne fournit PAS d'API REST officielle gratuite
 - Nécessite parsing manuel des fichiers CSV
 
 **Action Immédiate:**
+
 1. ✅ Télécharger les fichiers BDPM depuis https://base-donnees-publique.medicaments.gouv.fr/telechargement
 2. ✅ Analyser la structure des fichiers (TSV, encodage, format)
 3. ✅ Implémenter un parser CSV robuste
@@ -323,11 +350,13 @@
 **Statut:** ⚠️ À CLARIFIER
 
 **Problème:**
+
 - Le plan propose de créer `pathologiesv2`, `healthprofessionalsv2`, `prescriptionsv2`, `treatmentsv2`
 - **Question**: Est-ce vraiment nécessaire pour TOUTES ces tables?
 - Complexifie la migration et augmente le risque d'erreur
 
 **Recommandation:**
+
 - Dupliquer uniquement `medications` et `medicationintakes`
 - Utiliser les tables v1 existantes pour pathologies, traitements, prescriptions
 - **Avantage**: Migration plus simple, moins de scripts, rollback plus facile
@@ -343,11 +372,13 @@
 **Statut:** ⚠️ NON ÉVALUÉ
 
 **Problème:**
+
 - Import initial de 10k-50k médicaments dans `medicationreferencecache`
 - Parsing CSV + insertion peut prendre 30min-1h
 - **Question**: Bloquer le déploiement pendant l'import?
 
 **Recommandation:**
+
 1. Import différé en background (job async)
 2. Feature flag activé uniquement après import terminé
 3. Barre de progression visible dans admin panel
@@ -357,53 +388,57 @@
 ---
 
 <a name="risques"></a>
+
 ## 4. Risques et Mitigation
 
 ### Tableau des Risques
 
-| ID | Risque | Impact | Proba | Mitigation |
-|----|--------|--------|-------|------------|
-| R1 | BDPM API indisponible | 🔴 Critique | 🟢 Faible (5%) | Parser fichiers CSV locaux |
-| R2 | Import BDPM échoue | 🔴 Critique | 🟡 Moyen (20%) | Retry logic + alerting |
-| R3 | Migration v2 corrompt données | 🔴 Critique | 🟢 Faible (5%) | Backups + validation exhaustive |
-| R4 | Scan DataMatrix taux échec élevé | 🟡 Moyen | 🟡 Moyen (30%) | Fallback saisie manuelle |
-| R5 | Performance cache < 500ms | 🟡 Moyen | 🟢 Faible (10%) | Index optimisés + monitoring |
-| R6 | Régression sur prises/stocks | 🔴 Critique | 🟡 Moyen (15%) | Tests E2E exhaustifs + canary |
-| R7 | Rollback nécessaire en prod | 🔴 Critique | 🟡 Moyen (20%) | Procédure testée + feature flags |
-| R8 | Complexité frontend sous-estimée | 🟡 Moyen | 🟡 Moyen (40%) | +1-2 jours buffer Phase 8.3 |
+| ID  | Risque                           | Impact      | Proba           | Mitigation                       |
+| --- | -------------------------------- | ----------- | --------------- | -------------------------------- |
+| R1  | BDPM API indisponible            | 🔴 Critique | 🟢 Faible (5%)  | Parser fichiers CSV locaux       |
+| R2  | Import BDPM échoue               | 🔴 Critique | 🟡 Moyen (20%)  | Retry logic + alerting           |
+| R3  | Migration v2 corrompt données    | 🔴 Critique | 🟢 Faible (5%)  | Backups + validation exhaustive  |
+| R4  | Scan DataMatrix taux échec élevé | 🟡 Moyen    | 🟡 Moyen (30%)  | Fallback saisie manuelle         |
+| R5  | Performance cache < 500ms        | 🟡 Moyen    | 🟢 Faible (10%) | Index optimisés + monitoring     |
+| R6  | Régression sur prises/stocks     | 🔴 Critique | 🟡 Moyen (15%)  | Tests E2E exhaustifs + canary    |
+| R7  | Rollback nécessaire en prod      | 🔴 Critique | 🟡 Moyen (20%)  | Procédure testée + feature flags |
+| R8  | Complexité frontend sous-estimée | 🟡 Moyen    | 🟡 Moyen (40%)  | +1-2 jours buffer Phase 8.3      |
 
 ---
 
 <a name="dependances"></a>
+
 ## 5. Dépendances Bloquantes
 
 ### Dépendances Techniques
 
-| Dépendance | Statut | Criticité | Action |
-|------------|--------|-----------|--------|
-| **Fichiers BDPM téléchargés** | ⚠️ À FAIRE | 🔴 CRITIQUE | Télécharger avant Phase 8.2 |
-| **Parser CSV TypeScript** | ⚠️ À DÉVELOPPER | 🔴 CRITIQUE | Développer Phase 8.2 Jour 1 |
-| **@zxing/library installé** | ✅ Disponible | 🟡 Moyen | `npm install @zxing/library` |
-| **Environnement de staging** | ⚠️ À VALIDER | 🟡 Moyen | Copie prod avant Phase 8.1 |
-| **Accès service_role Supabase** | ⚠️ À VALIDER | 🟡 Moyen | Vérifier credentials |
+| Dépendance                      | Statut          | Criticité   | Action                       |
+| ------------------------------- | --------------- | ----------- | ---------------------------- |
+| **Fichiers BDPM téléchargés**   | ⚠️ À FAIRE      | 🔴 CRITIQUE | Télécharger avant Phase 8.2  |
+| **Parser CSV TypeScript**       | ⚠️ À DÉVELOPPER | 🔴 CRITIQUE | Développer Phase 8.2 Jour 1  |
+| **@zxing/library installé**     | ✅ Disponible   | 🟡 Moyen    | `npm install @zxing/library` |
+| **Environnement de staging**    | ⚠️ À VALIDER    | 🟡 Moyen    | Copie prod avant Phase 8.1   |
+| **Accès service_role Supabase** | ⚠️ À VALIDER    | 🟡 Moyen    | Vérifier credentials         |
 
 ### Dépendances Organisationnelles
 
-| Dépendance | Statut | Criticité | Action |
-|------------|--------|-----------|--------|
-| **Validation plan par équipe** | ⚠️ EN COURS | 🔴 CRITIQUE | Meeting validation |
-| **Création branche feature/phase8** | ⚠️ À FAIRE | 🔴 CRITIQUE | Avant démarrage |
-| **Budget temps (12-15 jours)** | ⚠️ À VALIDER | 🟡 Moyen | Confirmation chef de projet |
-| **Tests utilisateurs post-canary** | ⚠️ À PLANIFIER | 🟡 Moyen | Recruter beta-testeurs |
+| Dépendance                          | Statut         | Criticité   | Action                      |
+| ----------------------------------- | -------------- | ----------- | --------------------------- |
+| **Validation plan par équipe**      | ⚠️ EN COURS    | 🔴 CRITIQUE | Meeting validation          |
+| **Création branche feature/phase8** | ⚠️ À FAIRE     | 🔴 CRITIQUE | Avant démarrage             |
+| **Budget temps (12-15 jours)**      | ⚠️ À VALIDER   | 🟡 Moyen    | Confirmation chef de projet |
+| **Tests utilisateurs post-canary**  | ⚠️ À PLANIFIER | 🟡 Moyen    | Recruter beta-testeurs      |
 
 ---
 
 <a name="recommandations"></a>
+
 ## 6. Recommandations Prioritaires
 
 ### 🔴 PRIORITÉ 1: Clarifier Intégration BDPM (AVANT DÉMARRAGE)
 
 **Actions:**
+
 1. ✅ Télécharger fichiers BDPM depuis source officielle
 2. ✅ Analyser structure (colonnes, encodage, volumétrie)
 3. ✅ Développer parser CSV en standalone (tests unitaires)
@@ -417,6 +452,7 @@
 ### 🔴 PRIORITÉ 2: Valider Liste Tables v2
 
 **Actions:**
+
 1. ✅ Confirmer si duplication complète nécessaire (pathologies, treatments, prescriptions)
 2. ✅ Privilégier duplication minimale (`medications` + `medicationintakes` uniquement)
 3. ✅ Ajuster scripts SQL et calendrier en conséquence
@@ -428,6 +464,7 @@
 ### 🟡 PRIORITÉ 3: Prévoir Buffer Calendrier
 
 **Actions:**
+
 1. ✅ Ajouter +5 jours au calendrier initial (7-10j → 12-15j)
 2. ✅ Répartir le buffer:
    - Phase 8.2 Backend: +2j (intégration BDPM)
@@ -439,6 +476,7 @@
 ### 🟡 PRIORITÉ 4: Tests de Rollback Obligatoires
 
 **Actions:**
+
 1. ✅ Tester rollback AVANT canary rollout
 2. ✅ Simuler anomalie critique et basculer sur v1
 3. ✅ Valider que toutes les fonctionnalités v1 restent opérationnelles
@@ -449,6 +487,7 @@
 ### 🟢 PRIORITÉ 5: Documentation Utilisateur
 
 **Actions:**
+
 1. ✅ Créer guide utilisateur pour nouveau wizard
 2. ✅ Tutoriel vidéo scan DataMatrix
 3. ✅ FAQ sur différences v1/v2
@@ -457,18 +496,19 @@
 ---
 
 <a name="calendrier"></a>
+
 ## 7. Faisabilité Calendrier
 
 ### Calendrier Proposé (Optimiste)
 
-| Phase | Durée Proposée | Durée Réaliste | Écart | Justification |
-|-------|----------------|----------------|-------|---------------|
-| **Préparation BDPM** | - | **+2 jours** | +2j | Téléchargement + parser CSV |
-| 8.1 Migration BDD | 2 j | **2-3 jours** | +0-1j | Volume données + validation |
-| 8.2 Backend | 2-3 j | **4-5 jours** | +2j | Parsing BDPM + tests |
-| 8.3 Frontend | 2-3 j | **3-4 jours** | +1j | Refonte complexe |
-| 8.4 Tests & Rollout | 1-2 j | **2-3 jours** | +1j | Tests exhaustifs + canary |
-| **TOTAL** | **7-10 jours** | **13-17 jours** | **+6-7j** | **~3 semaines** |
+| Phase                | Durée Proposée | Durée Réaliste  | Écart     | Justification               |
+| -------------------- | -------------- | --------------- | --------- | --------------------------- |
+| **Préparation BDPM** | -              | **+2 jours**    | +2j       | Téléchargement + parser CSV |
+| 8.1 Migration BDD    | 2 j            | **2-3 jours**   | +0-1j     | Volume données + validation |
+| 8.2 Backend          | 2-3 j          | **4-5 jours**   | +2j       | Parsing BDPM + tests        |
+| 8.3 Frontend         | 2-3 j          | **3-4 jours**   | +1j       | Refonte complexe            |
+| 8.4 Tests & Rollout  | 1-2 j          | **2-3 jours**   | +1j       | Tests exhaustifs + canary   |
+| **TOTAL**            | **7-10 jours** | **13-17 jours** | **+6-7j** | **~3 semaines**             |
 
 ### Planning Recommandé
 
@@ -496,6 +536,7 @@ Semaine 3 (Phase 8.4 + Buffer):
 ---
 
 <a name="decision"></a>
+
 ## 8. Décision Finale
 
 ### ✅ VALIDATION CONDITIONNELLE
@@ -549,6 +590,7 @@ Le plan Phase 8 est **FAISABLE** et **BIEN CONÇU**, sous réserve des condition
 ### Recommandation Finale
 
 **✅ GO POUR DÉMARRAGE** après:
+
 1. Clarification intégration BDPM (1-2 jours)
 2. Validation liste tables v2 (1 réunion)
 3. Ajustement calendrier à 3 semaines

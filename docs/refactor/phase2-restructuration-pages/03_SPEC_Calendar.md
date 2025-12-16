@@ -7,6 +7,7 @@
 **Complexité** : Haute
 
 ### Responsabilités actuelles (TROP !)
+
 1. Affichage calendrier mensuel (date-fns calendar)
 2. Chargement données mois (intakes par jour)
 3. Chargement détails jour sélectionné
@@ -17,25 +18,26 @@
 8. Navigation mois précédent/suivant
 
 ### Interfaces actuelles
+
 ```typescript
 interface DayIntake {
-  date: Date
-  total: number
-  taken: number
-  missed: number
-  upcoming: number
+  date: Date;
+  total: number;
+  taken: number;
+  missed: number;
+  upcoming: number;
 }
 
 interface IntakeDetail {
-  id: string
-  medication: string
-  dosage: string
-  time: string
-  takenAt?: string
-  status: 'taken' | 'missed' | 'upcoming'
-  treatment: string
-  scheduledTimestamp?: string
-  takenAtTimestamp?: string
+  id: string;
+  medication: string;
+  dosage: string;
+  time: string;
+  takenAt?: string;
+  status: "taken" | "missed" | "upcoming";
+  treatment: string;
+  scheduledTimestamp?: string;
+  takenAtTimestamp?: string;
 }
 ```
 
@@ -61,31 +63,32 @@ src/pages/calendar/
 ## 📝 Décomposition Détaillée
 
 ### 1. types.ts
+
 ```typescript
 export interface DayIntake {
-  date: Date
-  total: number
-  taken: number
-  missed: number
-  upcoming: number
+  date: Date;
+  total: number;
+  taken: number;
+  missed: number;
+  upcoming: number;
 }
 
 export interface IntakeDetail {
-  id: string
-  medication: string
-  dosage: string
-  time: string
-  takenAt?: string
-  status: 'taken' | 'missed' | 'upcoming'
-  treatment: string
-  scheduledTimestamp?: string
-  takenAtTimestamp?: string
+  id: string;
+  medication: string;
+  dosage: string;
+  time: string;
+  takenAt?: string;
+  status: "taken" | "missed" | "upcoming";
+  treatment: string;
+  scheduledTimestamp?: string;
+  takenAtTimestamp?: string;
 }
 
 export interface VisitDates {
-  nextPharmacyVisit: Date | null
-  nextDoctorVisit: Date | null
-  treatmentStartDate: Date | null
+  nextPharmacyVisit: Date | null;
+  nextDoctorVisit: Date | null;
+  treatmentStartDate: Date | null;
 }
 ```
 
@@ -95,19 +98,19 @@ export interface VisitDates {
 
 ```typescript
 export const getDayModifiers = (date: Date, monthIntakes: DayIntake[]) => {
-  const dayData = monthIntakes.find(d => isSameDay(d.date, date))
-  if (!dayData || dayData.total === 0) return null
-  
-  if (dayData.taken > 0 && dayData.missed === 0) return 'taken'
-  if (dayData.missed > 0 && dayData.taken === 0) return 'missed'
-  if (dayData.taken > 0 && dayData.missed > 0) return 'partial'
-  if (dayData.upcoming > 0) return 'upcoming'
-  return null
-}
+  const dayData = monthIntakes.find((d) => isSameDay(d.date, date));
+  if (!dayData || dayData.total === 0) return null;
+
+  if (dayData.taken > 0 && dayData.missed === 0) return "taken";
+  if (dayData.missed > 0 && dayData.taken === 0) return "missed";
+  if (dayData.taken > 0 && dayData.missed > 0) return "partial";
+  if (dayData.upcoming > 0) return "upcoming";
+  return null;
+};
 
 export const getDayClassName = (modifier: string | null) => {
   // Retourne className pour styling dots
-}
+};
 ```
 
 **Lignes extraites** : 485-520 (logique modifiers/classNames)
@@ -116,13 +119,15 @@ export const getDayClassName = (modifier: string | null) => {
 
 **Responsabilité** : Charger les intakes du mois + observance
 **Params** :
+
 ```typescript
 {
-  currentMonth: Date
+  currentMonth: Date;
 }
 ```
 
 **Returns** :
+
 ```typescript
 {
   monthIntakes: DayIntake[]
@@ -132,6 +137,7 @@ export const getDayClassName = (modifier: string | null) => {
 ```
 
 **Logique extraite** :
+
 - Lignes 57-182 actuelles (loadMonthData)
 - Query Supabase medication_intakes pour le mois étendu (±7 jours)
 - Grouping par jour avec calculs (taken/missed/upcoming)
@@ -141,13 +147,15 @@ export const getDayClassName = (modifier: string | null) => {
 
 **Responsabilité** : Charger détails jour sélectionné
 **Params** :
+
 ```typescript
 {
-  selectedDate: Date
+  selectedDate: Date;
 }
 ```
 
 **Returns** :
+
 ```typescript
 {
   dayDetails: IntakeDetail[]
@@ -156,6 +164,7 @@ export const getDayClassName = (modifier: string | null) => {
 ```
 
 **Logique extraite** :
+
 - Lignes 184-290 actuelles (loadDayDetails)
 - Query intakes du jour sélectionné
 - Tri avec sortIntakesByTimeAndName
@@ -165,15 +174,17 @@ export const getDayClassName = (modifier: string | null) => {
 
 **Responsabilité** : Charger dates visites pharmacie/médecin
 **Returns** :
+
 ```typescript
 {
-  nextPharmacyVisit: Date | null
-  nextDoctorVisit: Date | null
-  treatmentStartDate: Date | null
+  nextPharmacyVisit: Date | null;
+  nextDoctorVisit: Date | null;
+  treatmentStartDate: Date | null;
 }
 ```
 
 **Logique extraite** :
+
 - Lignes 73-97 actuelles (dans loadMonthData)
 - Query treatments actifs (start_date, end_date)
 - Query pharmacy_visits (is_completed = false)
@@ -181,18 +192,20 @@ export const getDayClassName = (modifier: string | null) => {
 ### 6. components/CalendarView.tsx
 
 **Props** :
+
 ```typescript
 interface CalendarViewProps {
-  currentMonth: Date
-  selectedDate: Date
-  onMonthChange: (date: Date) => void
-  onDateSelect: (date: Date) => void
-  monthIntakes: DayIntake[]
-  treatmentStartDate: Date | null
+  currentMonth: Date;
+  selectedDate: Date;
+  onMonthChange: (date: Date) => void;
+  onDateSelect: (date: Date) => void;
+  monthIntakes: DayIntake[];
+  treatmentStartDate: Date | null;
 }
 ```
 
 **Contenu** :
+
 - CalendarComponent de shadcn
 - Custom modifiers pour dots
 - Custom className pour styling
@@ -204,14 +217,16 @@ interface CalendarViewProps {
 ### 7. components/CalendarHeader.tsx
 
 **Props** :
+
 ```typescript
 interface CalendarHeaderProps {
-  observanceRate: number
-  visitDates: VisitDates
+  observanceRate: number;
+  visitDates: VisitDates;
 }
 ```
 
 **Contenu** :
+
 - Card taux d'observance global
 - VisitInfoCards (prochaines visites)
 
@@ -220,14 +235,16 @@ interface CalendarHeaderProps {
 ### 8. components/VisitInfoCards.tsx
 
 **Props** :
+
 ```typescript
 interface VisitInfoCardsProps {
-  nextPharmacyVisit: Date | null
-  nextDoctorVisit: Date | null
+  nextPharmacyVisit: Date | null;
+  nextDoctorVisit: Date | null;
 }
 ```
 
 **Contenu** :
+
 - Card "Prochaine visite pharmacie"
 - Card "Date fin traitement"
 - Icônes + dates formatées
@@ -237,15 +254,17 @@ interface VisitInfoCardsProps {
 ### 9. components/DayDetailsPanel.tsx
 
 **Props** :
+
 ```typescript
 interface DayDetailsPanelProps {
-  selectedDate: Date
-  dayDetails: IntakeDetail[]
-  loading: boolean
+  selectedDate: Date;
+  dayDetails: IntakeDetail[];
+  loading: boolean;
 }
 ```
 
 **Contenu** :
+
 - Header avec date sélectionnée
 - Stats du jour (total/pris/manqués)
 - Liste IntakeDetailCard
@@ -256,14 +275,16 @@ interface DayDetailsPanelProps {
 ### 10. components/IntakeDetailCard.tsx
 
 **Props** :
+
 ```typescript
 interface IntakeDetailCardProps {
-  intake: IntakeDetail
-  isOverdue: boolean
+  intake: IntakeDetail;
+  isOverdue: boolean;
 }
 ```
 
 **Contenu** :
+
 - Card avec heure, médication, dosage
 - Badge status avec icône
 - Badge traitement
@@ -277,6 +298,7 @@ interface IntakeDetailCardProps {
 **Taille cible** : ~120 lignes
 
 **Contenu** :
+
 ```typescript
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
@@ -293,30 +315,30 @@ import { useIntakeOverdue } from "@/hooks/useIntakeOverdue"
 const Calendar = () => {
   const navigate = useNavigate()
   const { isIntakeOverdue } = useIntakeOverdue()
-  
+
   // State
   const [selectedDate, setSelectedDate] = useState<Date>(new Date())
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date())
-  
+
   // Hooks
   const { monthIntakes, observanceRate, loading: monthLoading } = useMonthIntakes({ currentMonth })
   const { dayDetails, loading: dayLoading } = useDayDetails({ selectedDate })
   const visitDates = useVisitDates()
-  
+
   if (monthLoading) return <AppLayout><Loader /></AppLayout>
-  
+
   return (
     <AppLayout>
-      <PageHeader 
-        title="Calendrier" 
+      <PageHeader
+        title="Calendrier"
         onBack={() => navigate("/")}
       />
-      
-      <CalendarHeader 
+
+      <CalendarHeader
         observanceRate={observanceRate}
         visitDates={visitDates}
       />
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <CalendarView
           currentMonth={currentMonth}
@@ -326,7 +348,7 @@ const Calendar = () => {
           monthIntakes={monthIntakes}
           treatmentStartDate={visitDates.treatmentStartDate}
         />
-        
+
         <DayDetailsPanel
           selectedDate={selectedDate}
           dayDetails={dayDetails}

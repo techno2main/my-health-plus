@@ -10,18 +10,22 @@
 ## ⚠️ Problème Détecté
 
 ### Symptômes
+
 Le linter Supabase détectait 3 warnings de type "Auth RLS Initialization Plan" sur les tables :
+
 - `public.pathologies`
 - `public.allergies`
 - `public.medication_catalog`
 
 ### Message d'Erreur
+
 ```
-Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies 
+Detects if calls to `current_setting()` and `auth.<function>()` in RLS policies
 are being unnecessarily re-evaluated for each row
 ```
 
 ### Impact
+
 - 🔴 **Performance dégradée** : Appels répétés à `auth.uid()` pour chaque ligne
 - 🔴 **Coût CPU élevé** : Re-évaluation inutile de la fonction d'authentification
 - ⚠️ **Scalabilité** : Problème amplifié avec de grandes tables
@@ -31,7 +35,9 @@ are being unnecessarily re-evaluated for each row
 ## 🔍 Analyse Technique
 
 ### Cause Racine
+
 Les RLS policies utilisaient `auth.uid()` directement dans la clause `USING` sans :
+
 1. Définir le rôle cible avec `TO authenticated`
 2. Isoler l'appel dans une sous-requête
 
@@ -46,7 +52,9 @@ CREATE POLICY "pathologies_read"
 ```
 
 ### Pourquoi c'est un problème ?
+
 Sans `TO authenticated`, Postgres ne peut pas optimiser la requête et doit :
+
 - Vérifier si l'utilisateur est authentifié pour chaque ligne
 - Appeler `auth.uid()` de manière répétée
 - Faire des conversions de type inutiles
@@ -72,10 +80,11 @@ CREATE POLICY "pathologies_read"
 ```
 
 ### Tables Mises à Jour
-| Table | Policy | Optimisation |
-|-------|--------|--------------|
-| `pathologies` | `pathologies_read` | ✅ `TO authenticated` + sous-requête |
-| `allergies` | `allergies_read` | ✅ `TO authenticated` + sous-requête |
+
+| Table                | Policy                    | Optimisation                         |
+| -------------------- | ------------------------- | ------------------------------------ |
+| `pathologies`        | `pathologies_read`        | ✅ `TO authenticated` + sous-requête |
+| `allergies`          | `allergies_read`          | ✅ `TO authenticated` + sous-requête |
 | `medication_catalog` | `medication_catalog_read` | ✅ `TO authenticated` + sous-requête |
 
 ---
@@ -83,16 +92,19 @@ CREATE POLICY "pathologies_read"
 ## 📊 Gain de Performance
 
 ### Avant (par requête avec 100 lignes)
+
 - 100 appels à `auth.uid()`
 - 100 vérifications d'authentification
 - Temps : ~50ms
 
 ### Après (par requête avec 100 lignes)
+
 - 1 appel à `auth.uid()`
 - 1 vérification d'authentification
 - Temps : ~5ms
 
 ### Amélioration
+
 - **90% de réduction** du temps d'exécution
 - **99% de réduction** des appels `auth.uid()`
 - **Scalabilité** : Performance constante quelle que soit la taille de la table
@@ -102,17 +114,20 @@ CREATE POLICY "pathologies_read"
 ## 🧪 Tests de Validation
 
 ### Vérification Fonctionnelle
+
 ✅ Comportement identique aux policies précédentes :
+
 - Utilisateurs voient leurs propres données + données approuvées
 - Admins ne voient plus les données personnelles non approuvées (RGPD OK)
 
 ### Vérification Performance
+
 ```sql
 -- Test de performance (à exécuter en tant qu'user)
-EXPLAIN ANALYZE 
+EXPLAIN ANALYZE
 SELECT * FROM pathologies;
 
--- Résultat attendu : 
+-- Résultat attendu :
 -- "SubPlan 1" avec "(returned 1 row)" au lieu de "(returned N rows)"
 ```
 
@@ -121,17 +136,20 @@ SELECT * FROM pathologies;
 ## 📝 Notes Techniques
 
 ### Pourquoi `(SELECT auth.uid())` ?
+
 La sous-requête force Postgres à :
+
 1. Évaluer `auth.uid()` **une seule fois** avant le scan de la table
 2. Stocker le résultat en mémoire
 3. Réutiliser ce résultat pour chaque ligne
 
 ### Différence avec `auth.uid()` direct
+
 ```sql
 -- Sans sous-requête (MAL)
 created_by = auth.uid()  -- Fonction volatile, évaluée N fois
 
--- Avec sous-requête (BIEN)  
+-- Avec sous-requête (BIEN)
 created_by = (SELECT auth.uid())  -- Sous-requête stable, évaluée 1 fois
 ```
 

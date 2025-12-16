@@ -7,12 +7,14 @@
 **Complexité** : Faible (dashboard simple)
 
 ### Responsabilités actuelles
+
 1. Affichage dashboard admin (cards d'accès rapide)
 2. Vérification rôle admin (useUserRole)
 3. Navigation vers sections admin
 4. Protection de l'accès (redirection si non-admin)
 
 ### Interface actuelle
+
 ```typescript
 // Pas d'interface spécifique, juste des cards de navigation
 // Liens vers : Navigation Manager, Referentials, NotificationDebug
@@ -21,6 +23,7 @@
 ## 🎯 Structure Cible : Espace Admin Dédié
 
 ### Principe
+
 L'espace admin sera un **sous-dossier complet** `src/pages/admin/` avec sa propre architecture modulaire. Le fichier `Admin.tsx` actuel devient `AdminDashboard.tsx` dans `admin/dashboard/`.
 
 ```
@@ -76,17 +79,17 @@ src/pages/
 
 ```typescript
 export interface AdminRoute {
-  title: string
-  description: string
-  icon: React.ComponentType
-  path: string
-  badge?: string
-  disabled?: boolean
+  title: string;
+  description: string;
+  icon: React.ComponentType;
+  path: string;
+  badge?: string;
+  disabled?: boolean;
 }
 
 export interface AdminSection {
-  name: string
-  routes: AdminRoute[]
+  name: string;
+  routes: AdminRoute[];
 }
 ```
 
@@ -94,28 +97,32 @@ export interface AdminSection {
 
 **Responsabilité** : Vérifier rôle admin + redirection
 **Returns** :
+
 ```typescript
 {
-  isAdmin: boolean
-  role: string | null
-  loading: boolean
+  isAdmin: boolean;
+  role: string | null;
+  loading: boolean;
 }
 ```
 
 **Logique extraite** :
+
 - Lignes 10-30 actuelles (useUserRole + vérification)
 - Redirection si non-admin
 
 ### 3. components/AdminHeader.tsx
 
 **Props** :
+
 ```typescript
 interface AdminHeaderProps {
-  role: string | null
+  role: string | null;
 }
 ```
 
 **Contenu** :
+
 - Titre "Administration"
 - Badge rôle utilisateur
 - Info "Accès réservé"
@@ -125,14 +132,16 @@ interface AdminHeaderProps {
 ### 4. components/QuickAccessCard.tsx
 
 **Props** :
+
 ```typescript
 interface QuickAccessCardProps {
-  route: AdminRoute
-  onClick: () => void
+  route: AdminRoute;
+  onClick: () => void;
 }
 ```
 
 **Contenu** :
+
 - Card cliquable avec icon
 - Titre + description
 - Badge (si présent)
@@ -144,15 +153,17 @@ interface QuickAccessCardProps {
 ### 5. components/AdminStats.tsx (FUTURE)
 
 **Props** :
+
 ```typescript
 interface AdminStatsProps {
-  userCount: number
-  activeUsers: number
-  totalIntakes: number
+  userCount: number;
+  activeUsers: number;
+  totalIntakes: number;
 }
 ```
 
 **Contenu** :
+
 - Cards de statistiques globales
 - Graphiques légers
 - Métriques système
@@ -164,6 +175,7 @@ interface AdminStatsProps {
 **Taille cible** : ~80 lignes
 
 **Contenu** :
+
 ```typescript
 import { useNavigate } from "react-router-dom"
 import { AppLayout } from "@/components/Layout/AppLayout"
@@ -177,19 +189,19 @@ import { adminRoutes } from "./constants"
 const AdminDashboard = () => {
   const navigate = useNavigate()
   const { isAdmin, role, loading } = useAdminAccess()
-  
+
   if (loading) return <AppLayout><Loader2 /></AppLayout>
   if (!isAdmin) return null // Redirection handled in hook
-  
+
   return (
     <AppLayout>
-      <PageHeader 
-        title="Administration" 
+      <PageHeader
+        title="Administration"
         onBack={() => navigate("/")}
       />
-      
+
       <AdminHeader role={role} />
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {adminRoutes.map((route) => (
           <QuickAccessCard
@@ -209,8 +221,15 @@ export default AdminDashboard
 ### 7. constants.ts
 
 ```typescript
-import { Navigation, Database, Bug, Users, Settings, FileText } from "lucide-react"
-import { AdminRoute, AdminSection } from "./types"
+import {
+  Navigation,
+  Database,
+  Bug,
+  Users,
+  Settings,
+  FileText,
+} from "lucide-react";
+import { AdminRoute, AdminSection } from "./types";
 
 export const adminRoutes: AdminRoute[] = [
   {
@@ -246,7 +265,7 @@ export const adminRoutes: AdminRoute[] = [
   //   path: "/admin/settings",
   //   disabled: true,
   // },
-]
+];
 ```
 
 ## 🔄 Plan d'Exécution
@@ -268,6 +287,7 @@ export const adminRoutes: AdminRoute[] = [
 ### Phase 2 : Extensions futures (HORS SCOPE Phase 2)
 
 Ces pages seront créées ultérieurement (Phase 3+ ou selon besoins) :
+
 - `admin/users/` : Gestion utilisateurs
 - `admin/settings/` : Paramètres système
 - `admin/logs/` : Logs et monitoring
@@ -302,6 +322,7 @@ Lorsque les pages admin supplémentaires seront nécessaires :
 4. **admin/shared/** : AdminLayout, AdminBreadcrumb, AdminSidebar
 
 Chaque nouvelle page suivra la même structure :
+
 - `[PageName].tsx` : Orchestrateur
 - `components/` : Composants UI
 - `hooks/` : Hooks métier

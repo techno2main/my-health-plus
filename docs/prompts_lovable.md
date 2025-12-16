@@ -3,8 +3,9 @@ STOP ! Le problème est que la base de données n'a PAS la bonne structure. Les 
 La base de données doit correspondre EXACTEMENT aux fichiers SQL de migration qui sont dans le projet :
 
 📁 migration_sql/scripts_sql/
+
 - 01_profiles.sql
-- 02_user_roles.sql  
+- 02_user_roles.sql
 - 03_user_preferences.sql
 - 04_pathologies.sql
 - 05_allergies.sql

@@ -21,6 +21,7 @@ treatments (traitements utilisateurs)
 ### Tables Actuelles
 
 #### **`medication_catalog`** : Référentiel de médicaments disponibles
+
 ```sql
 - id UUID PRIMARY KEY
 - name TEXT NOT NULL
@@ -33,6 +34,7 @@ treatments (traitements utilisateurs)
 ```
 
 #### **`medications`** : Instances de médicaments dans les traitements
+
 ```sql
 - id UUID PRIMARY KEY
 - treatment_id UUID FK → treatments
@@ -107,14 +109,18 @@ treatments (traitements utilisateurs)
 ### ⚠️ MAIS Attention aux Points Suivants
 
 #### 1. **Cache & Performance**
+
 Sans catalog local, chaque recherche frappe l'API externe :
+
 - **Coût API** : Si API payante (ex: Vidal), chaque recherche = coût
 - **Latence réseau** : Délai utilisateur à chaque recherche
 - **Dépendance externe** : API down = app inutilisable
 - **Quotas API** : Risque de dépassement de limite
 
 #### 2. **Personnalisation Utilisateur**
+
 Le catalog permettait aux users de créer leurs propres médicaments non-officiels :
+
 - Compléments alimentaires (non dans bases officielles)
 - Médicaments étrangers (hors France)
 - Préparations magistrales (préparées en pharmacie)
@@ -122,13 +128,17 @@ Le catalog permettait aux users de créer leurs propres médicaments non-officie
 - Produits de parapharmacie
 
 #### 3. **Historique & Cohérence**
+
 Si un médicament disparaît de l'API officielle (retrait du marché) :
+
 - Les traitements historiques deviennent orphelins
 - Perte d'informations sur d'anciens médicaments
 - Impossible de consulter l'historique complet
 
 #### 4. **Offline First**
+
 Sans cache local :
+
 - App inutilisable sans connexion internet
 - Impossible d'ajouter un médicament hors ligne
 - Dégradation de l'UX mobile
@@ -155,7 +165,7 @@ treatments
 CREATE TABLE medications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     treatment_id UUID NOT NULL REFERENCES treatments(id) ON DELETE CASCADE,
-    
+
     -- Données OFFICIELLES (non modifiables)
     cis_code VARCHAR(13),              -- Code CIS officiel
     name TEXT NOT NULL,                -- Nom commercial
@@ -163,7 +173,7 @@ CREATE TABLE medications (
     dosage TEXT,                       -- 5mg/1000mg
     composition TEXT,                  -- Substances actives
     laboratory TEXT,                   -- Laboratoire fabricant
-    
+
     -- Données PERSONNALISÉES (modifiables)
     pathology_id UUID REFERENCES pathologies(id),
     initial_stock INTEGER DEFAULT 0,
@@ -174,7 +184,7 @@ CREATE TABLE medications (
     instructions TEXT,                 -- "Après repas"
     expiry_date DATE,
     photo_url TEXT,
-    
+
     -- Métadonnées
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
@@ -238,10 +248,11 @@ treatments
 #### Nouvelle Structure de Tables
 
 ##### **`medications_reference`** (Remplace medication_catalog)
+
 ```sql
 CREATE TABLE medications_reference (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    
+
     -- Données OFFICIELLES (via API)
     cis_code VARCHAR(13) UNIQUE,       -- Code CIS officiel (identifiant unique France)
     name TEXT NOT NULL,                -- Nom commercial
@@ -250,15 +261,15 @@ CREATE TABLE medications_reference (
     composition TEXT,                  -- Substances actives (DCI)
     laboratory TEXT,                   -- Laboratoire fabricant
     atc_code VARCHAR(10),              -- Classification thérapeutique ATC
-    
+
     -- Métadonnées de source
     source TEXT NOT NULL CHECK (source IN ('official_api', 'user_created')),
     official_data JSONB,               -- Données brutes complètes de l'API
-    
+
     -- Multi-users (pour médicaments personnalisés)
     created_by UUID REFERENCES auth.users(id),
     is_approved BOOLEAN DEFAULT false,
-    
+
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now(),
@@ -271,12 +282,13 @@ CREATE INDEX idx_medications_reference_source ON medications_reference(source);
 ```
 
 ##### **`treatment_medications`** (Remplace medications)
+
 ```sql
 CREATE TABLE treatment_medications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     treatment_id UUID NOT NULL REFERENCES treatments(id) ON DELETE CASCADE,
     medication_ref_id UUID NOT NULL REFERENCES medications_reference(id),
-    
+
     -- Champs MODIFIABLES par l'utilisateur
     pathology_id UUID REFERENCES pathologies(id),
     initial_stock INTEGER DEFAULT 0,
@@ -287,7 +299,7 @@ CREATE TABLE treatment_medications (
     instructions TEXT,                 -- "À prendre après repas avec un grand verre d'eau"
     expiry_date DATE,
     photo_url TEXT,
-    
+
     -- Timestamps
     created_at TIMESTAMPTZ DEFAULT now(),
     updated_at TIMESTAMPTZ DEFAULT now()
@@ -347,129 +359,140 @@ interface OfficialMedicationData {
 }
 
 class MedicationAPIService {
-  private readonly API_BASE_URL = 'https://base-donnees-publique.medicaments.gouv.fr/api';
-  
+  private readonly API_BASE_URL =
+    "https://base-donnees-publique.medicaments.gouv.fr/api";
+
   /**
    * Recherche par nom dans le cache local d'abord, puis API si nécessaire
    */
   async searchByName(name: string): Promise<MedicationReference[]> {
     // 1. Recherche dans le cache local
     const { data: cached } = await supabase
-      .from('medications_reference')
-      .select('*')
-      .ilike('name', `%${name}%`)
+      .from("medications_reference")
+      .select("*")
+      .ilike("name", `%${name}%`)
       .limit(10);
-    
+
     if (cached && cached.length > 0) {
       return cached;
     }
-    
+
     // 2. Si pas de résultat, interroger l'API officielle
     const officialResults = await this.fetchFromOfficialAPI(name);
-    
+
     // 3. Mettre en cache les résultats
     for (const result of officialResults) {
       await this.cacheOfficialMedication(result);
     }
-    
+
     return officialResults;
   }
-  
+
   /**
    * Recherche par QR Code (code CIS)
    */
   async fetchByCIS(cisCode: string): Promise<MedicationReference> {
     // 1. Vérifier le cache local
     const { data: cached } = await supabase
-      .from('medications_reference')
-      .select('*')
-      .eq('cis_code', cisCode)
+      .from("medications_reference")
+      .select("*")
+      .eq("cis_code", cisCode)
       .single();
-    
+
     if (cached) {
       // Vérifier si sync récente (< 30 jours)
       const lastSync = new Date(cached.last_sync_at);
-      const daysSinceSync = (Date.now() - lastSync.getTime()) / (1000 * 60 * 60 * 24);
-      
+      const daysSinceSync =
+        (Date.now() - lastSync.getTime()) / (1000 * 60 * 60 * 24);
+
       if (daysSinceSync < 30) {
         return cached;
       }
     }
-    
+
     // 2. Récupérer depuis l'API officielle
     const officialData = await this.fetchOfficialByCIS(cisCode);
-    
+
     // 3. Mettre à jour le cache
     return await this.cacheOfficialMedication(officialData);
   }
-  
+
   /**
    * Mise en cache ou mise à jour d'un médicament officiel
    */
-  private async cacheOfficialMedication(data: OfficialMedicationData): Promise<MedicationReference> {
+  private async cacheOfficialMedication(
+    data: OfficialMedicationData,
+  ): Promise<MedicationReference> {
     const { data: medication, error } = await supabase
-      .from('medications_reference')
-      .upsert({
-        cis_code: data.cisCode,
-        name: data.name,
-        form: data.form,
-        dosage: data.dosage,
-        composition: data.composition,
-        laboratory: data.laboratory,
-        atc_code: data.atcCode,
-        source: 'official_api',
-        official_data: data,
-        last_sync_at: new Date().toISOString()
-      }, {
-        onConflict: 'cis_code'
-      })
+      .from("medications_reference")
+      .upsert(
+        {
+          cis_code: data.cisCode,
+          name: data.name,
+          form: data.form,
+          dosage: data.dosage,
+          composition: data.composition,
+          laboratory: data.laboratory,
+          atc_code: data.atcCode,
+          source: "official_api",
+          official_data: data,
+          last_sync_at: new Date().toISOString(),
+        },
+        {
+          onConflict: "cis_code",
+        },
+      )
       .select()
       .single();
-    
+
     if (error) throw error;
     return medication;
   }
-  
+
   /**
    * Création d'un médicament personnalisé (non-officiel)
    */
   async createCustomMedication(
-    name: string, 
-    form: string, 
+    name: string,
+    form: string,
     dosage: string,
-    userId: string
+    userId: string,
   ): Promise<MedicationReference> {
     const { data, error } = await supabase
-      .from('medications_reference')
+      .from("medications_reference")
       .insert({
         name,
         form,
         dosage,
-        source: 'user_created',
+        source: "user_created",
         created_by: userId,
-        is_approved: false
+        is_approved: false,
       })
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
-  
+
   /**
    * Appel réel à l'API officielle (à implémenter selon l'API choisie)
    */
-  private async fetchFromOfficialAPI(name: string): Promise<OfficialMedicationData[]> {
+  private async fetchFromOfficialAPI(
+    name: string,
+  ): Promise<OfficialMedicationData[]> {
     // TODO: Implémenter selon API choisie
     // - Base de Données Publique des Médicaments (gratuite)
     // - Vidal API (payante)
     // - Base Claude Bernard (payante)
-    throw new Error('Not implemented');
+    throw new Error("Not implemented");
   }
-  
-  private async fetchOfficialByCIS(cisCode: string): Promise<OfficialMedicationData> {
+
+  private async fetchOfficialByCIS(
+    cisCode: string,
+  ): Promise<OfficialMedicationData> {
     // TODO: Implémenter selon API choisie
-    throw new Error('Not implemented');
+    throw new Error("Not implemented");
   }
 }
 
@@ -499,18 +522,18 @@ export const medicationAPI = new MedicationAPIService();
 
 ## 📊 COMPARAISON DÉTAILLÉE DES OPTIONS
 
-| Critère | Option A (Sans catalog) | Option B (Hybride) | Gagnant |
-|---------|------------------------|-------------------|---------|
-| **Simplicité architecturale** | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ | A |
-| **Performance (latence)** | ⭐⭐ | ⭐⭐⭐⭐⭐ | B |
-| **Flexibilité** | ⭐⭐ | ⭐⭐⭐⭐⭐ | B |
-| **Coût API** | ⭐⭐ | ⭐⭐⭐⭐ | B |
-| **Résilience (API down)** | ⭐ | ⭐⭐⭐⭐⭐ | B |
-| **Offline first** | ⭐ | ⭐⭐⭐⭐⭐ | B |
-| **Maintenance code** | ⭐⭐⭐⭐ | ⭐⭐⭐ | A |
-| **Historique préservé** | ⭐⭐ | ⭐⭐⭐⭐⭐ | B |
-| **Médicaments personnalisés** | ❌ | ✅ | B |
-| **Conformité RGPD** | ⭐⭐⭐⭐ | ⭐⭐⭐⭐⭐ | B |
+| Critère                       | Option A (Sans catalog) | Option B (Hybride) | Gagnant |
+| ----------------------------- | ----------------------- | ------------------ | ------- |
+| **Simplicité architecturale** | ⭐⭐⭐⭐⭐              | ⭐⭐⭐             | A       |
+| **Performance (latence)**     | ⭐⭐                    | ⭐⭐⭐⭐⭐         | B       |
+| **Flexibilité**               | ⭐⭐                    | ⭐⭐⭐⭐⭐         | B       |
+| **Coût API**                  | ⭐⭐                    | ⭐⭐⭐⭐           | B       |
+| **Résilience (API down)**     | ⭐                      | ⭐⭐⭐⭐⭐         | B       |
+| **Offline first**             | ⭐                      | ⭐⭐⭐⭐⭐         | B       |
+| **Maintenance code**          | ⭐⭐⭐⭐                | ⭐⭐⭐             | A       |
+| **Historique préservé**       | ⭐⭐                    | ⭐⭐⭐⭐⭐         | B       |
+| **Médicaments personnalisés** | ❌                      | ✅                 | B       |
+| **Conformité RGPD**           | ⭐⭐⭐⭐                | ⭐⭐⭐⭐⭐         | B       |
 
 **Score final** : Option A = 24/50 ⭐ | Option B = 43/50 ⭐
 
@@ -549,20 +572,20 @@ SET source = 'user_created'
 WHERE source IS NULL;
 
 -- 4. CRÉER index pour performance
-CREATE INDEX IF NOT EXISTS idx_medications_reference_cis 
+CREATE INDEX IF NOT EXISTS idx_medications_reference_cis
 ON medications_reference(cis_code);
 
-CREATE INDEX IF NOT EXISTS idx_medications_reference_name 
+CREATE INDEX IF NOT EXISTS idx_medications_reference_name
 ON medications_reference USING gin(to_tsvector('french', name));
 
-CREATE INDEX IF NOT EXISTS idx_medications_reference_source 
+CREATE INDEX IF NOT EXISTS idx_medications_reference_source
 ON medications_reference(source);
 
 -- 5. RENOMMER medications → treatment_medications
 ALTER TABLE medications RENAME TO treatment_medications;
 
 -- 6. RENOMMER colonne FK
-ALTER TABLE treatment_medications 
+ALTER TABLE treatment_medications
 RENAME COLUMN catalog_id TO medication_ref_id;
 
 -- 7. AJOUTER colonnes manquantes
@@ -583,7 +606,7 @@ CREATE POLICY "medications_reference_read"
   ON medications_reference FOR SELECT
   TO authenticated
   USING (
-    (created_by = (SELECT auth.uid())) OR 
+    (created_by = (SELECT auth.uid())) OR
     (is_approved = true) OR
     (source = 'official_api')
   );
@@ -606,6 +629,7 @@ COMMIT;
 #### Choix de l'API
 
 **Recommandation** : Base de Données Publique des Médicaments (gratuite)
+
 - URL : https://base-donnees-publique.medicaments.gouv.fr/
 - Licence : Licence Ouverte (Open Data)
 - Coût : Gratuit
@@ -613,6 +637,7 @@ COMMIT;
 - Mise à jour : Hebdomadaire
 
 **Alternative payante** : Vidal API (si budget disponible)
+
 - Plus complète (interactions médicamenteuses, contre-indications)
 - Coût : À partir de 500€/mois
 
@@ -621,7 +646,7 @@ COMMIT;
 ```typescript
 // src/services/medication/medicationAPIService.ts
 
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 interface OfficialMedicationResponse {
   codeCIS: string;
@@ -640,8 +665,9 @@ interface OfficialMedicationResponse {
 }
 
 export class MedicationAPIService {
-  private readonly BASE_URL = 'https://base-donnees-publique.medicaments.gouv.fr/api/v1';
-  
+  private readonly BASE_URL =
+    "https://base-donnees-publique.medicaments.gouv.fr/api/v1";
+
   /**
    * Recherche intelligente avec cache
    */
@@ -651,122 +677,132 @@ export class MedicationAPIService {
     if (localResults.length > 0) {
       return localResults;
     }
-    
+
     // 2. Recherche API si rien en local
     const apiResults = await this.searchAPI(query);
-    
+
     // 3. Cache les résultats
     for (const result of apiResults) {
       await this.cacheResult(result);
     }
-    
+
     return apiResults;
   }
-  
+
   /**
    * Recherche dans le cache local
    */
   private async searchLocal(query: string): Promise<MedicationReference[]> {
     const { data, error } = await supabase
-      .from('medications_reference')
-      .select('*')
+      .from("medications_reference")
+      .select("*")
       .or(`name.ilike.%${query}%,composition.ilike.%${query}%`)
       .limit(20);
-    
+
     if (error) throw error;
     return data || [];
   }
-  
+
   /**
    * Recherche via API officielle
    */
-  private async searchAPI(query: string): Promise<OfficialMedicationResponse[]> {
+  private async searchAPI(
+    query: string,
+  ): Promise<OfficialMedicationResponse[]> {
     const response = await fetch(
-      `${this.BASE_URL}/medicaments.json?denomination=${encodeURIComponent(query)}`
+      `${this.BASE_URL}/medicaments.json?denomination=${encodeURIComponent(query)}`,
     );
-    
+
     if (!response.ok) {
       throw new Error(`API Error: ${response.statusText}`);
     }
-    
+
     return await response.json();
   }
-  
+
   /**
    * Scan QR Code (Code CIS)
    */
   async fetchByCIS(cisCode: string): Promise<MedicationReference> {
     // 1. Check cache
     const { data: cached } = await supabase
-      .from('medications_reference')
-      .select('*')
-      .eq('cis_code', cisCode)
+      .from("medications_reference")
+      .select("*")
+      .eq("cis_code", cisCode)
       .single();
-    
+
     if (cached && this.isCacheValid(cached.last_sync_at)) {
       return cached;
     }
-    
+
     // 2. Fetch from API
     const response = await fetch(`${this.BASE_URL}/medicament/${cisCode}.json`);
     if (!response.ok) {
-      throw new Error('Médicament non trouvé');
+      throw new Error("Médicament non trouvé");
     }
-    
+
     const data = await response.json();
-    
+
     // 3. Cache result
     return await this.cacheResult(data);
   }
-  
+
   /**
    * Vérifie si le cache est encore valide (< 30 jours)
    */
   private isCacheValid(lastSync: string | null): boolean {
     if (!lastSync) return false;
-    const daysSinceSync = (Date.now() - new Date(lastSync).getTime()) / (1000 * 60 * 60 * 24);
+    const daysSinceSync =
+      (Date.now() - new Date(lastSync).getTime()) / (1000 * 60 * 60 * 24);
     return daysSinceSync < 30;
   }
-  
+
   /**
    * Met en cache un résultat API
    */
-  private async cacheResult(apiData: OfficialMedicationResponse): Promise<MedicationReference> {
+  private async cacheResult(
+    apiData: OfficialMedicationResponse,
+  ): Promise<MedicationReference> {
     const composition = apiData.compositions
-      .map(c => c.composants.map(comp => 
-        `${comp.denominationSubstance} ${comp.dosage}`
-      ).join(', '))
-      .join(' / ');
-    
+      .map((c) =>
+        c.composants
+          .map((comp) => `${comp.denominationSubstance} ${comp.dosage}`)
+          .join(", "),
+      )
+      .join(" / ");
+
     const { data, error } = await supabase
-      .from('medications_reference')
-      .upsert({
-        cis_code: apiData.codeCIS,
-        name: apiData.denomination,
-        form: apiData.formePharmaceutique,
-        dosage: this.extractDosage(apiData),
-        composition: composition,
-        laboratory: apiData.titulaires.join(', '),
-        source: 'official_api',
-        official_data: apiData,
-        last_sync_at: new Date().toISOString(),
-        is_approved: true
-      }, {
-        onConflict: 'cis_code'
-      })
+      .from("medications_reference")
+      .upsert(
+        {
+          cis_code: apiData.codeCIS,
+          name: apiData.denomination,
+          form: apiData.formePharmaceutique,
+          dosage: this.extractDosage(apiData),
+          composition: composition,
+          laboratory: apiData.titulaires.join(", "),
+          source: "official_api",
+          official_data: apiData,
+          last_sync_at: new Date().toISOString(),
+          is_approved: true,
+        },
+        {
+          onConflict: "cis_code",
+        },
+      )
       .select()
       .single();
-    
+
     if (error) throw error;
     return data;
   }
-  
+
   /**
    * Extrait le dosage depuis les données API
    */
   private extractDosage(apiData: OfficialMedicationResponse): string {
     const mainComponent = apiData.compositions[0]?.composants[0];
-    return mainComponent?.dosage || '';
+    return mainComponent?.dosage || "";
   }
 }
 
@@ -793,41 +829,41 @@ interface WizardStep {
 export function MedicationWizard({ treatmentId }: { treatmentId: string }) {
   const [step, setStep] = useState<WizardStep['step']>('method');
   const [selectedMedication, setSelectedMedication] = useState<MedicationReference | null>(null);
-  
+
   // Étape 1 : Choix de la méthode
   if (step === 'method') {
     return (
       <div className="space-y-4">
         <h2>Comment souhaitez-vous ajouter votre médicament ?</h2>
-        
+
         <button onClick={() => setStep('search')} className="btn-primary">
           📷 Scanner le QR Code (Datamatrix)
         </button>
-        
+
         <button onClick={() => setStep('search')} className="btn-secondary">
           🔍 Recherche par nom
         </button>
-        
+
         <button onClick={handleCustomMedication} className="btn-tertiary">
           ✏️ Saisie manuelle (médicament non-officiel)
         </button>
       </div>
     );
   }
-  
+
   // Étape 2 : Recherche/Scan
   if (step === 'search') {
     return (
       <div>
         {/* QR Code Scanner ou Recherche */}
-        <QRCodeScanner 
+        <QRCodeScanner
           onScan={async (cisCode) => {
             const med = await medicationAPI.fetchByCIS(cisCode);
             setSelectedMedication(med);
             setStep('customize');
           }}
         />
-        
+
         <MedicationSearch
           onSelect={(med) => {
             setSelectedMedication(med);
@@ -837,7 +873,7 @@ export function MedicationWizard({ treatmentId }: { treatmentId: string }) {
       </div>
     );
   }
-  
+
   // Étape 3 : Personnalisation
   if (step === 'customize' && selectedMedication) {
     return (
@@ -848,7 +884,7 @@ export function MedicationWizard({ treatmentId }: { treatmentId: string }) {
       />
     );
   }
-  
+
   return null;
 }
 ```
@@ -860,49 +896,51 @@ export function MedicationWizard({ treatmentId }: { treatmentId: string }) {
 ```typescript
 // supabase/functions/sync-medications/index.ts
 
-import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async (req) => {
   const supabase = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
-  
+
   // Récupérer les médicaments officiels non synchronisés depuis > 30 jours
   const { data: outdated } = await supabase
-    .from('medications_reference')
-    .select('cis_code')
-    .eq('source', 'official_api')
-    .lt('last_sync_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString());
-  
+    .from("medications_reference")
+    .select("cis_code")
+    .eq("source", "official_api")
+    .lt(
+      "last_sync_at",
+      new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
+    );
+
   // Resynchroniser chaque médicament
   for (const med of outdated || []) {
     try {
       const response = await fetch(
-        `https://base-donnees-publique.medicaments.gouv.fr/api/v1/medicament/${med.cis_code}.json`
+        `https://base-donnees-publique.medicaments.gouv.fr/api/v1/medicament/${med.cis_code}.json`,
       );
-      
+
       if (response.ok) {
         const data = await response.json();
-        
+
         await supabase
-          .from('medications_reference')
+          .from("medications_reference")
           .update({
             official_data: data,
-            last_sync_at: new Date().toISOString()
+            last_sync_at: new Date().toISOString(),
           })
-          .eq('cis_code', med.cis_code);
+          .eq("cis_code", med.cis_code);
       }
     } catch (error) {
       console.error(`Failed to sync ${med.cis_code}:`, error);
     }
   }
-  
-  return new Response(
-    JSON.stringify({ synced: outdated?.length || 0 }),
-    { headers: { 'Content-Type': 'application/json' } }
-  );
+
+  return new Response(JSON.stringify({ synced: outdated?.length || 0 }), {
+    headers: { "Content-Type": "application/json" },
+  });
 });
 ```
 
@@ -929,26 +967,31 @@ SELECT cron.schedule(
 ### Je recommande **FORTEMENT l'Option B (Système Hybride)** pour les raisons suivantes :
 
 #### 1. **Architecture Robuste & Scalable**
+
 - Cache intelligent = performance optimale
 - Résilience face aux pannes API
 - Prêt pour migration vers API payante (Vidal) si besoin
 
 #### 2. **Expérience Utilisateur Optimale**
+
 - Recherche instantanée (cache local)
 - Offline first (médicaments courants disponibles)
 - Pas de latence perceptible
 
 #### 3. **Flexibilité & Évolutivité**
+
 - Médicaments officiels + personnalisés
 - Ajout facile d'autres sources de données
 - Migration progressive possible
 
 #### 4. **Conformité & Sécurité**
+
 - RGPD friendly (séparation référentiel/données perso)
 - Traçabilité complète (source, sync dates)
 - Historique préservé
 
 #### 5. **Coût Maîtrisé**
+
 - Cache = réduction drastique des appels API
 - Compatible API gratuite (Open Data)
 - Migration vers API payante facilitée
@@ -956,12 +999,14 @@ SELECT cron.schedule(
 ### 🚦 Prochaines Étapes Suggérées
 
 **Phase immédiate** :
+
 1. ✅ Valider cette proposition
 2. 🔄 Créer une branche `feature/phase8-medications-refactor`
 3. 📝 Exécuter migration SQL (Phase 8.1)
 4. 🧪 Tester migration sur données existantes
 
 **Phase suivante** :
+
 1. 💻 Implémenter `MedicationAPIService`
 2. 🎨 Créer nouveau Wizard d'ajout
 3. 🔄 Mettre en place sync périodique

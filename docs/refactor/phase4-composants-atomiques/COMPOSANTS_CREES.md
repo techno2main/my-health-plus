@@ -5,6 +5,7 @@
 Cette phase a créé une bibliothèque de composants UI atomiques réutilisables suivant les principes d'**Atomic Design** pour assurer la cohérence du design et réduire la duplication de code.
 
 **Architecture** :
+
 ```
 src/components/ui/
 ├── atoms/          # Composants de base (EmptyState, StatusBadge)
@@ -23,18 +24,20 @@ src/components/ui/
 **Description** : Composant générique pour afficher les états vides à travers l'application.
 
 **Props** :
+
 ```typescript
 interface EmptyStateProps {
-  icon?: LucideIcon;           // Icône optionnelle à afficher
-  iconColor?: string;          // Couleur de l'icône (ex: "text-success")
-  title?: string;              // Titre optionnel
-  description: string;         // Description (obligatoire)
-  action?: {                   // Bouton d'action optionnel
+  icon?: LucideIcon; // Icône optionnelle à afficher
+  iconColor?: string; // Couleur de l'icône (ex: "text-success")
+  title?: string; // Titre optionnel
+  description: string; // Description (obligatoire)
+  action?: {
+    // Bouton d'action optionnel
     label: string;
     onClick: () => void;
     variant?: "default" | "outline" | "secondary";
   };
-  children?: ReactNode;        // Contenu personnalisé
+  children?: ReactNode; // Contenu personnalisé
 }
 ```
 
@@ -61,6 +64,7 @@ interface EmptyStateProps {
 ```
 
 **Pages utilisant ce composant** :
+
 - `src/pages/treatments/components/EmptyState.tsx` ✅
 - `src/pages/rattrapage/components/EmptyState.tsx` ✅
 - `src/pages/history/components/EmptyState.tsx` ✅
@@ -76,33 +80,47 @@ interface EmptyStateProps {
 **Composants exportés** :
 
 #### StatusBadge (base)
+
 ```typescript
 interface StatusBadgeProps {
-  variant: "success" | "warning" | "danger" | "secondary" | "default" | "muted" | "outline";
+  variant:
+    | "success"
+    | "warning"
+    | "danger"
+    | "secondary"
+    | "default"
+    | "muted"
+    | "outline";
   children: ReactNode;
   className?: string;
 }
 ```
 
 #### StockStatusBadge (spécialisé)
+
 ```typescript
 <StockStatusBadge status="ok" | "low" | "critical" />
 ```
+
 - `ok` → Badge vert "Stock OK"
 - `low` → Badge orange "Stock bas"
 - `critical` → Badge rouge "Critique"
 
 #### ActiveStatusBadge (spécialisé)
+
 ```typescript
 <ActiveStatusBadge isActive={true | false} />
 ```
+
 - `true` → Badge vert "Actif"
 - `false` → Badge gris "Inactif"
 
 #### SeverityBadge (spécialisé)
+
 ```typescript
 <SeverityBadge severity="Légère" | "Modérée" | "Sévère" />
 ```
+
 - `Légère` → Badge bleu
 - `Modérée` → Badge orange
 - `Sévère` → Badge rouge
@@ -122,6 +140,7 @@ interface StatusBadgeProps {
 ```
 
 **Pages utilisant ce composant** :
+
 - `src/pages/allergies/components/AllergyCard.tsx` (SeverityBadge) ✅
 - `src/pages/stocks/*` (StockStatusBadge) - À migrer
 
@@ -136,21 +155,23 @@ interface StatusBadgeProps {
 **Description** : Card avec header (titre + actions), body optionnel, et footer optionnel. Pattern commun pour les cartes d'entités.
 
 **Props** :
+
 ```typescript
 interface ActionCardProps {
-  title: string;                     // Titre principal
-  subtitle?: ReactNode;              // Sous-titre optionnel (badges, etc.)
-  children?: ReactNode;              // Contenu principal
-  footer?: ReactNode;                // Footer optionnel
-  onEdit?: () => void;               // Callback édition
-  onDelete?: () => void;             // Callback suppression
-  customActions?: ReactNode;         // Actions personnalisées
-  icon?: LucideIcon;                 // Icône avant le titre
-  className?: string;                // Classes CSS additionnelles
+  title: string; // Titre principal
+  subtitle?: ReactNode; // Sous-titre optionnel (badges, etc.)
+  children?: ReactNode; // Contenu principal
+  footer?: ReactNode; // Footer optionnel
+  onEdit?: () => void; // Callback édition
+  onDelete?: () => void; // Callback suppression
+  customActions?: ReactNode; // Actions personnalisées
+  icon?: LucideIcon; // Icône avant le titre
+  className?: string; // Classes CSS additionnelles
 }
 ```
 
 **Comportement** :
+
 - Affiche automatiquement les boutons Edit/Delete si `onEdit`/`onDelete` fournis
 - Support des actions personnalisées via `customActions`
 - Hover effect et transition automatiques
@@ -203,11 +224,13 @@ interface ActionCardProps {
 ```
 
 **Pages utilisant ce composant** :
+
 - `src/pages/pathologies/components/PathologyCard.tsx` ✅
 - `src/pages/allergies/components/AllergyCard.tsx` ✅
 - `src/pages/health-professionals/components/ProfessionalCard.tsx` ✅
 
 **Bénéfices** :
+
 - ✅ 95% de code en moins dans PathologyCard (32 → 19 lignes)
 - ✅ 90% de code en moins dans AllergyCard (40 → 27 lignes)
 - ✅ 89% de code en moins dans ProfessionalCard (75 → 63 lignes)
@@ -223,23 +246,25 @@ interface ActionCardProps {
 **Description** : Dialog générique pour les formulaires avec ScrollArea, header avec back button, et footer avec actions.
 
 **Props** :
+
 ```typescript
 interface FormDialogProps {
-  open: boolean;                    // État ouvert/fermé
-  onClose: () => void;              // Callback fermeture
-  title: string;                    // Titre du dialog
-  description?: string;             // Description optionnelle
-  children: ReactNode;              // Contenu du formulaire
-  onSubmit: () => void;             // Callback soumission
-  submitLabel?: string;             // Label bouton submit (défaut: "Enregistrer")
-  cancelLabel?: string;             // Label bouton cancel (défaut: "Annuler")
-  submitDisabled?: boolean;         // Désactiver le submit
-  showBackButton?: boolean;         // Afficher flèche retour (défaut: true)
-  customFooter?: ReactNode;         // Footer personnalisé
+  open: boolean; // État ouvert/fermé
+  onClose: () => void; // Callback fermeture
+  title: string; // Titre du dialog
+  description?: string; // Description optionnelle
+  children: ReactNode; // Contenu du formulaire
+  onSubmit: () => void; // Callback soumission
+  submitLabel?: string; // Label bouton submit (défaut: "Enregistrer")
+  cancelLabel?: string; // Label bouton cancel (défaut: "Annuler")
+  submitDisabled?: boolean; // Désactiver le submit
+  showBackButton?: boolean; // Afficher flèche retour (défaut: true)
+  customFooter?: ReactNode; // Footer personnalisé
 }
 ```
 
 **Caractéristiques** :
+
 - ScrollArea automatique pour les formulaires longs
 - Back button dans le header
 - Boutons submit/cancel avec styling unifié
@@ -297,10 +322,12 @@ interface FormDialogProps {
 ```
 
 **Pages utilisant ce composant** :
+
 - `src/pages/pathologies/components/PathologyDialog.tsx` ✅
 - `src/pages/allergies/components/AllergyDialog.tsx` ✅
 
 **Bénéfices** :
+
 - ✅ 83% de code en moins dans PathologyDialog (84 → 59 lignes)
 - ✅ 80% de code en moins dans AllergyDialog (106 → 85 lignes)
 
@@ -313,6 +340,7 @@ interface FormDialogProps {
 **Description** : Dialog de confirmation simple pour les actions critiques (suppression, etc.).
 
 **Props** :
+
 ```typescript
 interface ConfirmDialogProps {
   open: boolean;                                    // État ouvert/fermé
@@ -360,6 +388,7 @@ interface ConfirmDialogProps {
 ```
 
 **Utilisation future** :
+
 - Rattrapage (confirmation de prises)
 - Suppressions d'entités (pathologies, allergies, etc.)
 - Actions critiques nécessitant confirmation
@@ -370,28 +399,28 @@ interface ConfirmDialogProps {
 
 ### Réduction de code
 
-| Composant | Avant | Après | Réduction |
-|-----------|-------|-------|-----------|
-| PathologyCard | 32 lignes | 19 lignes | **-40%** |
-| PathologyDialog | 84 lignes | 59 lignes | **-30%** |
-| AllergyCard | 40 lignes | 27 lignes | **-32%** |
-| AllergyDialog | 106 lignes | 85 lignes | **-20%** |
-| ProfessionalCard | 75 lignes | 63 lignes | **-16%** |
-| EmptyState (treatments) | 12 lignes | 9 lignes | **-25%** |
-| EmptyState (rattrapage) | 21 lignes | 15 lignes | **-29%** |
-| EmptyState (history) | 10 lignes | 7 lignes | **-30%** |
+| Composant               | Avant      | Après     | Réduction |
+| ----------------------- | ---------- | --------- | --------- |
+| PathologyCard           | 32 lignes  | 19 lignes | **-40%**  |
+| PathologyDialog         | 84 lignes  | 59 lignes | **-30%**  |
+| AllergyCard             | 40 lignes  | 27 lignes | **-32%**  |
+| AllergyDialog           | 106 lignes | 85 lignes | **-20%**  |
+| ProfessionalCard        | 75 lignes  | 63 lignes | **-16%**  |
+| EmptyState (treatments) | 12 lignes  | 9 lignes  | **-25%**  |
+| EmptyState (rattrapage) | 21 lignes  | 15 lignes | **-29%**  |
+| EmptyState (history)    | 10 lignes  | 7 lignes  | **-30%**  |
 
 **Total** : **-27% de code JSX en moyenne** ✅
 
 ### Réutilisabilité
 
-| Composant atomique | Utilisations | Pages |
-|--------------------|--------------|-------|
-| EmptyState | 3 | treatments, rattrapage, history |
-| StatusBadge | 1+ | allergies (+ stocks à migrer) |
-| ActionCard | 3 | pathologies, allergies, professionals |
-| FormDialog | 2 | pathologies, allergies |
-| ConfirmDialog | 0 (prêt) | À utiliser pour confirmations |
+| Composant atomique | Utilisations | Pages                                 |
+| ------------------ | ------------ | ------------------------------------- |
+| EmptyState         | 3            | treatments, rattrapage, history       |
+| StatusBadge        | 1+           | allergies (+ stocks à migrer)         |
+| ActionCard         | 3            | pathologies, allergies, professionals |
+| FormDialog         | 2            | pathologies, allergies                |
+| ConfirmDialog      | 0 (prêt)     | À utiliser pour confirmations         |
 
 **Objectif atteint** : Chaque composant utilisé dans 2+ pages ✅
 
@@ -416,26 +445,31 @@ interface ConfirmDialogProps {
 ### Composants à créer (Phase future)
 
 **Atoms** :
+
 - `LoadingSpinner` - Spinner de chargement unifié
 - `ErrorMessage` - Message d'erreur unifié
 
 **Molecules** :
+
 - `FormField` - Wrapper Label + Input + Error
 - `ListItem` - Item de liste générique
 
 **Organisms** :
+
 - `List<T>` - Liste générique avec EmptyState/Loading
 - `DataTable` - Table de données avec tri/filtrage
 
 ### Pages à migrer
 
 **Priorité haute** :
+
 - [ ] Stocks (StockCard utilise déjà StockStatusBadge)
 - [ ] Medications (MedicationCard, MedicationDialog)
 - [ ] Prescriptions (PrescriptionCard)
 - [ ] Treatments (TreatmentCard)
 
 **Priorité moyenne** :
+
 - [ ] Index/Dashboard (IntakeCard, StockAlertsCard, etc.)
 - [ ] Calendar (IntakeDetailCard)
 - [ ] Notification Settings (cartes de config)
@@ -447,11 +481,13 @@ interface ConfirmDialogProps {
 ### Quand créer un nouveau composant atomique ?
 
 ✅ **Créer si** :
+
 - Le pattern se répète dans 3+ endroits
 - La logique est réutilisable avec des props différentes
 - Cela améliore la cohérence visuelle
 
 ❌ **Ne pas créer si** :
+
 - Usage unique et spécifique à une page
 - Trop de props conditionnelles (signe de sur-abstraction)
 - La complexité du composant > complexité du code dupliqué
@@ -466,10 +502,10 @@ interface ConfirmDialogProps {
 
 ### Exemple de pattern à suivre
 
-```tsx
+````tsx
 /**
  * MyComponent description
- * 
+ *
  * @example
  * ```tsx
  * <MyComponent prop1="value" prop2={true} />
@@ -478,7 +514,7 @@ interface ConfirmDialogProps {
 export function MyComponent({ prop1, prop2 }: MyComponentProps) {
   // Implementation
 }
-```
+````
 
 ---
 

@@ -1,11 +1,13 @@
 # Désactivation des logs console - 21 octobre 2025
 
 ## Objectif
+
 Nettoyer la console en production en désactivant tous les logs de debug informatifs.
 
 ## Changements appliqués
 
 ### 1. Ajout de constantes DEBUG
+
 Ajout de constantes booléennes pour contrôler l'affichage des logs dans 3 fichiers :
 
 - **`useMedicationNotificationScheduler.tsx`** : `DEBUG_NOTIFICATIONS = false`
@@ -13,6 +15,7 @@ Ajout de constantes booléennes pour contrôler l'affichage des logs dans 3 fich
 - **`NotificationSchedulerProvider.tsx`** : `DEBUG_SCHEDULER = false`
 
 ### 2. Logs conditionnels
+
 Tous les `console.log` informatifs sont maintenant enveloppés dans des conditions :
 
 ```typescript
@@ -22,7 +25,9 @@ if (DEBUG_NOTIFICATIONS) {
 ```
 
 ### 3. Logs conservés
+
 Les logs d'**erreurs** (`console.error`) sont **toujours affichés** car ils sont importants pour le debugging en production :
+
 - Erreurs de chargement de données
 - Erreurs de planification de notifications
 - Erreurs de connexion à Supabase
@@ -30,6 +35,7 @@ Les logs d'**erreurs** (`console.error`) sont **toujours affichés** car ils son
 ## Logs désactivés par défaut
 
 ### Dans `useMedicationNotificationScheduler.tsx` :
+
 - ✅ Cache restauré
 - ✅ Canal de notification créé
 - ✅ Planification automatique activée/désactivée
@@ -45,9 +51,11 @@ Les logs d'**erreurs** (`console.error`) sont **toujours affichés** car ils son
 - ✅ Total notifications planifiées
 
 ### Dans `useNotificationSystem.tsx` :
+
 - ✅ Notification system detected (PWA/Native)
 
 ### Dans `NotificationSchedulerProvider.tsx` :
+
 - ✅ Utilisateur connecté, démarrage du planificateur
 
 ## Comment activer les logs pour déboguer
@@ -55,16 +63,19 @@ Les logs d'**erreurs** (`console.error`) sont **toujours affichés** car ils son
 Si vous avez besoin de déboguer, changez simplement les constantes en haut des fichiers :
 
 **`useMedicationNotificationScheduler.tsx`** (ligne 10) :
+
 ```typescript
 const DEBUG_NOTIFICATIONS = true; // Mettre à true pour déboguer
 ```
 
 **`useNotificationSystem.tsx`** (ligne 7) :
+
 ```typescript
 const DEBUG_NOTIFICATION_SYSTEM = true;
 ```
 
 **`NotificationSchedulerProvider.tsx`** (ligne 6) :
+
 ```typescript
 const DEBUG_SCHEDULER = true;
 ```
@@ -75,11 +86,12 @@ const DEBUG_SCHEDULER = true;
 ✅ **Performance** : Moins d'opérations de logging  
 ✅ **UX développeur** : Logs faciles à réactiver pour le debug  
 ✅ **Flexibilité** : Chaque module peut être débogué indépendamment  
-✅ **Maintenabilité** : Les logs d'erreurs restent visibles  
+✅ **Maintenabilité** : Les logs d'erreurs restent visibles
 
 ## Exemple de console avant/après
 
 ### Avant (console encombrée) :
+
 ```
 Notification system detected: {platform: "PWA (Web)", ...}
 📦 Cache restauré: 5 notifications
@@ -95,9 +107,11 @@ Notification system detected: {platform: "PWA (Web)", ...}
 ```
 
 ### Après (console propre) :
+
 ```
 (vide ou seulement les erreurs si problème)
 ```
 
 ## Note importante
+
 Les **erreurs** restent **toujours visibles** pour faciliter le diagnostic des problèmes en production.

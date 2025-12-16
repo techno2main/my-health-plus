@@ -11,33 +11,33 @@
 
 ### Total : 27 occurrences dans 20 fichiers
 
-| # | Fichier | Occurrences | Priorité | Statut |
-|---|---------|-------------|----------|--------|
-| 1 | `src/hooks/useAuth.tsx` | 1 | 🔴 CRITIQUE | ✅ FAIT |
-| 2 | `src/hooks/useAutoRegenerateIntakes.tsx` | 0* | 🔴 CRITIQUE | ✅ FAIT |
-| 3 | `src/lib/auth-guard.ts` | 2 | N/A | ✅ (Utilitaire) |
-| 4 | `src/components/Layout/AppHeader.tsx` | 1 | 🔴 CRITIQUE | ✅ FAIT |
-| 5 | `src/hooks/useMedicationNotificationScheduler.tsx` | 1 | 🔴 CRITIQUE | ✅ FAIT |
-| 6 | `src/components/TreatmentWizard/TreatmentWizard.tsx` | 1 | 🔴 CRITIQUE | ✅ FAIT |
-| 7 | `src/components/TreatmentWizard/hooks/useStep3Stocks.ts` | 1 | 🟠 HAUTE | ✅ FAIT |
-| 8 | `src/pages/profile-export/hooks/useExportConfig.ts` | 2 | 🟠 HAUTE | ✅ FAIT |
-| 9 | `src/pages/profile-export/hooks/useExportData.ts` | 1 | 🟠 HAUTE | ✅ FAIT |
-| 10 | `src/pages/privacy/hooks/usePrivacySettings.ts` | 1 | 🟠 HAUTE | ✅ FAIT |
-| 11 | `src/pages/privacy/hooks/usePasswordManagement.ts` | 2 | 🟠 HAUTE | ✅ FAIT |
-| 12 | `src/pages/privacy/hooks/useBiometricSettings.ts` | 2 | 🟠 HAUTE | ✅ FAIT |
-| 13 | `src/pages/privacy/hooks/useAccountActions.ts` | 3 | 🟠 HAUTE | ✅ FAIT |
-| 14 | `src/pages/prescriptions/hooks/usePrescriptions.ts` | 1 | 🟡 MOYENNE | ✅ FAIT |
-| 15 | `src/pages/pathologies/hooks/usePathologies.ts` | 1 | 🟡 MOYENNE | ✅ FAIT |
-| 16 | `src/pages/medication-catalog/hooks/useMedicationCatalog.ts` | 1 | 🟡 MOYENNE | ✅ FAIT |
-| 17 | `src/pages/health-professionals/hooks/useHealthProfessionals.ts` | 1 | 🟡 MOYENNE | ✅ FAIT |
-| 18 | `src/pages/allergies/hooks/useAllergies.ts` | 1 | 🟡 MOYENNE | ✅ FAIT |
-| 19 | `src/hooks/useSettingsSectionOrder.tsx` | 2 | 🟡 MOYENNE | ✅ FAIT |
-| 20 | `src/hooks/generic/useEntityCrud.ts` | 1 | 🟡 MOYENNE | ✅ FAIT |
-| 21 | `src/pages/admin/NotificationDebug.tsx` | 1 | 🔵 BASSE | ✅ FAIT |
+| #   | Fichier                                                          | Occurrences | Priorité    | Statut          |
+| --- | ---------------------------------------------------------------- | ----------- | ----------- | --------------- |
+| 1   | `src/hooks/useAuth.tsx`                                          | 1           | 🔴 CRITIQUE | ✅ FAIT         |
+| 2   | `src/hooks/useAutoRegenerateIntakes.tsx`                         | 0\*         | 🔴 CRITIQUE | ✅ FAIT         |
+| 3   | `src/lib/auth-guard.ts`                                          | 2           | N/A         | ✅ (Utilitaire) |
+| 4   | `src/components/Layout/AppHeader.tsx`                            | 1           | 🔴 CRITIQUE | ✅ FAIT         |
+| 5   | `src/hooks/useMedicationNotificationScheduler.tsx`               | 1           | 🔴 CRITIQUE | ✅ FAIT         |
+| 6   | `src/components/TreatmentWizard/TreatmentWizard.tsx`             | 1           | 🔴 CRITIQUE | ✅ FAIT         |
+| 7   | `src/components/TreatmentWizard/hooks/useStep3Stocks.ts`         | 1           | 🟠 HAUTE    | ✅ FAIT         |
+| 8   | `src/pages/profile-export/hooks/useExportConfig.ts`              | 2           | 🟠 HAUTE    | ✅ FAIT         |
+| 9   | `src/pages/profile-export/hooks/useExportData.ts`                | 1           | 🟠 HAUTE    | ✅ FAIT         |
+| 10  | `src/pages/privacy/hooks/usePrivacySettings.ts`                  | 1           | 🟠 HAUTE    | ✅ FAIT         |
+| 11  | `src/pages/privacy/hooks/usePasswordManagement.ts`               | 2           | 🟠 HAUTE    | ✅ FAIT         |
+| 12  | `src/pages/privacy/hooks/useBiometricSettings.ts`                | 2           | 🟠 HAUTE    | ✅ FAIT         |
+| 13  | `src/pages/privacy/hooks/useAccountActions.ts`                   | 3           | 🟠 HAUTE    | ✅ FAIT         |
+| 14  | `src/pages/prescriptions/hooks/usePrescriptions.ts`              | 1           | 🟡 MOYENNE  | ✅ FAIT         |
+| 15  | `src/pages/pathologies/hooks/usePathologies.ts`                  | 1           | 🟡 MOYENNE  | ✅ FAIT         |
+| 16  | `src/pages/medication-catalog/hooks/useMedicationCatalog.ts`     | 1           | 🟡 MOYENNE  | ✅ FAIT         |
+| 17  | `src/pages/health-professionals/hooks/useHealthProfessionals.ts` | 1           | 🟡 MOYENNE  | ✅ FAIT         |
+| 18  | `src/pages/allergies/hooks/useAllergies.ts`                      | 1           | 🟡 MOYENNE  | ✅ FAIT         |
+| 19  | `src/hooks/useSettingsSectionOrder.tsx`                          | 2           | 🟡 MOYENNE  | ✅ FAIT         |
+| 20  | `src/hooks/generic/useEntityCrud.ts`                             | 1           | 🟡 MOYENNE  | ✅ FAIT         |
+| 21  | `src/pages/admin/NotificationDebug.tsx`                          | 1           | 🔵 BASSE    | ✅ FAIT         |
 
 **Total** : 25 occurrences à migrer (27 - 2 déjà faits dans auth-guard.ts)
 
-*Note: useAutoRegenerateIntakes a été refactorisé pour ne plus utiliser getUser() directement
+\*Note: useAutoRegenerateIntakes a été refactorisé pour ne plus utiliser getUser() directement
 
 ---
 
@@ -49,18 +49,20 @@ Pour chaque fichier, appliquer ce pattern :
 
 ```typescript
 // ❌ AVANT (non sécurisé)
-const { data: { user } } = await supabase.auth.getUser();
+const {
+  data: { user },
+} = await supabase.auth.getUser();
 if (!user) {
-  toast.error('Non authentifié');
+  toast.error("Non authentifié");
   return;
 }
 
 // ✅ APRÈS (sécurisé avec AuthGuard)
-import { getAuthenticatedUser } from '@/lib/auth-guard';
+import { getAuthenticatedUser } from "@/lib/auth-guard";
 
 const { data: user, error } = await getAuthenticatedUser();
 if (error || !user) {
-  console.warn('[NomDuHook] Utilisateur non authentifié:', error?.message);
+  console.warn("[NomDuHook] Utilisateur non authentifié:", error?.message);
   return;
 }
 ```
@@ -76,12 +78,14 @@ if (error || !user) {
 ### Règles de Sécurité
 
 ✅ **À FAIRE** :
+
 - Remplacer TOUS les `supabase.auth.getUser()`
 - Garder la même logique de gestion d'erreur
 - Conserver les toasts existants
 - Ajouter un log avec préfixe du hook
 
 ❌ **NE PAS FAIRE** :
+
 - Changer la logique métier
 - Supprimer des vérifications existantes
 - Modifier les retours de fonction
@@ -92,6 +96,7 @@ if (error || !user) {
 ## 📋 Plan d'Exécution (3 Phases)
 
 ### Phase 1 : CRITIQUE (Fichiers 4-6) - ✅ TERMINÉE
+
 **Impact** : Bloque l'utilisation normale de l'app
 
 - [x] `AppHeader.tsx` - Header présent partout
@@ -99,6 +104,7 @@ if (error || !user) {
 - [x] `TreatmentWizard.tsx` - Création de traitements
 
 ### Phase 2 : HAUTE PRIORITÉ (Fichiers 7-13) - ✅ TERMINÉE
+
 **Impact** : Fonctionnalités importantes mais pas bloquantes
 
 - [x] `useStep3Stocks.ts` - Étape 3 wizard traitement
@@ -110,6 +116,7 @@ if (error || !user) {
 - [x] `useAccountActions.ts` (3 occurrences) - Actions compte
 
 ### Phase 3 : MOYENNE & BASSE (Fichiers 14-21) - ✅ TERMINÉE
+
 **Impact** : Référentiels et fonctionnalités secondaires
 
 - [x] `usePrescriptions.ts` - Prescriptions
@@ -199,6 +206,7 @@ Après chaque phase :
 **ZÉRO** erreur 403 au chargement de l'application, quelle que soit la page.
 
 **Bénéfices** :
+
 - ✅ Code 100% sécurisé
 - ✅ Pattern uniforme dans toute l'app
 - ✅ Logs cohérents pour debugging

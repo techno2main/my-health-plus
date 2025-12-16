@@ -1,4 +1,5 @@
 # Compte-Rendu : Tentative d'implémentation Avatar Google OAuth
+
 **Date** : 3 Novembre 2025  
 **Statut** : ❌ ÉCHEC  
 **Crédits consommés** : ~8-10 échanges
@@ -6,6 +7,7 @@
 ---
 
 ## 🎯 Objectif Initial
+
 Récupérer automatiquement l'avatar du compte Google lors de la connexion OAuth et l'afficher dans le profil utilisateur.
 
 ---
@@ -15,6 +17,7 @@ Récupérer automatiquement l'avatar du compte Google lors de la connexion OAuth
 ### 1. Migrations Base de Données (3 migrations)
 
 #### Migration 1 : Fonction handle_new_user()
+
 ```sql
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER
@@ -54,7 +57,7 @@ BEGIN
     first_name = COALESCE(EXCLUDED.first_name, profiles.first_name),
     last_name = COALESCE(EXCLUDED.last_name, profiles.last_name),
     updated_at = NOW();
-  
+
   RETURN NEW;
 END;
 $$;
@@ -64,9 +67,10 @@ $$;
 **Problème** : Le champ `picture` n'est jamais renvoyé par Google via Supabase OAuth
 
 #### Migration 2 : Création profil existant
+
 ```sql
 INSERT INTO public.profiles (id, first_name, last_name, created_at, updated_at)
-SELECT 
+SELECT
   id,
   COALESCE(raw_user_meta_data->>'first_name', split_part(raw_user_meta_data->>'name', ' ', 1)),
   COALESCE(raw_user_meta_data->>'last_name', split_part(raw_user_meta_data->>'name', ' ', 2)),
@@ -83,6 +87,7 @@ ON CONFLICT (id) DO UPDATE SET
 **Résultat** : ✅ Profil créé pour l'utilisateur existant
 
 #### Migration 3 : Fonction sync_google_avatar_to_profile
+
 ```sql
 CREATE OR REPLACE FUNCTION public.sync_google_avatar_to_profile(user_uuid uuid)
 RETURNS void
@@ -95,7 +100,7 @@ DECLARE
   first_name_value text;
   last_name_value text;
 BEGIN
-  SELECT 
+  SELECT
     raw_user_meta_data->>'avatar_url',
     COALESCE(raw_user_meta_data->>'first_name', split_part(email, '@', 1)),
     raw_user_meta_data->>'last_name'
@@ -104,7 +109,7 @@ BEGIN
   WHERE id = user_uuid;
 
   UPDATE public.profiles
-  SET 
+  SET
     avatar_url = COALESCE(avatar_url_value, avatar_url),
     first_name = COALESCE(first_name_value, first_name),
     last_name = COALESCE(last_name_value, last_name),
@@ -121,18 +126,20 @@ $$;
 ### 2. Modifications Code OAuth
 
 #### Tentative 1 : Ajout scopes dans queryParams
+
 ```typescript
 // src/hooks/useAuth.tsx
 const signInWithGoogle = async () => {
   const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
+    provider: "google",
     options: {
       redirectTo: `${window.location.origin}/`,
       queryParams: {
-        access_type: 'offline',
-        prompt: 'consent',
-        scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid'
-      }
+        access_type: "offline",
+        prompt: "consent",
+        scope:
+          "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
+      },
     },
   });
   return { error };
@@ -147,10 +154,11 @@ const signInWithGoogle = async () => {
 ### 3. Création Hook useGoogleAvatar
 
 #### Fichier créé puis supprimé : src/hooks/useGoogleAvatar.tsx
+
 ```typescript
-import { useEffect } from 'react';
-import { useAuth } from './useAuth';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect } from "react";
+import { useAuth } from "./useAuth";
+import { supabase } from "@/integrations/supabase/client";
 
 export function useGoogleAvatar() {
   const { user, session } = useAuth();
@@ -161,19 +169,19 @@ export function useGoogleAvatar() {
     const fetchGoogleAvatar = async () => {
       try {
         const providerToken = session.provider_token;
-        
+
         if (!providerToken) {
-          console.log('❌ Pas de provider_token disponible');
+          console.log("❌ Pas de provider_token disponible");
           return;
         }
 
         const response = await fetch(
-          'https://people.googleapis.com/v1/people/me?personFields=photos',
+          "https://people.googleapis.com/v1/people/me?personFields=photos",
           {
             headers: {
               Authorization: `Bearer ${providerToken}`,
             },
-          }
+          },
         );
 
         if (!response.ok) return;
@@ -184,15 +192,18 @@ export function useGoogleAvatar() {
         if (!photoUrl) return;
 
         const { error } = await supabase
-          .from('profiles')
-          .update({ avatar_url: photoUrl, updated_at: new Date().toISOString() })
-          .eq('id', user.id);
+          .from("profiles")
+          .update({
+            avatar_url: photoUrl,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", user.id);
 
         if (!error) {
           window.location.reload();
         }
       } catch (error) {
-        console.error('❌ Erreur récupération avatar Google:', error);
+        console.error("❌ Erreur récupération avatar Google:", error);
       }
     };
 
@@ -209,9 +220,11 @@ export function useGoogleAvatar() {
 ## ❌ Problèmes Identifiés
 
 ### Cause Racine
+
 Supabase OAuth avec Google **ne renvoie PAS le champ `picture`** dans `raw_user_meta_data`, même avec les scopes correctement configurés côté Google Cloud.
 
 ### Données Actuelles Reçues
+
 ```json
 {
   "email": "antonymasson.dev@gmail.com",
@@ -226,10 +239,12 @@ Supabase OAuth avec Google **ne renvoie PAS le champ `picture`** dans `raw_user_
 ```
 
 ### Données Manquantes
+
 - ❌ `picture: "https://lh3.googleusercontent.com/..."`
 - ❌ `avatar_url`
 
 ### Configuration Google Cloud Vérifiée
+
 - ✅ Scopes OAuth configurés :
   - `.../auth/userinfo.email`
   - `.../auth/userinfo.profile`
@@ -253,28 +268,32 @@ Supabase OAuth avec Google **ne renvoie PAS le champ `picture`** dans `raw_user_
 
 ## 📊 Bilan
 
-| Élément | Statut | Notes |
-|---------|--------|-------|
-| Connexion Google OAuth | ✅ | Fonctionne parfaitement |
-| Récupération nom/email | ✅ | Automatique via trigger |
-| Récupération avatar Google | ❌ | **ÉCHEC TOTAL** |
-| Upload manuel avatar | ✅ | Alternative fonctionnelle |
-| Temps consommé | ❌ | ~30-40 minutes |
-| Crédits Lovable | ❌ | ~8-10 échanges perdus |
+| Élément                    | Statut | Notes                     |
+| -------------------------- | ------ | ------------------------- |
+| Connexion Google OAuth     | ✅     | Fonctionne parfaitement   |
+| Récupération nom/email     | ✅     | Automatique via trigger   |
+| Récupération avatar Google | ❌     | **ÉCHEC TOTAL**           |
+| Upload manuel avatar       | ✅     | Alternative fonctionnelle |
+| Temps consommé             | ❌     | ~30-40 minutes            |
+| Crédits Lovable            | ❌     | ~8-10 échanges perdus     |
 
 ---
 
 ## 🔧 Solutions Alternatives
 
 ### Solution 1 : Upload Manuel (IMPLÉMENTÉE)
+
 L'utilisateur peut uploader son propre avatar :
+
 1. Aller sur le profil
 2. Cliquer sur "Modifier"
 3. Cliquer sur l'icône caméra sur l'avatar
 4. Sélectionner une image
 
 ### Solution 2 : Edge Function (NON TENTÉE)
+
 Créer une edge function Supabase qui :
+
 1. Intercepte le callback OAuth
 2. Utilise le `provider_token` pour appeler l'API Google People
 3. Stocke l'avatar dans le profil
@@ -282,12 +301,15 @@ Créer une edge function Supabase qui :
 **Risque** : Même problématique de `provider_token` potentiellement absent
 
 ### Solution 3 : Configuration Serveur Supabase (NON ACCESSIBLE)
+
 Vérifier si une configuration serveur spécifique existe dans Supabase Dashboard > Authentication > Providers > Google pour forcer la récupération de l'avatar.
 
 ---
 
 ## 🚨 Avertissement Sécurité
+
 1 warning Supabase détecté (non critique) :
+
 - **Leaked Password Protection Disabled** : Protection contre les mots de passe compromis désactivée
 
 ---
@@ -295,13 +317,16 @@ Vérifier si une configuration serveur spécifique existe dans Supabase Dashboar
 ## 📝 Fichiers Modifiés
 
 ### Créés puis Supprimés
+
 - ❌ `src/hooks/useGoogleAvatar.tsx` (supprimé)
 
 ### Modifiés puis Restaurés
+
 - ↩️ `src/hooks/useAuth.tsx` (retour version initiale)
 - ↩️ `src/pages/auth/Auth.tsx` (import useGoogleAvatar retiré)
 
 ### Migrations Appliquées
+
 - ✅ `handle_new_user()` fonction
 - ✅ Trigger `on_auth_user_created`
 - ✅ `sync_google_avatar_to_profile()` fonction

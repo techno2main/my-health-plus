@@ -83,6 +83,7 @@ Synchroniser les événements de santé de l'application (prises de médicaments
 - [x] Tests synchronisation complète 144 prises (13/10 → 02/11/2025)
 
 **Bugs résolus** :
+
 - ❌ **Bug couleurs** : Événements toujours verts → ✅ RÉSOLU (utilisation `taken_at`)
 - ❌ **Bug UPDATE Samsung** : Erreur native → ✅ RÉSOLU (stratégie DELETE+CREATE)
 - ❌ **Bug doublons** : Événements multipliés → ✅ RÉSOLU (mapping `syncedEvents`)
@@ -130,7 +131,7 @@ npx cap sync android
 
 Le fichier `android/app/src/main/AndroidManifest.xml` contient déjà :
 
-```xml
+````xml
 <uses-permission android:name="android.permission.READ_CALENDAR" />
 <uses-permission android:name="android.permission.WRITE_CALENDAR" />
 ```**✅ Déjà configurées** - Rien à faire !
@@ -223,7 +224,7 @@ Le système de synchronisation utilise un **mapping persistent** pour éviter le
   "doctor_def456": "native_event_uvw012",
   ...
 }
-```
+````
 
 ---
 
@@ -232,19 +233,20 @@ Le système de synchronisation utilise un **mapping persistent** pour éviter le
 **⚠️ CRITIQUE** : L'application utilise **toujours le fuseau horaire de Paris** (Europe/Paris), même sur des émulateurs/appareils configurés différemment.
 
 ### Fonction `getCurrentDateInParis()`
+
 ```typescript
 const getCurrentDateInParis = (): Date => {
-  const parisFormatter = new Intl.DateTimeFormat('fr-FR', {
-    timeZone: 'Europe/Paris',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hour12: false
+  const parisFormatter = new Intl.DateTimeFormat("fr-FR", {
+    timeZone: "Europe/Paris",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
   });
-  
+
   const now = new Date();
   const parts = parisFormatter.formatToParts(now);
   // ... reconstruit une Date avec l'heure de Paris
@@ -252,18 +254,22 @@ const getCurrentDateInParis = (): Date => {
 ```
 
 ### Utilisée dans
+
 - `TodaySection.tsx` : Détermine "Aujourd'hui"
 - `TomorrowSection.tsx` : Détermine "Demain"
 - `Index.tsx` : Auto-open des accordions et validation des prises
 - `isIntakeValidationAllowed()` : Vérification heure >= 06:00 Paris
 
 ### Pourquoi c'est critique ?
+
 Sur un émulateur Android configuré en PST (UTC-8), sans cette correction :
+
 - Il est 15:00 à Paris → "Aujourd'hui"
 - Mais l'émulateur affiche 06:00 PST → "Hier" ❌
 - Les sections Today/Tomorrow affichent les mauvaises prises !
 
 Avec `getCurrentDateInParis()` :
+
 - Toujours 15:00 Paris → "Aujourd'hui" ✅
 - Fonctionne sur **tous** les appareils, quel que soit le fuseau local
 
@@ -274,6 +280,7 @@ Avec `getCurrentDateInParis()` :
 ### Tests émulateur Android
 
 1. **Build et sync**
+
    ```bash
    npm run build
    npx cap sync android
@@ -293,12 +300,14 @@ Avec `getCurrentDateInParis()` :
 ### Tests téléphone Android réel
 
 1. **Générer APK de test**
+
    ```bash
    npm run build
    npx cap sync android
    cd android
    ./gradlew assembleDebug
    ```
+
    APK généré dans `android/app/build/outputs/apk/debug/`
 
 2. **Installer et tester**
@@ -310,6 +319,7 @@ Avec `getCurrentDateInParis()` :
 ### Tests iOS (si disponible)
 
 1. **Build et sync**
+
    ```bash
    npm run build
    npx cap sync ios
@@ -332,24 +342,31 @@ Avec `getCurrentDateInParis()` :
 ## 🐛 Troubleshooting
 
 ### Problème : "Permissions refusées"
+
 **Solution** : Aller dans Paramètres Android → Applications → MyHealth+ → Autorisations → Calendrier → Autoriser
 
 ### Problème : "Aucun calendrier disponible"
+
 **Solution** : Créer un compte Google et synchroniser le calendrier, ou utiliser le calendrier local Samsung
 
 ### Problème : "Événements en double"
+
 **Solution** : Le système empêche normalement les doublons via le mapping. Si doublons :
+
 1. Supprimer les événements manuellement
 2. Effacer les données de l'app (Paramètres → Stockage)
 3. Re-synchroniser
 
 ### Problème : "Today/Tomorrow affichent mauvaises dates sur émulateur"
+
 **✅ CORRIGÉ** : `getCurrentDateInParis()` force toujours le fuseau horaire Paris. Si le problème persiste, vérifier que tous les fichiers utilisent bien cette fonction.
 
 ### Problème : "Couleurs ne s'affichent pas"
+
 **Note** : Certaines apps calendrier Android n'affichent pas les couleurs personnalisées des événements. Testé et fonctionnel sur Google Calendar.
 
 ### Problème : "Alertes ne se déclenchent pas"
+
 **Solution** : Vérifier que l'app a la permission NOTIFICATIONS et que "Ne pas déranger" est désactivé.
 
 ---
@@ -435,15 +452,18 @@ await CapacitorCalendar.deleteEvent({ id });
 ## 🚀 Prochaines évolutions possibles
 
 ### V2 : Synchronisation bidirectionnelle
+
 - Détecter modifications dans calendrier natif
 - Mettre à jour statut prises depuis calendrier
 - Gérer conflits app ↔ calendrier
 
 ### V3 : Synchronisation en arrière-plan
+
 - Service worker pour sync auto toutes les 6h
 - Push notifications quand événements créés/modifiés
 
 ### V4 : Personnalisation avancée
+
 - Choisir couleurs personnalisées par type
 - Configurer durée des événements
 - Choisir alertes personnalisées
@@ -474,6 +494,7 @@ Avant de merger `feat/calendar-sync` dans `dev` :
 
 1. **Stocker les IDs de mapping**
    Créer une table Supabase `calendar_event_mappings` :
+
    ```sql
    CREATE TABLE calendar_event_mappings (
      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -510,7 +531,7 @@ Avant de merger `feat/calendar-sync` dans `dev` :
 const startDate = new Date(intake.scheduled_time); // UTC depuis BDD
 await Calendar.createEvent({
   startDate: startDate.getTime(), // Timestamp UTC
-  endDate: endDate.getTime()
+  endDate: endDate.getTime(),
 });
 
 // ❌ INCORRECT - Ne pas faire de conversion manuelle

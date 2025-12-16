@@ -8,6 +8,7 @@
 ## 🎯 Vue d'ensemble
 
 ### Problèmes actuels
+
 - ❌ Code dupliqué sur toutes les pages (tri, filtrage, groupement)
 - ❌ Traitements archivés invisibles (pas d'historique accessible)
 - ❌ Hooks qui incluent les traitements archivés dans les calculs
@@ -16,6 +17,7 @@
 - ❌ Pas d'avertissement si end_date dépassée
 
 ### Approche
+
 1. **Phase 1** : Base de données (colonnes, triggers, fonctions PostgreSQL)
 2. **Phase 2** : Utilitaires centralisés (sortingUtils, filterUtils, etc.)
 3. **Phase 3** : Correction des hooks et pages
@@ -26,18 +28,18 @@
 
 ## 📊 Récapitulatif des Scénarios
 
-| # | Scénario | Décision | Actions requises |
-|---|----------|----------|------------------|
-| 2 | Traitement neuf archivé | ✅ GARDER avec badge "Non commencé" | Affichage conditionnel |
-| 3 | Traitement en cours archivé | ✅ GARDER tout + annuler visites pharma | Trigger + affichage |
-| 4 | Réactivation | ⚠️ Rare - Skipped auto entre dates | Trigger + logique métier |
-| 5 | Modification horaires | ✅ UPDATE futures + supprimer orphelines | Trigger complexe |
-| 6 | Suppression médicament | ❌ INTERDIT si prises existent + flag "inactif" | Contrainte + colonne |
-| 7 | Modification QSP | ⚠️ À revoir avec utilisateur | - |
-| 8 | Hook + archivés | ✅ Déjà corrigé (filtre is_active) | - |
-| 9 | Prises manquées | ✅ Filtrer is_active dans hook | Correction hook |
-| 10 | Stats observance | ✅ Filtrer is_active | Correction hook |
-| 12 | end_date dépassée | ℹ️ Avertir utilisateur (pas auto) | Fonction + notification |
+| #   | Scénario                    | Décision                                        | Actions requises         |
+| --- | --------------------------- | ----------------------------------------------- | ------------------------ |
+| 2   | Traitement neuf archivé     | ✅ GARDER avec badge "Non commencé"             | Affichage conditionnel   |
+| 3   | Traitement en cours archivé | ✅ GARDER tout + annuler visites pharma         | Trigger + affichage      |
+| 4   | Réactivation                | ⚠️ Rare - Skipped auto entre dates              | Trigger + logique métier |
+| 5   | Modification horaires       | ✅ UPDATE futures + supprimer orphelines        | Trigger complexe         |
+| 6   | Suppression médicament      | ❌ INTERDIT si prises existent + flag "inactif" | Contrainte + colonne     |
+| 7   | Modification QSP            | ⚠️ À revoir avec utilisateur                    | -                        |
+| 8   | Hook + archivés             | ✅ Déjà corrigé (filtre is_active)              | -                        |
+| 9   | Prises manquées             | ✅ Filtrer is_active dans hook                  | Correction hook          |
+| 10  | Stats observance            | ✅ Filtrer is_active                            | Correction hook          |
+| 12  | end_date dépassée           | ℹ️ Avertir utilisateur (pas auto)               | Fonction + notification  |
 
 ---
 
@@ -49,23 +51,24 @@
 
 ```sql
 -- Ajouter la colonne archived_at
-ALTER TABLE treatments 
+ALTER TABLE treatments
 ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP WITH TIME ZONE;
 
 -- Remplir rétroactivement pour les traitements déjà archivés
-UPDATE treatments 
-SET archived_at = updated_at 
+UPDATE treatments
+SET archived_at = updated_at
 WHERE is_active = false AND archived_at IS NULL;
 
 -- Index pour les requêtes
-CREATE INDEX IF NOT EXISTS idx_treatments_archived_at 
-ON treatments(archived_at) 
+CREATE INDEX IF NOT EXISTS idx_treatments_archived_at
+ON treatments(archived_at)
 WHERE archived_at IS NOT NULL;
 
 COMMENT ON COLUMN treatments.archived_at IS 'Date et heure d''archivage du traitement. NULL si actif.';
 ```
 
 **Impact** :
+
 - ✅ Permet de savoir QUAND un traitement a été archivé
 - ✅ Permet de distinguer "jamais commencé" vs "en cours puis archivé"
 
@@ -84,25 +87,25 @@ DECLARE
 BEGIN
   -- Si le traitement passe de actif à archivé
   IF NEW.is_active = false AND OLD.is_active = true THEN
-    
+
     -- 1. Enregistrer la date d'archivage
     NEW.archived_at = NOW();
-    
+
     -- 2. Vérifier si le traitement avait commencé
     SELECT EXISTS (
-      SELECT 1 
+      SELECT 1
       FROM medication_intakes mi
       JOIN medications m ON m.id = mi.medication_id
       WHERE m.treatment_id = NEW.id
         AND mi.status IN ('taken', 'skipped')
     ) INTO treatment_started;
-    
+
     -- 3. Annuler les visites pharmacie futures
     UPDATE pharmacy_visits
-    SET 
+    SET
       is_completed = true,
-      notes = CASE 
-        WHEN notes IS NULL OR notes = '' 
+      notes = CASE
+        WHEN notes IS NULL OR notes = ''
         THEN 'Annulée - Traitement archivé le ' || TO_CHAR(NOW(), 'DD/MM/YYYY')
         ELSE notes || E'\n' || 'Annulée - Traitement archivé le ' || TO_CHAR(NOW(), 'DD/MM/YYYY')
       END,
@@ -110,15 +113,15 @@ BEGIN
     WHERE treatment_id = NEW.id
       AND visit_date >= CURRENT_DATE
       AND is_completed = false;
-    
+
     -- 4. Log pour debug
-    RAISE NOTICE 'Traitement % archivé. Started: %. Visites annulées: %', 
-      NEW.name, 
+    RAISE NOTICE 'Traitement % archivé. Started: %. Visites annulées: %',
+      NEW.name,
       treatment_started,
       (SELECT COUNT(*) FROM pharmacy_visits WHERE treatment_id = NEW.id AND visit_date >= CURRENT_DATE);
-    
+
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -132,6 +135,7 @@ CREATE TRIGGER trigger_archive_treatment
 ```
 
 **Impact** :
+
 - ✅ Annule automatiquement les visites pharmacie futures
 - ✅ Détecte si le traitement avait commencé (pour badge "Non commencé")
 - ✅ Garde les visites passées intactes
@@ -144,11 +148,11 @@ CREATE TRIGGER trigger_archive_treatment
 
 ```sql
 -- Ajouter colonne is_active sur medications (pour Scénario 6)
-ALTER TABLE medications 
+ALTER TABLE medications
 ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT true;
 
 -- Index
-CREATE INDEX IF NOT EXISTS idx_medications_is_active 
+CREATE INDEX IF NOT EXISTS idx_medications_is_active
 ON medications(is_active);
 
 COMMENT ON COLUMN medications.is_active IS 'Indique si ce médicament est encore à prendre. false = historique seulement.';
@@ -163,6 +167,7 @@ WHERE m.treatment_id = t.id
 ```
 
 **Impact** :
+
 - ✅ Permet de désactiver un médicament sans le supprimer (Scénario 6)
 - ✅ Garde l'historique des prises passées
 - ✅ Empêche la génération de futures prises pour ce médicament
@@ -183,10 +188,10 @@ BEGIN
     SET is_active = false, updated_at = NOW()
     WHERE treatment_id = NEW.id
       AND is_active = true;
-    
+
     RAISE NOTICE 'Médicaments désactivés pour le traitement %', NEW.name;
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -199,6 +204,7 @@ CREATE TRIGGER trigger_cascade_medication
 ```
 
 **Impact** :
+
 - ✅ Cohérence : traitement archivé = tous ses médicaments inactifs
 - ✅ Empêche la régénération des prises
 
@@ -218,7 +224,7 @@ DECLARE
 BEGIN
   -- Si les horaires ont changé
   IF OLD.times IS DISTINCT FROM NEW.times THEN
-    
+
     -- 1. SUPPRIMER les prises futures dont l'horaire n'existe plus
     WITH deleted AS (
       DELETE FROM medication_intakes
@@ -231,20 +237,20 @@ BEGIN
       RETURNING *
     )
     SELECT COUNT(*) INTO deleted_count FROM deleted;
-    
+
     -- 2. METTRE À JOUR les prises futures dont l'horaire a changé
     -- Exemple : 09:00 devient 09:30
     -- On trouve les correspondances par position dans le tableau
     -- Cette partie est complexe car il faut détecter les modifications sans suppression
-    
+
     -- Pour simplifier, on régénère tout après suppression
     PERFORM regenerate_future_intakes(NEW.id);
-    
-    RAISE NOTICE 'Nettoyage prises médicament %: % supprimées, régénération lancée', 
+
+    RAISE NOTICE 'Nettoyage prises médicament %: % supprimées, régénération lancée',
       NEW.name, deleted_count;
-    
+
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -257,6 +263,7 @@ CREATE TRIGGER trigger_cleanup_orphans
 ```
 
 **Impact** :
+
 - ✅ Supprime les prises futures dont l'horaire n'existe plus
 - ✅ Régénère les prises avec les nouveaux horaires
 - ✅ Garde les prises passées (taken/skipped) intactes
@@ -278,23 +285,23 @@ DECLARE
 BEGIN
   -- Si le traitement passe d'archivé à actif
   IF NEW.is_active = true AND OLD.is_active = false THEN
-    
+
     archive_date := DATE(OLD.archived_at);
     reactivation_date := CURRENT_DATE;
-    
+
     -- 1. Réinitialiser archived_at
     NEW.archived_at = NULL;
-    
+
     -- 2. Réactiver les médicaments
     UPDATE medications
     SET is_active = true, updated_at = NOW()
     WHERE treatment_id = NEW.id;
-    
+
     -- 3. Marquer comme SKIPPED les prises pending entre la date d'archivage et aujourd'hui
     UPDATE medication_intakes mi
-    SET 
+    SET
       status = 'skipped',
-      notes = COALESCE(notes || E'\n', '') || 'Marquée skipped automatiquement (traitement archivé du ' 
+      notes = COALESCE(notes || E'\n', '') || 'Marquée skipped automatiquement (traitement archivé du '
         || TO_CHAR(archive_date, 'DD/MM/YYYY') || ' au ' || TO_CHAR(reactivation_date, 'DD/MM/YYYY') || ')',
       updated_at = NOW()
     FROM medications m
@@ -303,19 +310,19 @@ BEGIN
       AND mi.status = 'pending'
       AND DATE(mi.scheduled_time AT TIME ZONE 'Europe/Paris') >= archive_date
       AND DATE(mi.scheduled_time AT TIME ZONE 'Europe/Paris') < reactivation_date;
-    
+
     -- 4. Régénérer les prises futures pour chaque médicament
-    FOR med_record IN 
+    FOR med_record IN
       SELECT id FROM medications WHERE treatment_id = NEW.id
     LOOP
       PERFORM regenerate_future_intakes(med_record.id);
     END LOOP;
-    
+
     RAISE NOTICE 'Traitement % réactivé. Prises entre % et % marquées skipped. Régénération lancée.',
       NEW.name, archive_date, reactivation_date;
-    
+
   END IF;
-  
+
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -328,6 +335,7 @@ CREATE TRIGGER trigger_reactivate_treatment
 ```
 
 **Impact** :
+
 - ✅ Marque automatiquement les prises entre archivage et réactivation comme "skipped"
 - ✅ Régénère les prises futures
 - ✅ Préserve l'historique complet
@@ -349,7 +357,7 @@ RETURNS TABLE (
 ) AS $$
 BEGIN
   RETURN QUERY
-  SELECT 
+  SELECT
     t.id,
     t.name,
     t.end_date,
@@ -366,6 +374,7 @@ COMMENT ON FUNCTION get_expired_treatments() IS 'Retourne la liste des traitemen
 ```
 
 **Impact** :
+
 - ✅ Fonction appelable depuis le frontend
 - ✅ Permet d'afficher une notification à l'utilisateur
 - ℹ️ Pas d'archivage automatique (décision utilisateur)
@@ -388,14 +397,14 @@ BEGIN
   FROM medication_intakes
   WHERE medication_id = OLD.id
     AND status IN ('taken', 'skipped');
-  
+
   IF intake_count > 0 THEN
-    RAISE EXCEPTION 
+    RAISE EXCEPTION
       'Impossible de supprimer le médicament %. Il existe % prise(s) dans l''historique. Utilisez is_active = false pour le désactiver.',
       OLD.name, intake_count
       USING HINT = 'Désactivez le médicament au lieu de le supprimer pour conserver l''historique.';
   END IF;
-  
+
   RETURN OLD;
 END;
 $$ LANGUAGE plpgsql;
@@ -408,6 +417,7 @@ CREATE TRIGGER trigger_prevent_medication_deletion
 ```
 
 **Impact** :
+
 - ✅ Empêche la perte d'historique
 - ✅ Force l'utilisation de `is_active = false`
 - ✅ Autorise la suppression si aucune prise (traitement neuf jamais commencé)
@@ -441,17 +451,17 @@ export interface TreatmentWithDate {
  * Trie les prises par horaire (HH:mm) puis par nom de médicament (alphabétique)
  */
 export function sortIntakesByTimeAndName<T extends IntakeWithTime>(
-  intakes: T[]
+  intakes: T[],
 ): T[] {
   return [...intakes].sort((a, b) => {
     // 1. Trier par heure
     const timeCompare = a.time.localeCompare(b.time);
     if (timeCompare !== 0) return timeCompare;
-    
+
     // 2. Trier par nom de médicament (français)
-    return a.medication.localeCompare(b.medication, 'fr', {
-      sensitivity: 'base',
-      ignorePunctuation: true
+    return a.medication.localeCompare(b.medication, "fr", {
+      sensitivity: "base",
+      ignorePunctuation: true,
     });
   });
 }
@@ -460,17 +470,17 @@ export function sortIntakesByTimeAndName<T extends IntakeWithTime>(
  * Trie les médicaments par première prise du jour, puis par nom
  */
 export function sortMedicationsByEarliestTime<T extends MedicationWithTimes>(
-  medications: T[]
+  medications: T[],
 ): T[] {
   return [...medications].sort((a, b) => {
     const timeA = getEarliestMinutes(a.times);
     const timeB = getEarliestMinutes(b.times);
-    
+
     if (timeA !== timeB) return timeA - timeB;
-    
-    return a.name.localeCompare(b.name, 'fr', {
-      sensitivity: 'base',
-      ignorePunctuation: true
+
+    return a.name.localeCompare(b.name, "fr", {
+      sensitivity: "base",
+      ignorePunctuation: true,
     });
   });
 }
@@ -480,7 +490,7 @@ export function sortMedicationsByEarliestTime<T extends MedicationWithTimes>(
  */
 export function sortTreatmentsByStartDate<T extends TreatmentWithDate>(
   treatments: T[],
-  ascending = true
+  ascending = true,
 ): T[] {
   return [...treatments].sort((a, b) => {
     const dateA = new Date(a.startDate).getTime();
@@ -494,10 +504,10 @@ export function sortTreatmentsByStartDate<T extends TreatmentWithDate>(
  */
 function getEarliestMinutes(times: string[]): number {
   if (!times || times.length === 0) return 24 * 60; // Minuit = fin de journée
-  
+
   const sortedTimes = [...times].sort();
-  const [hours, minutes] = sortedTimes[0].split(':').map(Number);
-  
+  const [hours, minutes] = sortedTimes[0].split(":").map(Number);
+
   return hours * 60 + minutes;
 }
 ```
@@ -529,20 +539,23 @@ export interface GroupedByTreatment<T> {
  * Groupe les prises par traitement
  */
 export function groupIntakesByTreatment<T extends IntakeBase>(
-  intakes: T[]
+  intakes: T[],
 ): Record<string, GroupedByTreatment<T>> {
-  return intakes.reduce((acc, intake) => {
-    if (!acc[intake.treatmentId]) {
-      acc[intake.treatmentId] = {
-        treatment: intake.treatment,
-        qspDays: intake.treatmentQspDays,
-        endDate: intake.treatmentEndDate,
-        intakes: []
-      };
-    }
-    acc[intake.treatmentId].intakes.push(intake);
-    return acc;
-  }, {} as Record<string, GroupedByTreatment<T>>);
+  return intakes.reduce(
+    (acc, intake) => {
+      if (!acc[intake.treatmentId]) {
+        acc[intake.treatmentId] = {
+          treatment: intake.treatment,
+          qspDays: intake.treatmentQspDays,
+          endDate: intake.treatmentEndDate,
+          intakes: [],
+        };
+      }
+      acc[intake.treatmentId].intakes.push(intake);
+      return acc;
+    },
+    {} as Record<string, GroupedByTreatment<T>>,
+  );
 }
 ```
 
@@ -560,8 +573,8 @@ export function groupIntakesByTreatment<T extends IntakeBase>(
  * À utiliser dans les requêtes Supabase
  */
 export const ACTIVE_TREATMENT_FILTER = {
-  join: 'treatments!inner(is_active)',
-  condition: { 'treatments.is_active': true }
+  join: "treatments!inner(is_active)",
+  condition: { "treatments.is_active": true },
 } as const;
 
 /**
@@ -569,11 +582,11 @@ export const ACTIVE_TREATMENT_FILTER = {
  * À utiliser dans les requêtes Supabase
  */
 export const ACTIVE_MEDICATION_FILTER = {
-  join: 'medications!inner(is_active, treatment_id, treatments!inner(is_active))',
-  conditions: { 
-    'medications.is_active': true,
-    'medications.treatments.is_active': true 
-  }
+  join: "medications!inner(is_active, treatment_id, treatments!inner(is_active))",
+  conditions: {
+    "medications.is_active": true,
+    "medications.treatments.is_active": true,
+  },
 } as const;
 
 /**
@@ -581,13 +594,13 @@ export const ACTIVE_MEDICATION_FILTER = {
  */
 export function isTreatmentNeverStarted(
   startDate: string,
-  archivedAt: string | null
+  archivedAt: string | null,
 ): boolean {
   if (!archivedAt) return false;
-  
+
   const start = new Date(startDate);
   const archived = new Date(archivedAt);
-  
+
   // Archivé avant la date de début = jamais commencé
   return archived < start;
 }
@@ -597,21 +610,21 @@ export function isTreatmentNeverStarted(
  */
 export function getArchivedBadgeText(
   startDate: string,
-  archivedAt: string | null
+  archivedAt: string | null,
 ): string {
-  if (!archivedAt) return '';
-  
+  if (!archivedAt) return "";
+
   const archived = new Date(archivedAt);
-  const dateStr = archived.toLocaleDateString('fr-FR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
+  const dateStr = archived.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
   });
-  
+
   if (isTreatmentNeverStarted(startDate, archivedAt)) {
     return `Non commencé - Archivé le ${dateStr}`;
   }
-  
+
   return `Archivé le ${dateStr}`;
 }
 ```
@@ -630,27 +643,31 @@ export function getArchivedBadgeText(
 // AVANT
 const { data: intakes } = await supabase
   .from("medication_intakes")
-  .select(`
+  .select(
+    `
     *,
     medications (
       name,
       treatments (name)
     )
-  `)
+  `,
+  )
   .eq("status", "pending")
   .lt("scheduled_time", now.toISOString());
 
 // APRÈS
 const { data: intakes } = await supabase
   .from("medication_intakes")
-  .select(`
+  .select(
+    `
     *,
     medications!inner (
       name,
       is_active,
       treatments!inner (name, is_active)
     )
-  `)
+  `,
+  )
   .eq("status", "pending")
   .eq("medications.is_active", true)
   .eq("medications.treatments.is_active", true)
@@ -669,10 +686,8 @@ const { data: intakes } = await supabase
 // Ajouter un paramètre includeArchived
 export const useAdherenceStats = (includeArchived = false) => {
   // ...
-  
-  let query = supabase
-    .from("medication_intakes")
-    .select(`
+
+  let query = supabase.from("medication_intakes").select(`
       *,
       medications!inner (
         name,
@@ -680,16 +695,16 @@ export const useAdherenceStats = (includeArchived = false) => {
         treatments!inner (name, is_active)
       )
     `);
-  
+
   // Filtrer par is_active si demandé
   if (!includeArchived) {
     query = query
       .eq("medications.is_active", true)
       .eq("medications.treatments.is_active", true);
   }
-  
+
   // ... reste de la logique
-}
+};
 ```
 
 ---
@@ -699,6 +714,7 @@ export const useAdherenceStats = (includeArchived = false) => {
 **Fichier** : `src/pages/Index.tsx`
 
 **Actions** :
+
 1. Importer les utilitaires
 2. Remplacer le tri manuel par `sortIntakesByTimeAndName()`
 3. Remplacer le groupement par `groupIntakesByTreatment()`
@@ -706,7 +722,10 @@ export const useAdherenceStats = (includeArchived = false) => {
 
 ```typescript
 // Imports
-import { sortIntakesByTimeAndName, sortTreatmentsByStartDate } from "@/lib/sortingUtils";
+import {
+  sortIntakesByTimeAndName,
+  sortTreatmentsByStartDate,
+} from "@/lib/sortingUtils";
 import { groupIntakesByTreatment } from "@/lib/groupingUtils";
 
 // Ligne ~130-137 : Tri des traitements
@@ -715,14 +734,14 @@ const sortedTreatments = sortTreatmentsByStartDate(treatmentsWithQsp, true);
 // Ligne ~546-561 : Section Aujourd'hui
 const groupedToday = groupIntakesByTreatment(todayIntakes);
 
-Object.values(groupedToday).forEach(group => {
+Object.values(groupedToday).forEach((group) => {
   group.intakes = sortIntakesByTimeAndName(group.intakes);
 });
 
 // Ligne ~645-655 : Section Demain (idem)
 const groupedTomorrow = groupIntakesByTreatment(tomorrowIntakes);
 
-Object.values(groupedTomorrow).forEach(group => {
+Object.values(groupedTomorrow).forEach((group) => {
   group.intakes = sortIntakesByTimeAndName(group.intakes);
 });
 ```
@@ -734,6 +753,7 @@ Object.values(groupedTomorrow).forEach(group => {
 **Fichier** : `src/pages/Calendar.tsx`
 
 **Actions** :
+
 1. Ajouter le tri des prises dans les détails du jour (ligne ~250)
 
 ```typescript
@@ -750,11 +770,15 @@ const sortedDayIntakes = sortIntakesByTimeAndName(dayIntakes);
 **Fichier** : `src/pages/Treatments.tsx`
 
 **Actions** :
+
 1. Remplacer le tri manuel par `sortMedicationsByEarliestTime()`
 2. Utiliser `sortTreatmentsByStartDate()` si nécessaire
 
 ```typescript
-import { sortMedicationsByEarliestTime, sortTreatmentsByStartDate } from "@/lib/sortingUtils";
+import {
+  sortMedicationsByEarliestTime,
+  sortTreatmentsByStartDate,
+} from "@/lib/sortingUtils";
 
 // Ligne ~166-190
 const sortedMedications = sortMedicationsByEarliestTime(medsWithPathology);
@@ -767,6 +791,7 @@ const sortedMedications = sortMedicationsByEarliestTime(medsWithPathology);
 **Fichier** : `src/pages/History.tsx`
 
 **Actions** :
+
 1. Ajouter le tri avec `sortIntakesByTimeAndName()` si nécessaire
 
 ---
@@ -891,15 +916,18 @@ Affiche l'historique des prises d'un traitement archivé (taken/skipped/pending)
 **Fichier** : `src/lib/__tests__/sortingUtils.test.ts`
 
 ```typescript
-import { describe, it, expect } from 'vitest';
-import { sortIntakesByTimeAndName, sortMedicationsByEarliestTime } from '../sortingUtils';
+import { describe, it, expect } from "vitest";
+import {
+  sortIntakesByTimeAndName,
+  sortMedicationsByEarliestTime,
+} from "../sortingUtils";
 
-describe('sortIntakesByTimeAndName', () => {
-  it('should sort by time first', () => {
+describe("sortIntakesByTimeAndName", () => {
+  it("should sort by time first", () => {
     // Test
   });
-  
-  it('should sort alphabetically when same time', () => {
+
+  it("should sort alphabetically when same time", () => {
     // Test
   });
 });
@@ -925,17 +953,20 @@ describe('sortIntakesByTimeAndName', () => {
 ## 📊 Ordre d'Exécution Recommandé
 
 ### Semaine 1 : Base de données
+
 1. ✅ Créer les 8 fichiers SQL (20 à 27)
 2. ⚠️ **VOUS** exécutez chaque script dans Supabase (un par un)
 3. ✅ Vérifier les triggers avec des tests manuels
 
 ### Semaine 2 : Utilitaires
+
 4. ✅ Créer `sortingUtils.ts`
 5. ✅ Créer `groupingUtils.ts`
 6. ✅ Créer `filterUtils.ts`
 7. ✅ Écrire tests unitaires
 
 ### Semaine 3 : Hooks et Pages
+
 8. ✅ Corriger `useMissedIntakesDetection`
 9. ✅ Corriger `useAdherenceStats`
 10. ✅ Refactoriser `Index.tsx`
@@ -944,11 +975,13 @@ describe('sortIntakesByTimeAndName', () => {
 13. ✅ Refactoriser `History.tsx`
 
 ### Semaine 4 : Interface Archivés
+
 14. ✅ Créer page `ArchivedTreatments.tsx`
 15. ✅ Créer composant `ArchivedIntakeHistory`
 16. ✅ Ajouter lien dans navigation
 
 ### Semaine 5 : Tests
+
 17. ✅ Tests manuels complets
 18. ✅ Corrections de bugs
 19. ✅ Build + Sync Android
@@ -961,9 +994,11 @@ describe('sortIntakesByTimeAndName', () => {
 ### **⚠️ CLARIFICATION TERMINOLOGIQUE**
 
 **Ancien (CONFUS)** :
+
 - "QSP ordonnance" et "QSP médicament" → Confusion !
 
 **Nouveau (CLAIR)** :
+
 - **Validité ordonnance** (`prescriptions.validity_months`) : 1, 3, 6, 12 mois → Détermine le renouvellement 2/3
 - **Stock initial** (`medications.initial_stock`) : Unités reçues à la première visite pharmacie
 - **Stock actuel** (`medications.current_stock`) : Unités restantes en temps réel
@@ -977,6 +1012,7 @@ describe('sortIntakesByTimeAndName', () => {
 **État** : L'utilisateur a une ordonnance mais n'est PAS encore allé à la pharmacie
 
 **Étape 1 - Ordonnance** :
+
 ```
 - Médecin prescripteur
 - Date de début
@@ -985,6 +1021,7 @@ describe('sortIntakesByTimeAndName', () => {
 ```
 
 **Étape 2 - Médicaments** :
+
 ```
 - Choix depuis référentiel OU création manuelle
 - Nom, posologie, horaires
@@ -992,11 +1029,13 @@ describe('sortIntakesByTimeAndName', () => {
 ```
 
 **Étape 3 - Pharmacie** :
+
 ```
 - Pharmacie de référence (optionnel)
 ```
 
-**Résultat** : 
+**Résultat** :
+
 - Traitement créé ✅
 - Prises générées pour 7 jours ✅
 - ⚠️ AUCUNE visite pharmacie planifiée (stock inconnu)
@@ -1010,6 +1049,7 @@ describe('sortIntakesByTimeAndName', () => {
 **Interface** : Page "Traitement" → Badge "⚠️ Stock non renseigné" → Bouton "📦 Enregistrer la visite pharmacie"
 
 **Dialog** :
+
 ```
 Pour chaque médicament :
 - Date de la visite
@@ -1023,6 +1063,7 @@ Calcul automatique :
 ```
 
 **Action backend** :
+
 ```sql
 -- 1. Enregistrer le stock initial
 UPDATE medications SET
@@ -1039,6 +1080,7 @@ SELECT calculate_pharmacy_visits_for_treatment(treatment_id);
 ```
 
 **Résultat** :
+
 - Stock initial enregistré ✅
 - Prochaine visite pharmacie calculée ✅
 - Renouvellement 2/3 planifié ✅
@@ -1048,12 +1090,14 @@ SELECT calculate_pharmacy_visits_for_treatment(treatment_id);
 #### **TEMPS 3 : Mise à Jour du Stock (Récurrent)**
 
 **Déclencheurs** :
+
 - Nouvelle visite pharmacie (ajout de stock)
 - Correction manuelle (ajustement)
 
 **Interface** : Page "Traitement" → Section "Stock" → Icône ✏️
 
 **Modes** :
+
 1. **Ajouter du stock** (visite pharmacie) :
    - Date de la visite
    - Boîtes reçues + Unités/boîte
@@ -1075,11 +1119,13 @@ SELECT calculate_pharmacy_visits_for_treatment(treatment_id);
 **Réponse** : ✅ **OUI, recalcul automatique avec traçabilité**
 
 **Raisons** :
+
 1. Cohérence : Le stock est la source de vérité
 2. Sécurité : L'utilisateur ne risque pas d'oublier de recalculer
 3. Transparence : Table `stock_adjustments` garde l'historique
 
 **Implémentation** :
+
 ```sql
 -- Trigger sur medications.current_stock
 CREATE TRIGGER trigger_auto_recalculate_visits
@@ -1092,18 +1138,18 @@ CREATE TRIGGER trigger_auto_recalculate_visits
 
 ## 📝 Résumé des Actions par Scénario
 
-| Scénario | Actions SQL | Actions Frontend | Priorité |
-|----------|-------------|------------------|----------|
-| 2 (Neuf archivé) | `archived_at` + trigger | Badge conditionnel | 🔴 P1 |
-| 3 (En cours archivé) | Trigger annulation visites | Badge + consultation | 🔴 P1 |
-| 4 (Réactivation) | Trigger skipped auto | Régénération prises | 🟡 P2 |
-| 5 (Modif horaires) | Trigger cleanup orphelines | Aucune | 🔴 P1 |
-| 6 (Suppression médoc) | Contrainte + `is_active` | Message erreur | 🔴 P1 |
-| 7 (Modif QSP) | ⚠️ À décider | ⚠️ À décider | ⚠️ En attente |
-| 8 (Hook archivés) | ✅ Déjà fait | ✅ Déjà fait | ✅ OK |
-| 9 (Prises manquées) | Aucune | Filtre hook | 🔴 P1 |
-| 10 (Stats observance) | Aucune | Filtre hook | 🔴 P1 |
-| 12 (end_date) | Fonction SQL | Notification | 🟡 P2 |
+| Scénario              | Actions SQL                | Actions Frontend     | Priorité      |
+| --------------------- | -------------------------- | -------------------- | ------------- |
+| 2 (Neuf archivé)      | `archived_at` + trigger    | Badge conditionnel   | 🔴 P1         |
+| 3 (En cours archivé)  | Trigger annulation visites | Badge + consultation | 🔴 P1         |
+| 4 (Réactivation)      | Trigger skipped auto       | Régénération prises  | 🟡 P2         |
+| 5 (Modif horaires)    | Trigger cleanup orphelines | Aucune               | 🔴 P1         |
+| 6 (Suppression médoc) | Contrainte + `is_active`   | Message erreur       | 🔴 P1         |
+| 7 (Modif QSP)         | ⚠️ À décider               | ⚠️ À décider         | ⚠️ En attente |
+| 8 (Hook archivés)     | ✅ Déjà fait               | ✅ Déjà fait         | ✅ OK         |
+| 9 (Prises manquées)   | Aucune                     | Filtre hook          | 🔴 P1         |
+| 10 (Stats observance) | Aucune                     | Filtre hook          | 🔴 P1         |
+| 12 (end_date)         | Fonction SQL               | Notification         | 🟡 P2         |
 
 ---
 

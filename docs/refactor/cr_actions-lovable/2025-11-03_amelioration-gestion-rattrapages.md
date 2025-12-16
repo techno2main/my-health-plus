@@ -8,11 +8,13 @@
 ## 📋 Demandes utilisateur
 
 ### 1. Modification du tooltip du bouton "Pris"
+
 - **Avant** : "J'ai pris le médicament à l'heure prévue mais j'ai oublié de cliquer sur le bouton"
 - **Après** : "J'ai pris le médicament, mais j'ai oublié de cliquer sur le bouton"
 - **Raison** : Simplification et clarté du message
 
 ### 2. Amélioration de la boîte de dialogue de confirmation pour le bouton "Pris"
+
 - **Nouveau titre** : "Confirmer l'heure à laquelle vous avez pris ce médicament"
 - **Ajout d'un champ** : TimeSelect pour saisir l'heure de prise réelle
   - Pré-rempli avec l'heure prévue initialement (ex: 09:30)
@@ -26,6 +28,7 @@
 ### 1. **IntakeCard.tsx** (`src/pages/rattrapage/components/IntakeCard.tsx`)
 
 #### Modification du tooltip (ligne 116)
+
 ```typescript
 // AVANT
 <TooltipContent>
@@ -45,27 +48,29 @@
 #### Ajout du champ `actualTakenTime` dans les interfaces
 
 **IntakeAction** (lignes 1-7)
+
 ```typescript
 export interface IntakeAction {
   id: string;
-  action: 'taken' | 'skipped' | 'taken_now' | 'pending';
+  action: "taken" | "skipped" | "taken_now" | "pending";
   takenAt?: string;
   scheduledTime?: string;
-  actualTakenTime?: string;  // ✨ NOUVEAU
+  actualTakenTime?: string; // ✨ NOUVEAU
 }
 ```
 
 **ConfirmationDialog** (lignes 9-18)
+
 ```typescript
 export interface ConfirmationDialog {
   isOpen: boolean;
   intakeId: string;
-  action: 'taken' | 'skipped' | 'taken_now' | 'pending';
+  action: "taken" | "skipped" | "taken_now" | "pending";
   medicationName: string;
   scheduledTime: string;
   displayTime: string;
   dayName: string;
-  actualTakenTime?: string;  // ✨ NOUVEAU
+  actualTakenTime?: string; // ✨ NOUVEAU
 }
 ```
 
@@ -74,23 +79,26 @@ export interface ConfirmationDialog {
 ### 3. **ConfirmationDialog.tsx** (`src/pages/rattrapage/components/ConfirmationDialog.tsx`)
 
 #### Import de TimeSelect et useState
+
 ```typescript
 import { ConfirmDialog } from "@/components/ui/organisms/ConfirmDialog";
-import { TimeSelect } from "@/components/ui/time-select";  // ✨ NOUVEAU
+import { TimeSelect } from "@/components/ui/time-select"; // ✨ NOUVEAU
 import type { ConfirmationDialog } from "../utils/rattrapageTypes";
-import { useState } from "react";  // ✨ NOUVEAU
+import { useState } from "react"; // ✨ NOUVEAU
 ```
 
 #### Modification de la signature de onConfirm
+
 ```typescript
 interface ConfirmationDialogProps {
   confirmDialog: ConfirmationDialog;
   onClose: () => void;
-  onConfirm: (actualTakenTime?: string) => void;  // ✨ MODIFIÉ : accepte maintenant actualTakenTime
+  onConfirm: (actualTakenTime?: string) => void; // ✨ MODIFIÉ : accepte maintenant actualTakenTime
 }
 ```
 
 #### Ajout de la logique de gestion de l'heure
+
 ```typescript
 export function RattrapageConfirmationDialog({
   confirmDialog,
@@ -99,7 +107,7 @@ export function RattrapageConfirmationDialog({
 }: ConfirmationDialogProps) {
   // ✨ NOUVEAU : État local pour l'heure de prise réelle
   const [actualTakenTime, setActualTakenTime] = useState(confirmDialog.displayTime);
-  
+
   const getConfirmationMessage = () => {
     switch (confirmDialog.action) {
       case 'taken':
@@ -137,15 +145,15 @@ export function RattrapageConfirmationDialog({
         <div className="text-sm text-muted-foreground">
           {confirmDialog.dayName} - {confirmDialog.displayTime}
         </div>
-        
+
         {/* ✨ NOUVEAU : Champ TimeSelect pour l'heure réelle */}
         {confirmDialog.action === 'taken' && (
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">
               Heure de prise réelle
             </label>
-            <TimeSelect 
-              value={actualTakenTime} 
+            <TimeSelect
+              value={actualTakenTime}
               onValueChange={setActualTakenTime}
               placeholder="HH:MM"
             />
@@ -162,52 +170,54 @@ export function RattrapageConfirmationDialog({
 ### 4. **useRattrapageActions.ts** (`src/pages/rattrapage/hooks/useRattrapageActions.ts`)
 
 #### Modification de confirmAction (lignes 62-91)
+
 ```typescript
 // ✨ MODIFIÉ : accepte maintenant actualTakenTime en paramètre
 const confirmAction = (actualTakenTime?: string) => {
   const { intakeId, action } = confirmDialog;
-  
+
   let takenAtValue: string | undefined = undefined;
-  
+
   // ✨ NOUVEAU : Conversion de l'heure saisie (HH:MM) en timestamp ISO
-  if (action === 'taken' && actualTakenTime) {
+  if (action === "taken" && actualTakenTime) {
     // Convertir actualTakenTime (HH:MM) en timestamp ISO en utilisant la date du scheduledTime
     const scheduledDate = new Date(confirmDialog.scheduledTime);
-    const [hours, minutes] = actualTakenTime.split(':');
+    const [hours, minutes] = actualTakenTime.split(":");
     scheduledDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     takenAtValue = scheduledDate.toISOString();
-  } else if (action === 'taken') {
+  } else if (action === "taken") {
     takenAtValue = confirmDialog.scheduledTime;
-  } else if (action === 'taken_now') {
+  } else if (action === "taken_now") {
     takenAtValue = new Date().toISOString();
   }
-  
-  setActions(prev => ({
+
+  setActions((prev) => ({
     ...prev,
     [intakeId]: {
       id: intakeId,
       action,
       takenAt: takenAtValue,
       scheduledTime: confirmDialog.scheduledTime,
-      actualTakenTime: actualTakenTime,  // ✨ NOUVEAU : stockage de l'heure saisie
+      actualTakenTime: actualTakenTime, // ✨ NOUVEAU : stockage de l'heure saisie
     },
   }));
 
-  setConfirmDialog(prev => ({ ...prev, isOpen: false }));
+  setConfirmDialog((prev) => ({ ...prev, isOpen: false }));
 };
 ```
 
 #### Amélioration des notes (lignes 141-149)
+
 ```typescript
 // Ajouter une note
-if (actionItem.action === 'taken') {
+if (actionItem.action === "taken") {
   // ✨ NOUVEAU : Note différente selon si l'heure réelle a été saisie
   if (actionItem.actualTakenTime) {
     updateData.notes = `Pris à ${actionItem.actualTakenTime} (déclaré en retard)`;
   } else {
     updateData.notes = "Pris à l'heure prévue (marqué en retard)";
   }
-} else if (actionItem.action === 'taken_now') {
+} else if (actionItem.action === "taken_now") {
   updateData.notes = "Pris en rattrapage";
 }
 ```
@@ -242,20 +252,23 @@ if (actionItem.action === 'taken') {
 ## 🔍 Points d'attention
 
 ### Conversion de l'heure
+
 - L'heure saisie (format HH:MM) est convertie en timestamp ISO complet
 - La date utilisée est celle du `scheduledTime` (jour prévu)
 - Les heures, minutes et secondes sont remplacées par l'heure saisie
-- Exemple : 
+- Exemple :
   - `scheduledTime` : `2025-11-03T09:30:00Z`
   - `actualTakenTime` saisie : `10:45`
   - `takenAt` résultant : `2025-11-03T10:45:00Z`
 
 ### Compatibilité
+
 - Le composant TimeSelect existant est réutilisé (déjà présent dans le projet)
 - Aucune dépendance externe ajoutée
 - Les autres boutons ("Prendre" et "Manqué") ne sont pas modifiés
 
 ### Base de données
+
 - Le champ `taken_at` dans `medication_intakes` reçoit le timestamp ISO complet
 - Le champ `notes` stocke une description claire de l'action
 - Le champ `status` passe à 'taken'
@@ -324,20 +337,22 @@ Pour le bouton "Prendre" (action `taken_now`), le message de confirmation affich
 **ConfirmationDialog.tsx** (`src/pages/rattrapage/components/ConfirmationDialog.tsx`)
 
 #### Import de date-fns
+
 ```typescript
 import { format } from "date-fns";
 ```
 
 #### Modification de getConfirmationMessage (lignes 19-31)
+
 ```typescript
 const getConfirmationMessage = () => {
   switch (confirmDialog.action) {
-    case 'taken':
+    case "taken":
       return "Confirmer l'heure à laquelle vous avez pris ce médicament";
-    case 'taken_now':
-      const currentTime = format(new Date(), 'HH:mm');  // ✨ NOUVEAU
+    case "taken_now":
+      const currentTime = format(new Date(), "HH:mm"); // ✨ NOUVEAU
       return `Confirmer que vous voulez prendre ce médicament maintenant (heure actuelle réelle) : ${currentTime} ?`;
-    case 'skipped':
+    case "skipped":
       return "Confirmer que vous n'avez pas pris ce médicament et qu'il est trop tard pour le prendre ?";
     default:
       return "Confirmer cette action ?";
@@ -346,6 +361,7 @@ const getConfirmationMessage = () => {
 ```
 
 ### Résultat
+
 L'utilisateur voit maintenant l'heure exacte à laquelle il valide la prise du médicament (ex: "... : 14:35 ?"), ce qui lui permet de vérifier que c'est bien l'heure souhaitée avant de confirmer.
 
 ---
@@ -359,8 +375,9 @@ L'utilisateur voit maintenant l'heure exacte à laquelle il valide la prise du m
 Dans le récap "Prêt" (après avoir sélectionné une action), afficher l'heure de prise réelle qui sera enregistrée à côté de "Prévu à hh:mm".
 
 **Exemple** :
+
 - Prévu à 09:30
-- Pris à 09:15 *(affiché en bleu)*
+- Pris à 09:15 _(affiché en bleu)_
 
 ### Modification technique
 
@@ -369,6 +386,7 @@ Dans le récap "Prêt" (après avoir sélectionné une action), afficher l'heure
 #### Modification de la section d'affichage de l'heure (lignes 91-93)
 
 **Avant** :
+
 ```typescript
 <p className="text-sm text-muted-foreground pl-6">
   Prévu à {intake.displayTime}
@@ -376,6 +394,7 @@ Dans le récap "Prêt" (après avoir sélectionné une action), afficher l'heure
 ```
 
 **Après** :
+
 ```typescript
 <div className="text-sm text-muted-foreground pl-6 space-y-1">
   <p>Prévu à {intake.displayTime}</p>
@@ -390,6 +409,7 @@ Dans le récap "Prêt" (après avoir sélectionné une action), afficher l'heure
 ### Résultat
 
 Lorsque l'utilisateur :
+
 1. Clique sur "Pris" et saisit une heure (ex: 09:15)
 2. Le statut passe à "Prêt" ✓
 3. L'heure de prise réelle s'affiche en bleu sous l'heure prévue :
@@ -417,6 +437,7 @@ Le bouton "Prendre" (action `taken_now`) doit aussi afficher l'heure réelle dan
 #### Modification de confirmAction pour stocker l'heure actuelle au format HH:MM (lignes 62-95)
 
 **Avant** :
+
 ```typescript
 } else if (action === 'taken_now') {
   takenAtValue = new Date().toISOString();
@@ -435,6 +456,7 @@ setActions(prev => ({
 ```
 
 **Après** :
+
 ```typescript
 } else if (action === 'taken_now') {
   const now = new Date();
@@ -458,6 +480,7 @@ setActions(prev => ({
 ### Résultat
 
 Lorsque l'utilisateur :
+
 1. Clique sur "Prendre" (bouton orange)
 2. Confirme l'action
 3. Le statut passe à "Prêt" ✓
@@ -486,6 +509,7 @@ Le bouton "Manqué" (action `skipped`) doit afficher "Prise manquée" dans le r�
 #### Modification de la section d'affichage de l'heure (lignes 91-101)
 
 **Avant** :
+
 ```typescript
 <div className="text-sm text-muted-foreground pl-6 space-y-1">
   <p>Prévu à {intake.displayTime}</p>
@@ -498,6 +522,7 @@ Le bouton "Manqué" (action `skipped`) doit afficher "Prise manquée" dans le r�
 ```
 
 **Après** :
+
 ```typescript
 <div className="text-sm text-muted-foreground pl-6 space-y-1">
   <p>Prévu à {intake.displayTime}</p>
@@ -518,6 +543,7 @@ Le bouton "Manqué" (action `skipped`) doit afficher "Prise manquée" dans le r�
 ### Résultat
 
 Lorsque l'utilisateur :
+
 1. Clique sur "Manqué" (bouton rouge)
 2. Confirme l'action
 3. Le statut passe à "Prêt" ✓

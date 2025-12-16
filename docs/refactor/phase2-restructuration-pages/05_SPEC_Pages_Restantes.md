@@ -3,6 +3,7 @@
 ## 🎯 Objectif
 
 Documenter la restructuration de **TOUTES les pages restantes** (24 pages) selon la **structure standardisée** :
+
 - Orchestrateur ~100-150 lignes
 - Sous-dossier dédié avec components/, hooks/, types.ts
 - Même convention pour toutes les pages
@@ -31,12 +32,14 @@ src/pages/[page-name]/
 ### 1. Auth (~319 lignes) → pages/auth/
 
 **Responsabilités** :
+
 - Authentification email/password
 - Inscription + auto-login
 - Biométrie (fingerprint)
 - Gestion sessions
 
 **Structure cible** :
+
 ```
 auth/
   ├── Auth.tsx                  # Orchestrateur (~120 lignes)
@@ -56,12 +59,14 @@ auth/
 ### 2. Treatments (~353 lignes) → pages/treatments/
 
 **Responsabilités** :
+
 - Liste des traitements actifs/terminés
 - Filtres (actif/terminé/tous)
 - Navigation vers détails/édition
 - Export PDF
 
 **Structure cible** :
+
 ```
 treatments/
   ├── Treatments.tsx            # Orchestrateur (~100 lignes)
@@ -81,12 +86,14 @@ treatments/
 ### 3. TreatmentEdit (~500 lignes) → pages/treatment-edit/
 
 **Responsabilités** :
+
 - Édition traitement existant
 - Formulaire complexe (médication, durée, fréquence)
 - Validation + sauvegarde
 - Gestion QSP
 
 **Structure cible** :
+
 ```
 treatment-edit/
   ├── TreatmentEdit.tsx         # Orchestrateur (~120 lignes)
@@ -108,12 +115,14 @@ treatment-edit/
 ### 4. MedicationCatalog (~400 lignes) → pages/medications/
 
 **Responsabilités** :
+
 - Catalogue médicaments
 - Recherche + filtres
 - Ajout/édition médicaments
 - Modal de sélection
 
 **Structure cible** :
+
 ```
 medications/
   ├── MedicationCatalog.tsx     # Orchestrateur (~100 lignes)
@@ -134,12 +143,14 @@ medications/
 ### 5. Prescriptions (~434 lignes) → pages/prescriptions/
 
 **Responsabilités** :
+
 - Liste ordonnances
 - Upload fichiers
 - Statut renouvellement
 - Suppression
 
 **Structure cible** :
+
 ```
 prescriptions/
   ├── Prescriptions.tsx         # Orchestrateur (~100 lignes)
@@ -163,6 +174,7 @@ prescriptions/
 Pour ces pages plus légères, la structure reste identique mais avec **moins de composants** :
 
 **Pattern standard P3** :
+
 ```
 [page-name]/
   ├── [PageName].tsx            # Orchestrateur (~80-100 lignes)
@@ -329,12 +341,14 @@ Pour **CHAQUE page restructurée** :
 ## 🎯 Résumé
 
 **28 pages totales** à restructurer :
+
 - ✅ **3 pages P1** : Index, History, Calendar (specs détaillées créées)
 - ✅ **1 page Admin** : Admin → admin/dashboard/ (spec créée)
 - 📄 **5 pages P2** : Auth, Treatments, TreatmentEdit, MedicationCatalog, Prescriptions (guide ci-dessus)
 - 📄 **19 pages P3** : Toutes les autres (structure standardisée)
 
 **Convention finale** :
+
 ```
 pages/[page-name]/
   ├── [PageName].tsx       # Orchestrateur
@@ -344,6 +358,7 @@ pages/[page-name]/
 ```
 
 **Admin** :
+
 ```
 pages/admin/
   ├── dashboard/           # Point d'entrée

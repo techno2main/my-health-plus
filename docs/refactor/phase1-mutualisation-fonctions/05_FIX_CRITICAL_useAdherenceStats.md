@@ -28,7 +28,8 @@ Le hook `useAdherenceStats` **NE FILTRE PAS** les traitements par `is_active`.
 ```typescript
 const { data: intakesData, error } = await supabase
   .from("medication_intakes")
-  .select(`
+  .select(
+    `
     id,
     medication_id,
     scheduled_time,
@@ -38,7 +39,8 @@ const { data: intakesData, error } = await supabase
       treatment_id,
       treatments(user_id)  // ⚠️ MANQUE is_active ici !
     )
-  `)
+  `,
+  )
   .order("scheduled_time", { ascending: false });
 ```
 
@@ -69,7 +71,8 @@ const { data: intakesData, error } = await supabase
 // AVANT (ligne 37-48)
 const { data: intakesData, error } = await supabase
   .from("medication_intakes")
-  .select(`
+  .select(
+    `
     id,
     medication_id,
     scheduled_time,
@@ -79,13 +82,15 @@ const { data: intakesData, error } = await supabase
       treatment_id,
       treatments(user_id)
     )
-  `)
+  `,
+  )
   .order("scheduled_time", { ascending: false });
 
 // APRÈS
 const { data: intakesData, error } = await supabase
   .from("medication_intakes")
-  .select(`
+  .select(
+    `
     id,
     medication_id,
     scheduled_time,
@@ -95,7 +100,8 @@ const { data: intakesData, error } = await supabase
       treatment_id,
       treatments!inner(user_id, is_active)
     )
-  `)
+  `,
+  )
   .eq("medications.treatments.is_active", true)
   .order("scheduled_time", { ascending: false });
 ```
@@ -122,7 +128,7 @@ const { data: intakesData, error } = await supabase
    const loadStats = async () => {
      try {
        setLoading(true);
- 
+
        // Charger tous les intakes (tout l'historique)
        const { data: intakesData, error } = await supabase
          .from("medication_intakes")
@@ -141,7 +147,7 @@ const { data: intakesData, error } = await supabase
          `)
 +        .eq("medications.treatments.is_active", true)
          .order("scheduled_time", { ascending: false });
- 
+
        if (error) throw error;
 ```
 
@@ -176,6 +182,7 @@ const { data: intakesData, error } = await supabase
 ## 🎯 IMPACT ATTENDU
 
 ### Avant correction
+
 ```
 Situation fictive :
 - Traitement A (ACTIF) : 10 prises prises, 9 à l'heure
@@ -186,6 +193,7 @@ Observance : 80% ❌ FAUX (calcul basé sur 30 prises)
 ```
 
 ### Après correction
+
 ```
 Même situation :
 - Traitement A (ACTIF) : 10 prises, 9 à l'heure
@@ -202,12 +210,14 @@ Observance : 90% ✅ CORRECT (calcul basé sur 10 prises)
 **⚠️ IMPORTANT** : Cette correction doit être faite **AVANT** ou **EN PARALLÈLE** des autres refactorings.
 
 ### Option 1 : Correction immédiate (RECOMMANDÉ)
+
 1. ✅ Corriger useAdherenceStats **maintenant**
 2. ✅ Tester manuellement
 3. ✅ Commit : `fix(critical): filtre is_active dans useAdherenceStats`
 4. Puis procéder aux autres refactorings (sortingUtils, etc.)
 
 ### Option 2 : Correction incluse dans le refactoring
+
 1. Créer tous les utils (sortingUtils, groupingUtils, etc.)
 2. Corriger useAdherenceStats en même temps
 3. Commit global de la Phase 1
@@ -219,22 +229,26 @@ Observance : 90% ✅ CORRECT (calcul basé sur 10 prises)
 ## ✅ CRITÈRES DE VALIDATION
 
 ### Avant correction
+
 - [ ] Comprendre l'impact du bug
 - [ ] Valider la correction proposée
 - [ ] Décider de l'ordre d'exécution (immédiat ou avec refactoring)
 
 ### Après correction
+
 - [ ] Fichier compile sans erreurs TypeScript
 - [ ] Query Supabase ne génère pas d'erreur
 - [ ] Données retournées sont cohérentes
 
 ### Tests manuels
+
 - [ ] Compteur "À l'heure" correct après archivage traitement
 - [ ] Compteur "Manquées" correct après archivage traitement
 - [ ] Observance % change après archivage traitement
 - [ ] Aucune statistique de traitement archivé dans les compteurs
 
 ### Validation finale
+
 - [ ] Build réussit (`npm run build`)
 - [ ] Lint passe (`npm run lint`)
 - [ ] Commit avec message explicite
@@ -258,7 +272,7 @@ git commit -m "fix(critical): filtre is_active dans useAdherenceStats
 Bug critique: Les statistiques d'observance incluaient les traitements archivés
 Correction: Ajout du filtre treatments.is_active = true dans la requête
 
-Impact: 
+Impact:
 - Compteurs 'À l'heure', 'En retard', 'Manquées' maintenant corrects
 - Observance % calculée uniquement sur traitements actifs
 - Statistiques reflètent la situation actuelle de l'utilisateur

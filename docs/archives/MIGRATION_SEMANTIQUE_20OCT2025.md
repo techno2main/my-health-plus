@@ -9,6 +9,7 @@
 ## 🎯 OBJECTIF
 
 Clarifier la nomenclature médicale pour éviter toute confusion entre :
+
 - **POSOLOGIE** = Instructions de prise ("1 comprimé le matin et 1 le soir")
 - **FORCE/STRENGTH** = Concentration du médicament ("50mg", "5mg/1000mg")
 
@@ -17,20 +18,22 @@ Clarifier la nomenclature médicale pour éviter toute confusion entre :
 ## ✅ MODIFICATIONS SQL (4 colonnes renommées)
 
 ### Table `medication_catalog` :
+
 ```sql
-ALTER TABLE public.medication_catalog 
+ALTER TABLE public.medication_catalog
 RENAME COLUMN default_dosage TO default_posology;
 
-ALTER TABLE public.medication_catalog 
+ALTER TABLE public.medication_catalog
 RENAME COLUMN dosage_amount TO strength;
 ```
 
 ### Table `medications` :
+
 ```sql
-ALTER TABLE public.medications 
+ALTER TABLE public.medications
 RENAME COLUMN dosage TO posology;
 
-ALTER TABLE public.medications 
+ALTER TABLE public.medications
 RENAME COLUMN dosage_amount TO strength;
 ```
 
@@ -39,10 +42,12 @@ RENAME COLUMN dosage_amount TO strength;
 ## 📝 FICHIERS TYPESCRIPT MODIFIÉS (21 fichiers)
 
 ### Types & Intégrations :
+
 - ✅ `src/integrations/supabase/types.ts`
 - ✅ `src/components/TreatmentWizard/types.ts`
 
 ### Pages :
+
 - ✅ `src/pages/Index.tsx`
 - ✅ `src/pages/Calendar.tsx`
 - ✅ `src/pages/History.tsx`
@@ -55,12 +60,14 @@ RENAME COLUMN dosage_amount TO strength;
 - ✅ `src/pages/Rattrapage.tsx`
 
 ### Composants :
+
 - ✅ `src/components/TreatmentEdit/MedicationEditDialog.tsx`
 - ✅ `src/components/TreatmentWizard/TreatmentWizard.tsx`
 - ✅ `src/components/TreatmentWizard/Step2Medications.tsx`
 - ✅ `src/components/TreatmentWizard/Step4Summary.tsx`
 
 ### Hooks :
+
 - ✅ `src/hooks/useMissedIntakesDetection.tsx`
 - ✅ `src/hooks/useNativeNotifications.tsx`
 - ✅ `src/hooks/useNotifications.tsx`
@@ -70,18 +77,22 @@ RENAME COLUMN dosage_amount TO strength;
 ## 🗂️ SCRIPTS SQL CRÉÉS
 
 ### 1. Migration principale :
+
 **Fichier** : `migration_sql/scripts_sql/20_rename_dosage_to_posology.sql`
 
 **Contenu** :
+
 - Renommage des 4 colonnes
 - Ajout de COMMENT explicatifs
 - Requêtes de vérification
 - Instructions de rollback
 
 ### 2. Trigger auto-régénération (créé dans session précédente) :
+
 **Fichier** : `migration_sql/scripts_sql/19_auto_regenerate_future_intakes.sql`
 
 **Fonctions** :
+
 - `regenerate_future_intakes(med_id UUID)` : Régénère 7 jours de prises futures
 - Trigger `medication_times_changed` : Appelé automatiquement sur UPDATE de `medications.times`
 
@@ -90,11 +101,13 @@ RENAME COLUMN dosage_amount TO strength;
 ## ✅ VALIDATIONS
 
 ### Tests TypeScript :
+
 - ✅ **0 erreur** de compilation
 - ✅ Toutes les interfaces à jour
 - ✅ Toutes les requêtes SQL corrigées
 
 ### Tests fonctionnels :
+
 - ✅ Page Traitements
 - ✅ Page Calendrier
 - ✅ Page Historique
@@ -103,6 +116,7 @@ RENAME COLUMN dosage_amount TO strength;
 - ✅ Hook notifications (prises manquées)
 
 ### Tests SQL :
+
 - ✅ Migration exécutée sans erreur
 - ✅ Exports confirmés avec nouveaux noms
 - ✅ Données intégralement préservées

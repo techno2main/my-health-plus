@@ -8,6 +8,7 @@ import { fr } from "date-fns/locale"
 import { supabase } from "@/integrations/supabase/client"
 import { useTheme } from "@/components/theme-provider"
 import { useUserRole } from "@/hooks/useUserRole"
+import { generateUserInitials } from "./helpers"
 import { getAuthenticatedUser } from "@/lib/auth-guard"
 import { useStatusBarTheme } from "@/hooks/useStatusBarTheme"
 
@@ -46,13 +47,9 @@ export function AppHeader() {
       }
       
       // Générer les initiales
-      if (profile?.first_name && profile?.last_name) {
-        const initials = `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase()
+      const initials = generateUserInitials(profile, user.email)
+      if (initials) {
         setUserInitials(initials)
-      } else if (user.email) {
-        // Fallback sur email si pas de nom/prénom
-        const emailPart = user.email.split('@')[0]
-        setUserInitials(emailPart.substring(0, 2).toUpperCase())
       }
     } catch (error) {
       console.error("[AppHeader] Error loading profile:", error)

@@ -22,14 +22,14 @@ Garantir que les mises à jour (textes, styles, code) apparaissent **automatique
 
 ```typescript
 VitePWA({
-  registerType: 'autoUpdate',  // ← Changement ici (au lieu de 'prompt')
+  registerType: "autoUpdate", // ← Changement ici (au lieu de 'prompt')
   workbox: {
     skipWaiting: true,
     clientsClaim: true,
-    cleanupOutdatedCaches: true,  // ← Ajouter cette ligne
+    cleanupOutdatedCaches: true, // ← Ajouter cette ligne
     // ... reste identique
-  }
-})
+  },
+});
 ```
 
 **Effet** : L'app se met à jour automatiquement dès qu'une nouvelle version est détectée, sans demander à l'utilisateur.
@@ -39,12 +39,14 @@ VitePWA({
 ### ÉTAPE 2 : Ajouter un indicateur visuel simple
 
 **Créer un composant `UpdateNotification.tsx`** qui :
+
 - Vérifie `version.json` toutes les 5 minutes
 - Affiche un **petit badge discret** en bas à droite si nouvelle version
 - Au clic : recharge l'app
 - **Pas de console.log**, juste un badge visuel !
 
 **Code minimal** (≈ 30 lignes) :
+
 ```typescript
 // Badge visible uniquement si mise à jour disponible
 // Style : petit rond vert avec icône refresh
@@ -81,6 +83,7 @@ VitePWA({
 **C'est automatique !** Capacitor sync intègre le nouveau build → l'app Android aura la même mise à jour automatique que la PWA.
 
 **Procédure** :
+
 1. `npm run build`
 2. `npx cap sync android`
 3. Rebuild dans Android Studio

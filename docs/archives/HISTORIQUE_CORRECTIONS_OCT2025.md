@@ -11,6 +11,7 @@
 **Symptôme** : "Quand je modifie l'heure du médicament dans le traitement actif, ça met le bordel dans les prises"
 
 **Causes identifiées** :
+
 1. **Système hybride défaillant** :
    - Passé = lu depuis `medication_intakes` (base de données)
    - Futur = généré dynamiquement depuis `medications.times`
@@ -30,8 +31,10 @@
 ## ✅ CORRECTIONS APPLIQUÉES
 
 ### 1. **Tri des médicaments par horaire** ✅
+
 **Fichier** : `src/pages/TreatmentEdit.tsx`  
 **Solution** : Tri par premier horaire de prise, puis par nom alphabétique
+
 ```typescript
 sortedMedications.sort((a, b) => {
   const comparison = a.times[0].localeCompare(b.times[0]);
@@ -40,26 +43,33 @@ sortedMedications.sort((a, b) => {
 ```
 
 ### 2. **Détection des prises manquées** ✅
+
 **Fichier** : `src/hooks/useMissedIntakesDetection.tsx`  
 **Problème** : Générait dynamiquement depuis `medications.times` → fausses alertes  
 **Solution** : Ne lit QUE depuis `medication_intakes` avec `status='pending'`
 
 ### 3. **Page Calendrier - Approche hybride** ✅
+
 **Fichier** : `src/pages/Calendar.tsx`  
 **Solution** : Refactorisation complète de `loadDayDetails()` :
+
 - **Jours passés** : Lit UNIQUEMENT `medication_intakes` (historique figé)
 - **Aujourd'hui/Futur** : Combine `medication_intakes` (déjà pris) + `medications.times` (à venir)
 
 ### 4. **Correction des données corrompues** ✅
+
 **Scripts SQL exécutés** :
+
 - **18-19/10** : Correction timestamps (19:00→20:00, 22:30→22:00)
 - **13/10** : Correction doublon Xigduo + ajout Simvastatine manquante
 
 **Résultat** : 36 prises historiques complètes du 13/10 au 20/10 (5×7 + 1)
 
 ### 5. **Page Historique - Amélioration UX** ✅
+
 **Fichier** : `src/pages/History.tsx`  
 **Améliorations** :
+
 - ✅ Filtrage : affiche uniquement aujourd'hui + jours passés (pas les 7 jours futurs)
 - ✅ Auto-scroll vers "Aujourd'hui" au chargement de la page
 - ✅ Système accordéon : un seul jour ouvert à la fois (évite le scroll excessif)
@@ -70,14 +80,17 @@ sortedMedications.sort((a, b) => {
 ## 🚀 MIGRATION VERS SYSTÈME UNIFIÉ (TERMINÉE)
 
 ### Objectif ✅
+
 Supprimer le système hybride et passer à un système 100% base de données.
 
 ### Principe
+
 - **Tout stocké** : Futur pré-généré 7 jours à l'avance dans `medication_intakes`
 - **Génération automatique** : Script SQL manuel + trigger automatique sur modification d'horaires
 - **Avantage** : Modifier `medications.times` régénère automatiquement les 7 jours futurs
 
 ### Étapes
+
 1. ✅ Nettoyage documentation + commit
 2. ✅ Créer fonction SQL de génération J+1 à J+7
 3. ✅ Peupler les 7 prochains jours (21-27/10)
@@ -85,21 +98,25 @@ Supprimer le système hybride et passer à un système 100% base de données.
 5. ✅ Créer trigger automatique pour régénération sur modification d'horaires
 
 ### 5. **Trigger automatique de régénération** ✅
+
 **Fichier** : `migration_sql/scripts_sql/19_auto_regenerate_future_intakes.sql`  
 **Principe** : Quand vous modifiez `medications.times`, les prises futures se régénèrent automatiquement
 
 **Fonctions créées** :
+
 - `regenerate_future_intakes(med_id)` : Supprime les prises futures pending + régénère 7 jours
 - `auto_regenerate_intakes_on_times_change()` : Trigger function qui détecte les changements
 - Trigger `medication_times_changed` : Se déclenche sur UPDATE de `medications.times`
 
 **Protection** :
+
 - ✅ Ne supprime QUE `status='pending'` ET `scheduled_time > NOW()`
 - ✅ Ne touche JAMAIS aux prises passées
 - ✅ Ne touche JAMAIS aux prises `taken` ou `skipped`
 - ✅ L'historique est totalement protégé
 
 **Cas d'usage** :
+
 1. Modification horaire : `["09:30"]` → `["10:00"]` = prises futures passent à 10:00
 2. Ajout horaire : `["09:30"]` → `["09:30", "19:30"]` = nouvelles prises à 19:30 créées
 3. Suppression horaire : `["09:30", "19:30"]` → `["09:30"]` = prises à 19:30 supprimées (futur uniquement)
@@ -109,6 +126,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ## 📊 RÉSULTATS
 
 ### Avant corrections
+
 - ❌ Historique corrompu (13/10 : 4/5 prises)
 - ❌ Timestamps incorrects (décalage horaire)
 - ❌ Fausses alertes de prises manquées
@@ -116,6 +134,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 - ❌ Modification d'horaire = corruption historique
 
 ### Après corrections
+
 - ✅ Historique complet et cohérent (36 prises)
 - ✅ Timestamps corrects (UTC+2 France)
 - ✅ Alertes basées sur données réelles
@@ -140,6 +159,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ## 🔧 FICHIERS MODIFIÉS
 
 ### Code TypeScript
+
 - `src/pages/TreatmentEdit.tsx` (tri médicaments)
 - `src/hooks/useMissedIntakesDetection.tsx` (lecture DB pure)
 - `src/pages/Calendar.tsx` (lecture pure base de données)
@@ -147,11 +167,13 @@ Supprimer le système hybride et passer à un système 100% base de données.
 - `src/pages/Rattrapage.tsx` (UPDATE au lieu d'INSERT - correction doublons)
 
 ### Scripts SQL
+
 - `CORRECTION_FINALE_13OCT.sql` (correction 13/10)
 - Scripts correction timestamps 18-19/10
 - `migration_sql/scripts_sql/19_auto_regenerate_future_intakes.sql` (trigger automatique)
 
 ### Documentation
+
 - `docs/HISTORIQUE_CORRECTIONS_OCT2025.md` (ce fichier)
 - `docs/notf/systeme_notif.md` (système notifications)
 - `migration_sql/CR_maj_sql.md` (historique migrations)
@@ -167,6 +189,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ### Audit complet effectué - TOUT EST OPÉRATIONNEL ✅
 
 #### 1️⃣ **Lectures de medication_intakes** ✅
+
 ```
 ✅ AUCUNE génération dynamique depuis medications.times
 ✅ TOUTES les pages lisent depuis medication_intakes
@@ -179,6 +202,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ```
 
 #### 2️⃣ **Gestion des timestamps (UTC vs France)** ✅
+
 ```
 ✅ formatToFrenchTime() utilisé pour AFFICHAGE (UTC → France)
 ✅ convertFrenchToUTC() utilisé pour SAUVEGARDE (France → UTC)
@@ -190,6 +214,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ```
 
 #### 3️⃣ **Système de notifications** ✅
+
 ```
 ✅ Hooks notifications = fonctions utilitaires
 ✅ Appelés par composants qui lisent medication_intakes
@@ -199,6 +224,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ```
 
 #### 4️⃣ **Opérations en base de données** ✅
+
 ```
 ✅ Index.tsx : UPDATE (pas INSERT)
 ✅ Rattrapage.tsx : UPDATE (pas INSERT) - CORRIGÉ
@@ -208,6 +234,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ```
 
 #### 5️⃣ **Trigger automatique** ✅
+
 ```
 ✅ Script 19_auto_regenerate_future_intakes.sql créé
 ✅ Trigger medication_times_changed opérationnel
@@ -217,6 +244,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ```
 
 #### 6️⃣ **Page Historique UX** ✅
+
 ```
 ✅ Filtre : affiche uniquement aujourd'hui + passé
 ✅ Auto-scroll vers "Aujourd'hui"
@@ -238,6 +266,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ### ⚠️ Points à retenir
 
 **Quand vous modifiez un horaire dans l'interface** :
+
 1. ✅ La table `medications.times` est mise à jour
 2. ✅ Le trigger `medication_times_changed` se déclenche automatiquement
 3. ✅ Les prises futures (status='pending', scheduled_time > NOW) sont supprimées
@@ -245,6 +274,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 5. ✅ L'historique reste intact (prises passées/prises/sautées non touchées)
 
 **Structure du système** :
+
 ```
 ┌─────────────────────────────────────────────┐
 │  medications.times (source d'horaires)      │
@@ -290,6 +320,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ### Comment ça fonctionne
 
 #### 1️⃣ **Détection des prises manquées** (`useMissedIntakesDetection`)
+
 ```
 ✅ Lit UNIQUEMENT depuis medication_intakes (pas de génération dynamique)
 ✅ Filtre sur status='pending' ET scheduled_time < NOW()
@@ -298,6 +329,7 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ```
 
 #### 2️⃣ **Traitement du rattrapage** (`Rattrapage.tsx`)
+
 ```
 ✅ CORRIGÉ : Fait des UPDATE au lieu d'INSERT
 ✅ Pas de doublons dans medication_intakes
@@ -326,19 +358,23 @@ Supprimer le système hybride et passer à un système 100% base de données.
 ## 🚨 ACTION REQUISE
 
 ### Script SQL à exécuter
+
 **Fichier** : `migration_sql/scripts_sql/19_auto_regenerate_future_intakes.sql`
 
 **Comment l'exécuter** :
+
 1. Ouvrir Supabase → SQL Editor
 2. Copier-coller tout le contenu du fichier `19_auto_regenerate_future_intakes.sql`
 3. Exécuter (Run)
 
 **Ce que ça fait** :
+
 - Crée la fonction `regenerate_future_intakes()`
 - Crée le trigger qui se déclenche sur modification de `medications.times`
 - Protège totalement l'historique (ne touche QUE les prises futures pending)
 
 **Vérification** :
+
 ```sql
 -- Vérifier que le trigger existe
 SELECT trigger_name, event_object_table
@@ -347,14 +383,17 @@ WHERE trigger_name = 'medication_times_changed';
 ```
 
 **Test** :
+
 1. Modifier un horaire dans l'interface (ex: 09:30 → 10:00)
 2. Vérifier en base que les prises futures ont été régénérées :
+
 ```sql
-SELECT scheduled_time, status 
+SELECT scheduled_time, status
 FROM medication_intakes
 WHERE medication_id = 'votre-id'
   AND scheduled_time > NOW()
 ORDER BY scheduled_time;
 ```
- 
+
+ 
  
