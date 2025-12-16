@@ -23,7 +23,7 @@ export function useMedicationPause() {
       // 1. Mettre à jour le statut is_paused dans la table medications
       const { error: updateError } = await supabase
         .from('medications')
-        .update({ is_paused: newIsPaused })
+        .update({ is_paused: newIsPaused } as any) // Cast temporaire en attendant la régénération des types Supabase
         .eq('id', medicationId);
 
       if (updateError) throw updateError;
@@ -31,7 +31,7 @@ export function useMedicationPause() {
       // 2. Si on met en pause : supprimer les prises futures
       if (newIsPaused) {
         const { error: deleteFutureError } = await supabase
-          .rpc('delete_future_intakes_on_pause', { med_id: medicationId });
+          .rpc('delete_future_intakes_on_pause' as any, { med_id: medicationId });
 
         if (deleteFutureError) {
           console.error('[useMedicationPause] Erreur suppression prises futures:', deleteFutureError);
