@@ -15,10 +15,12 @@ export function useMedicationPause() {
     currentIsPaused: boolean,
     medicationName: string
   ): Promise<boolean> => {
+    console.log('[useMedicationPause] Toggle pause appelé:', { medicationId, currentIsPaused, medicationName });
     setLoading(true);
     
     try {
       const newIsPaused = !currentIsPaused;
+      console.log('[useMedicationPause] Nouveau statut is_paused:', newIsPaused);
 
       // 1. Mettre à jour le statut is_paused dans la table medications
       const { error: updateError } = await supabase
@@ -27,15 +29,18 @@ export function useMedicationPause() {
         .eq('id', medicationId);
 
       if (updateError) throw updateError;
+      console.log('[useMedicationPause] Update is_paused réussi');
 
       // 2. Si on met en pause : supprimer les prises futures
       if (newIsPaused) {
-        const { error: deleteFutureError } = await supabase
+        console.log('[useMedicationPause] Appel delete_future_intakes_on_pause...');
+        const { data: deletedCount, error: deleteFutureError } = await supabase
           .rpc('delete_future_intakes_on_pause' as any, { med_id: medicationId });
 
         if (deleteFutureError) {
           console.error('[useMedicationPause] Erreur suppression prises futures:', deleteFutureError);
-          // Ne pas bloquer si erreur, juste logger
+        } else {
+          console.log('[useMedicationPause] Prises futures supprimées:', deletedCount);
         }
 
         toast.success(`${medicationName} mis en pause`, {
@@ -44,12 +49,14 @@ export function useMedicationPause() {
       } 
       // 3. Si on réactive : régénérer les prises futures (7 jours)
       else {
+        console.log('[useMedicationPause] Appel regenerate_future_intakes...');
         const { error: regenerateError } = await supabase
           .rpc('regenerate_future_intakes', { med_id: medicationId });
 
         if (regenerateError) {
           console.error('[useMedicationPause] Erreur régénération prises:', regenerateError);
-          // Ne pas bloquer si erreur, juste logger
+        } else {
+          console.log('[useMedicationPause] Prises régénérées avec succès');
         }
 
         toast.success(`${medicationName} réactivé`, {
