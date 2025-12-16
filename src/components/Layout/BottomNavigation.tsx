@@ -1,66 +1,20 @@
 import { NavLink, useLocation } from "react-router-dom"
-import { useRef, useEffect, useState } from "react"
-import { 
-  Home, Pill, Package, Calendar, Settings,
-  User, Heart, Bell, Shield, FileText,
-  ClipboardList, Users, Database, Smartphone,
-  Moon, Sun, Mail, Phone, MapPin, Search, ListPlus
-} from "lucide-react"
 import { cn } from "@/lib/utils"
 import { supabase } from "@/integrations/supabase/client"
 import { useQuery } from "@tanstack/react-query"
-
-const ICON_MAP: Record<string, any> = {
-  Home, Pill, Package, Calendar, Settings,
-  User, Heart, Bell, Shield, FileText,
-  ClipboardList, Users, Database, Smartphone,
-  Moon, Sun, Mail, Phone, MapPin, Search, ListPlus
-};
+import { useNavigationScroll } from "./hooks/useNavigationScroll"
+import { getIconComponent } from "./utils/navigationIcons"
 
 export function BottomNavigation() {
   const location = useLocation()
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [startX, setStartX] = useState(0)
-  const [scrollLeft, setScrollLeft] = useState(0)
-
-  // Restore scroll position on mount and route change
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const savedPosition = localStorage.getItem('nav-scroll-position')
-    if (savedPosition) {
-      // Use multiple methods to ensure it works
-      container.scrollLeft = parseInt(savedPosition, 10)
-      
-      requestAnimationFrame(() => {
-        container.scrollLeft = parseInt(savedPosition, 10)
-      })
-      
-      setTimeout(() => {
-        container.scrollLeft = parseInt(savedPosition, 10)
-      }, 100)
-    }
-  }, [location.pathname])
-
-  // Save scroll position on scroll and touch
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const savePosition = () => {
-      localStorage.setItem('nav-scroll-position', container.scrollLeft.toString())
-    }
-
-    container.addEventListener('scroll', savePosition, { passive: true })
-    container.addEventListener('touchend', savePosition, { passive: true })
-    
-    return () => {
-      container.removeEventListener('scroll', savePosition)
-      container.removeEventListener('touchend', savePosition)
-    }
-  }, [])
+  const {
+    scrollContainerRef,
+    isDragging,
+    handleMouseDown,
+    handleMouseMove,
+    handleMouseUp,
+    handleMouseLeave,
+  } = useNavigationScroll()
 
   const { data: navItems } = useQuery({
     queryKey: ["navigation-items"],
@@ -75,34 +29,6 @@ export function BottomNavigation() {
       return data;
     },
   });
-
-  const getIconComponent = (iconName: string) => {
-    return ICON_MAP[iconName] || Home;
-  };
-
-  // Handle mouse drag to scroll
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!scrollContainerRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - scrollContainerRef.current.offsetLeft);
-    setScrollLeft(scrollContainerRef.current.scrollLeft);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !scrollContainerRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - scrollContainerRef.current.offsetLeft;
-    const walk = (x - startX) * 2;
-    scrollContainerRef.current.scrollLeft = scrollLeft - walk;
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleMouseLeave = () => {
-    setIsDragging(false);
-  };
 
   if (!navItems || navItems.length === 0) return null;
 
