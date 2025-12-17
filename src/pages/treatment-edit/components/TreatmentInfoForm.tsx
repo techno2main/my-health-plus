@@ -1,8 +1,8 @@
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DateInput } from "@/components/ui/date-input"
 import { Switch } from "@/components/ui/switch"
+import { DateInput } from "@/components/ui/date-input"
 import { formatToFrenchDate } from "@/lib/dateUtils"
 import type { TreatmentFormData } from "../types"
 
@@ -64,12 +64,14 @@ export const TreatmentInfoForm = ({
               id="startDate"
               value={formData.startDate}
               onChange={onStartDateChange}
+              placeholder="Non définie"
+              className="bg-surface"
             />
           </div>
           <div className="space-y-2">
             <Label htmlFor="endDate">Date de fin</Label>
-            <div className="flex items-center h-10 px-3 py-2 rounded-md border border-input bg-muted/50 text-sm">
-              {formData.endDate ? formatToFrenchDate(formData.endDate) : "Non définie"}
+            <div className="flex items-center h-10 px-2 py-2 rounded-md border border-input bg-muted/50 text-xs overflow-hidden">
+              <span className="truncate">{formData.endDate ? formatToFrenchDate(formData.endDate) : "Non définie"}</span>
             </div>
           </div>
         </div>

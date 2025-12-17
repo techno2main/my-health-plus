@@ -74,7 +74,8 @@ export const PharmacyInfoFields = ({
           id="first-visit"
           value={formData.firstPharmacyVisit}
           onChange={(date) => setFormData({ ...formData, firstPharmacyVisit: date })}
-          placeholder="Date"
+          placeholder="Non définie"
+          className="bg-surface"
         />
         <p className="text-xs text-muted-foreground">
           {formData.durationDays ? 

@@ -1,7 +1,7 @@
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { DateInput } from "@/components/ui/date-input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { DateInput } from "@/components/ui/date-input"
 import type { TreatmentFormData } from "../types"
 
 interface BasicInfoFieldsProps {
@@ -68,7 +68,8 @@ export const BasicInfoFields = ({ formData, setFormData, doctors }: BasicInfoFie
             id="prescription-date"
             value={formData.prescriptionDate}
             onChange={(date) => setFormData({ ...formData, prescriptionDate: date })}
-            placeholder="Date"
+            placeholder="Non définie"
+            className="bg-surface"
           />
         </div>
 

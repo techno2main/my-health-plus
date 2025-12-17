@@ -609,7 +609,7 @@ export function DatePickerM3(props: DatePickerM3Props) {
               disabled={disabled}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
-              {value ? format(value, "dd MMMM yyyy", { locale }) : (
+              {value ? format(value, "dd/MM/yyyy", { locale }) : (
                 <span>{props.placeholder || "Sélectionner une date"}</span>
               )}
             </Button>
@@ -692,7 +692,7 @@ export function DatePickerM3(props: DatePickerM3Props) {
           disabled={disabled}
         >
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {value ? format(value, "dd MMMM yyyy", { locale }) : (
+          {value ? format(value, "dd/MM/yyyy", { locale }) : (
             <span>Sélectionner une date</span>
           )}
         </Button>
