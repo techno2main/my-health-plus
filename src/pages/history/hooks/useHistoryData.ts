@@ -24,11 +24,12 @@ export const useHistoryData = () => {
             name,
             catalog_id,
             treatment_id,
+            is_paused,
             medication_catalog(strength, default_posology),
             treatments!inner(name, start_date, end_date, prescription_id, is_active)
           )
         `)
-        .order("scheduled_time", { ascending: false }) as { data: any[] | null; error: any }
+        .order("scheduled_time", { ascending: false })
 
       if (error) throw error
 
