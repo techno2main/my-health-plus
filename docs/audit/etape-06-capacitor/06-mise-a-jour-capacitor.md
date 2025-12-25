@@ -2,8 +2,8 @@
 
 **Priorité :** P5 - MOYENNE  
 **Durée estimée :** 20-30 minutes  
-**Risque :** 🟢 Minimal (patches 7.4.3 → 7.4.4)  
-**Type d'action :** PATCH + SYNC Android
+**Risque :** � Moyen (MAJOR 7.x → 8.0.0)  
+**Type d'action :** MAJOR + SYNC Android
 
 ---
 
@@ -11,13 +11,13 @@
 
 ### Packages concernés (9)
 ```
-@capacitor/core: 7.4.3 → 7.4.4
-@capacitor/android: 7.4.3 → 7.4.4
-@capacitor/ios: 7.4.3 → 7.4.4
-@capacitor/cli: 7.4.3 → 7.4.4
-@capacitor/app: 7.1.0 → 7.1.1
-@capacitor/filesystem: 7.1.4 → 7.1.6
-@capacitor/local-notifications: 7.0.3 → 7.0.4
+@capacitor/core: 7.4.3 → 8.0.0
+@capacitor/android: 7.4.3 → 8.0.0
+@capacitor/ios: 7.4.3 → 8.0.0
+@capacitor/cli: 7.4.3 → 8.0.0
+@capacitor/app: 7.1.0 → 8.0.0
+@capacitor/filesystem: 7.1.4 → 8.0.0
+@capacitor/local-notifications: 7.0.3 → 8.0.0
 @capacitor/push-notifications: 7.0.3 → 7.0.4
 @capacitor/status-bar: 7.0.3 → 7.0.4
 ```
