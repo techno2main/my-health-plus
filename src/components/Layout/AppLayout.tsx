@@ -2,6 +2,7 @@ import { ReactNode } from "react"
 import { ScrollToTop } from "@/components/ScrollToTop"
 import { BottomNavigation } from "./BottomNavigation"
 import { AppHeader } from "./AppHeader"
+import { ProfileCompletionBanner } from "@/components/Profile/ProfileCompletionBanner"
 import { usePullToRefresh } from "@/hooks/usePullToRefresh"
 import { cn } from "@/lib/utils"
 
@@ -24,6 +25,9 @@ export function AppLayout({ children, className, showBottomNav = true, showHeade
       </main>
       {showBottomNav && <BottomNavigation />}
       <ScrollToTop />
+      
+      {/* Banner discret pour compléter le profil */}
+      <ProfileCompletionBanner />
     </div>
   )
 }

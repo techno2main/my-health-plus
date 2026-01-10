@@ -8,10 +8,24 @@ import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
 
-
 interface ProtectedRouteProps {
   children: ReactNode;
 }
+
+// Fonction utilitaire pour vérifier l'onboarding directement depuis localStorage
+const checkOnboardingStatus = (userId: string): boolean => {
+  return localStorage.getItem(`hasSeenOnboarding_${userId}`) === 'true';
+};
+
+const checkFirstLoginStatus = (userId: string): boolean => {
+  const hasSeenOnboarding = localStorage.getItem(`hasSeenOnboarding_${userId}`) === 'true';
+  const firstLoginHandled = localStorage.getItem(`isFirstLogin_${userId}`) === 'true';
+  return !hasSeenOnboarding && !firstLoginHandled;
+};
+
+const markFirstLoginAsHandled = (userId: string): void => {
+  localStorage.setItem(`isFirstLogin_${userId}`, 'true');
+};
 
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
@@ -101,7 +115,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     enabled: !!user && !isLocked && !loading && !lockLoading,
   });
 
-  if (loading || lockLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -109,11 +123,33 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  // Rediriger vers l'onboarding si c'est la première visite (sauf si on est déjà sur /onboarding)
-  // Lire directement depuis localStorage pour avoir la valeur à jour
-  const hasSeenOnboardingNow = localStorage.getItem('hasSeenOnboarding') === 'true';
-  if (!hasSeenOnboardingNow && location.pathname !== '/onboarding') {
+  // CRITIQUE: Rediriger vers /auth si l'utilisateur n'est pas connecté
+  if (!user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  // Attendre le chargement des préférences de verrouillage après avoir vérifié l'utilisateur
+  if (lockLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // LECTURE DIRECTE depuis localStorage pour éviter les problèmes de synchronisation React
+  const hasSeenOnboarding = checkOnboardingStatus(user.id);
+  const isFirstLogin = checkFirstLoginStatus(user.id);
+
+  // Rediriger vers l'onboarding si c'est la première visite de cet utilisateur
+  if (!hasSeenOnboarding && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
+  }
+
+  // Après l'onboarding, rediriger les nouveaux utilisateurs vers leur profil
+  if (isFirstLogin && location.pathname !== '/profile' && location.pathname !== '/onboarding') {
+    markFirstLoginAsHandled(user.id);
+    return <Navigate to="/profile" replace />;
   }
 
   if (isLocked && requireAuthOnOpen) {

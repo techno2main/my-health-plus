@@ -1,6 +1,22 @@
 import { useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
+
+// URL de production fixe pour éviter les problèmes avec les URLs de preview Lovable
+const PRODUCTION_URL = 'https://my-med-plus.lovable.app';
+
+// Détermine la bonne URL de redirection selon la plateforme
+const getRedirectUrl = () => {
+  if (Capacitor.isNativePlatform()) {
+    // Deep link pour l'app mobile
+    return 'com.myhealthplus.app://auth/callback';
+  }
+  // Toujours utiliser l'URL de production pour OAuth web
+  // (les URLs de preview Lovable ne sont pas autorisées dans Supabase)
+  return `${PRODUCTION_URL}/`;
+};
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -9,6 +25,7 @@ export function useAuth() {
 
   useEffect(() => {
     let isCleanedUp = false;
+    let appUrlListener: any = null;
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -39,6 +56,42 @@ export function useAuth() {
         setLoading(false);
       }
     );
+
+    // Gérer les deep links pour OAuth sur mobile
+    if (Capacitor.isNativePlatform()) {
+      App.addListener('appUrlOpen', async ({ url }) => {
+        console.log('📱 Deep link reçu:', url);
+        
+        // Extraire les tokens de l'URL de callback
+        if (url.includes('auth/callback') || url.includes('access_token')) {
+          try {
+            // Parser l'URL pour extraire les paramètres
+            const urlObj = new URL(url.replace('com.myhealthplus.app://', 'https://placeholder/'));
+            const hashParams = new URLSearchParams(urlObj.hash.substring(1));
+            const accessToken = hashParams.get('access_token');
+            const refreshToken = hashParams.get('refresh_token');
+            
+            if (accessToken && refreshToken) {
+              console.log('🔑 Tokens OAuth reçus, configuration de la session...');
+              const { data, error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken,
+              });
+              
+              if (error) {
+                console.error('❌ Erreur setSession:', error);
+              } else {
+                console.log('✅ Session OAuth configurée avec succès');
+              }
+            }
+          } catch (err) {
+            console.error('❌ Erreur parsing deep link:', err);
+          }
+        }
+      }).then(listener => {
+        appUrlListener = listener;
+      });
+    }
 
     // THEN check for existing session with error handling
     supabase.auth.getSession()
@@ -85,14 +138,21 @@ export function useAuth() {
     return () => {
       isCleanedUp = true;
       subscription.unsubscribe();
+      if (appUrlListener) {
+        appUrlListener.remove();
+      }
     };
   }, []);
 
   const signInWithGoogle = async () => {
+    const redirectUrl = getRedirectUrl();
+    console.log('🔐 Google OAuth redirect URL:', redirectUrl);
+    
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: redirectUrl,
+        skipBrowserRedirect: Capacitor.isNativePlatform(),
       },
     });
     return { error };
@@ -103,7 +163,8 @@ export function useAuth() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        // Utiliser l'URL de production pour la confirmation email
+        emailRedirectTo: `${PRODUCTION_URL}/`,
       },
     });
     return { error };

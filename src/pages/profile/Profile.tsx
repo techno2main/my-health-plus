@@ -1,9 +1,13 @@
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { PageHeader } from "@/components/Layout/PageHeader";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useProfileCompletion } from "@/contexts/ProfileCompletionContext";
 import { useProfileData } from "./hooks/useProfileData";
+import { useProfileWizard } from "./hooks/useProfileWizard";
 import { calculateAge, calculateBMI, getBMIColor } from "./utils/profileUtils";
 import { ProfileHeader } from "./components/ProfileHeader";
 import { ProfileFormEdit } from "./components/ProfileFormEdit";
@@ -11,10 +15,17 @@ import { ProfileFormView } from "./components/ProfileFormView";
 import { ProfileActions } from "./components/ProfileActions";
 import { ExportDataCard } from "./components/ExportDataCard";
 import { LogoutButton } from "./components/LogoutButton";
+import { ProfileWizardDialog } from "./components/ProfileWizard";
+import type { ProfileFieldName } from "@/contexts/ProfileCompletionContext";
 
 export default function Profile() {
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { refetch: refetchProfileCompletion } = useProfileCompletion();
+  
+  // Stocker le champ à focus avant de nettoyer les query params
+  const [fieldToFocus, setFieldToFocus] = useState<ProfileFieldName | null>(null);
   
   const {
     loading,
@@ -41,8 +52,51 @@ export default function Profile() {
     handleLogout,
   } = useProfileData();
 
+  const { showWizard, closeWizard, completeWizard, skipWizard } = useProfileWizard();
+
+  // Lire les query params pour auto-edit et focus
+  const shouldEdit = searchParams.get('edit') === 'true';
+  const focusFieldFromParams = searchParams.get('focus') as ProfileFieldName | null;
+
+  // Auto-ouvrir le mode édition si demandé via query params
+  useEffect(() => {
+    if (shouldEdit && !loading) {
+      setIsEditing(true);
+      // Stocker le champ à focus avant de nettoyer les params
+      if (focusFieldFromParams) {
+        setFieldToFocus(focusFieldFromParams);
+      }
+      // Nettoyer les query params après avoir lu
+      setSearchParams({}, { replace: true });
+    }
+  }, [shouldEdit, loading, focusFieldFromParams, setIsEditing, setSearchParams]);
+
+  // Réinitialiser le champ à focus quand on quitte le mode édition
+  useEffect(() => {
+    if (!isEditing) {
+      setFieldToFocus(null);
+    }
+  }, [isEditing]);
+
   const age = calculateAge(dateOfBirth);
   const bmi = calculateBMI(height, weight);
+
+  // Wrapper pour sauvegarder et rafraîchir le badge de complétion
+  const handleSaveWithRefresh = async () => {
+    const success = await handleSave();
+    if (success) {
+      // Rafraîchir le statut de complétion pour mettre à jour le badge dans le header
+      await refetchProfileCompletion();
+    }
+  };
+
+  const handleWizardComplete = async () => {
+    const success = await handleSave();
+    if (success) {
+      await refetchProfileCompletion();
+    }
+    completeWizard();
+  };
 
   if (loading) {
     return (
@@ -93,6 +147,7 @@ export default function Profile() {
               weight={weight}
               age={age}
               bmi={bmi}
+              focusField={fieldToFocus}
               getBMIColor={getBMIColor}
               onFirstNameChange={setFirstName}
               onLastNameChange={setLastName}
@@ -117,7 +172,7 @@ export default function Profile() {
             isEditing={isEditing}
             saving={saving}
             onCancel={() => setIsEditing(false)}
-            onSave={handleSave}
+            onSave={handleSaveWithRefresh}
           />
         </Card>
 
@@ -125,6 +180,26 @@ export default function Profile() {
 
         <LogoutButton onLogout={handleLogout} />
       </div>
+
+      {/* Wizard didacticiel pour compléter le profil */}
+      <ProfileWizardDialog
+        open={showWizard}
+        onOpenChange={closeWizard}
+        firstName={firstName}
+        lastName={lastName}
+        dateOfBirth={dateOfBirth}
+        bloodType={bloodType}
+        height={height}
+        weight={weight}
+        onFirstNameChange={setFirstName}
+        onLastNameChange={setLastName}
+        onDateOfBirthChange={setDateOfBirth}
+        onBloodTypeChange={setBloodType}
+        onHeightChange={setHeight}
+        onWeightChange={setWeight}
+        onComplete={handleWizardComplete}
+        onSkip={skipWizard}
+      />
     </AppLayout>
   );
 }

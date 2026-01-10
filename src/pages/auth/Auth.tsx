@@ -54,7 +54,12 @@ const Auth = () => {
         toast.error('Le mot de passe doit contenir au moins 6 caractères');
         return;
       }
-      handleSignUp(email, password);
+      // Après inscription réussie, revenir au mode connexion
+      handleSignUp(email, password, () => {
+        setIsSignUpMode(false);
+        setPassword('');
+        setConfirmPassword('');
+      });
     } else {
       handleSignIn(email, password);
     }
@@ -84,7 +89,7 @@ const Auth = () => {
           <p className="text-muted-foreground">
             {isSignUpMode 
               ? "Créez votre compte pour commencer" 
-              : "Connectez-vous pour accéder à votre espace santé"}
+              : "Connectez-vous à votre espace santé"}
           </p>
         </div>
 
@@ -139,14 +144,15 @@ const Auth = () => {
         </div>
 
         <div className="space-y-4">
-          {biometricAvailable && (
+          {/* Google OAuth - fonctionne pour connexion ET inscription */}
+          <GoogleButton onSignIn={handleGoogleSignIn} isSignUp={isSignUpMode} />
+          
+          {biometricAvailable && !isSignUpMode && (
             <BiometricButton
               onSignIn={handleBiometricSignIn}
               isSubmitting={isSubmitting}
             />
           )}
-          
-          <GoogleButton onSignIn={handleGoogleSignIn} />
         </div>
 
         <p className="text-xs text-center text-muted-foreground">

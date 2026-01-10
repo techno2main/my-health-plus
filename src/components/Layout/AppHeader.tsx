@@ -8,6 +8,7 @@ import { fr } from "date-fns/locale"
 import { supabase } from "@/integrations/supabase/client"
 import { useTheme } from "@/components/theme-provider"
 import { useUserRole } from "@/hooks/useUserRole"
+import { useProfileCompletion } from "@/contexts/ProfileCompletionContext"
 import { generateUserInitials } from "./helpers"
 import { getAuthenticatedUser } from "@/lib/auth-guard"
 import { useStatusBarTheme } from "@/hooks/useStatusBarTheme"
@@ -16,6 +17,7 @@ export function AppHeader() {
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
   const { isAdmin } = useUserRole()
+  const { missingFieldsCount, isComplete, isLoading: profileLoading, firstMissingField } = useProfileCompletion()
   
   // Mettre à jour la barre de statut selon le thème
   useStatusBarTheme(theme)
@@ -88,8 +90,23 @@ export function AppHeader() {
               }}
               badge={{
                 isAdmin,
-                className: "cursor-pointer",
-                onClick: () => navigate("/profile"),
+                // Ne pas afficher de notification pendant le chargement ou si profil complet
+                notificationCount: profileLoading || isComplete ? 0 : missingFieldsCount,
+                className: "cursor-pointer touch-manipulation",
+                onClick: () => {
+                  // Si profil complet: page profil en lecture seule
+                  // Si profil incomplet: page profil en édition avec focus sur le premier champ manquant
+                  if (isComplete) {
+                    navigate('/profile');
+                  } else {
+                    const params = new URLSearchParams();
+                    params.set('edit', 'true');
+                    if (firstMissingField) {
+                      params.set('focus', firstMissingField);
+                    }
+                    navigate(`/profile?${params.toString()}`);
+                  }
+                },
               }}
             />
           </div>
