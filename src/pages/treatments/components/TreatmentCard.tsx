@@ -182,17 +182,19 @@ export const TreatmentCard = ({ treatment, onTreatmentTerminated }: TreatmentCar
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Terminer ce traitement ?</AlertDialogTitle>
-            <AlertDialogDescription className="space-y-2">
-              <p>
-                Cette action mettra fin au traitement <strong>{treatment.name}</strong> avant sa date de fin prévue
-                {treatment.end_date && <> ({formatToFrenchDate(treatment.end_date)})</>}.
-              </p>
-              <p className="text-amber-600 font-medium">
-                ⚠️ Toutes les prises de médicaments futures seront supprimées.
-              </p>
-              <p className="text-muted-foreground text-sm">
-                Cette action est irréversible.
-              </p>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <div>
+                  Cette action mettra fin au traitement <strong>{treatment.name}</strong> avant sa date de fin prévue
+                  {treatment.end_date && <> ({formatToFrenchDate(treatment.end_date)})</>}.
+                </div>
+                <div className="text-amber-600 font-medium">
+                  ⚠️ Toutes les prises de médicaments futures seront supprimées.
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  Cette action est irréversible.
+                </div>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
