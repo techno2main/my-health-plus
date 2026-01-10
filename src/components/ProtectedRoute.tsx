@@ -101,7 +101,21 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     enabled: !!user && !isLocked && !loading && !lockLoading,
   });
 
-  if (loading || lockLoading) {
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // CRITIQUE: Rediriger vers /auth si l'utilisateur n'est pas connecté
+  if (!user) {
+    return <Navigate to="/auth" state={{ from: location }} replace />;
+  }
+
+  // Attendre le chargement des préférences de verrouillage après avoir vérifié l'utilisateur
+  if (lockLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
