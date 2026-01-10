@@ -7,7 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Capacitor } from '@capacitor/core';
 import { App } from '@capacitor/app';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
-import { useOnboarding } from '@/hooks/useOnboarding';
+
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -16,7 +16,6 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { user, loading } = useAuth();
   const location = useLocation();
-  const { hasSeenOnboarding } = useOnboarding();
   const [isLocked, setIsLocked] = useState(false);
   const [lockLoading, setLockLoading] = useState(true);
   const [requireAuthOnOpen, setRequireAuthOnOpen] = useState(false);
@@ -110,12 +109,10 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   // Rediriger vers l'onboarding si c'est la première visite (sauf si on est déjà sur /onboarding)
-  if (!hasSeenOnboarding && location.pathname !== '/onboarding') {
+  // Lire directement depuis localStorage pour avoir la valeur à jour
+  const hasSeenOnboardingNow = localStorage.getItem('hasSeenOnboarding') === 'true';
+  if (!hasSeenOnboardingNow && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
