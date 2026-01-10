@@ -139,14 +139,15 @@ const Auth = () => {
         </div>
 
         <div className="space-y-4">
-          {biometricAvailable && (
+          {/* Google OAuth - fonctionne pour connexion ET inscription */}
+          <GoogleButton onSignIn={handleGoogleSignIn} isSignUp={isSignUpMode} />
+          
+          {biometricAvailable && !isSignUpMode && (
             <BiometricButton
               onSignIn={handleBiometricSignIn}
               isSubmitting={isSubmitting}
             />
           )}
-          
-          <GoogleButton onSignIn={handleGoogleSignIn} />
         </div>
 
         <p className="text-xs text-center text-muted-foreground">

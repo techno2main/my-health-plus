@@ -30,7 +30,11 @@ export const useEmailAuth = () => {
         description: error.message,
       });
     } else {
-      toast.success('Compte créé avec succès !');
+      // Message clair expliquant que la confirmation email est requise
+      toast.success('Vérifiez votre boîte mail !', {
+        description: `Un email de confirmation a été envoyé à ${email}. Cliquez sur le lien pour activer votre compte.`,
+        duration: 10000, // Afficher 10 secondes
+      });
     }
     
     setIsSubmitting(false);
