@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
 const WIZARD_COMPLETED_PREFIX = "profileWizardCompleted_";
@@ -6,27 +6,6 @@ const WIZARD_COMPLETED_PREFIX = "profileWizardCompleted_";
 export const useProfileWizard = () => {
   const { user } = useAuth();
   const [showWizard, setShowWizard] = useState(false);
-  const [hasChecked, setHasChecked] = useState(false);
-
-  useEffect(() => {
-    if (user && !hasChecked) {
-      const key = `${WIZARD_COMPLETED_PREFIX}${user.id}`;
-      const isCompleted = localStorage.getItem(key) === 'true';
-      
-      // Vérifier si c'est la première connexion (on utilise le flag existant)
-      const isFirstLogin = localStorage.getItem(`isFirstLogin_${user.id}`) !== 'true';
-      
-      // Afficher le wizard si jamais complété ET première connexion
-      if (!isCompleted && isFirstLogin) {
-        // Petit délai pour laisser la page se charger
-        setTimeout(() => {
-          setShowWizard(true);
-        }, 500);
-      }
-      
-      setHasChecked(true);
-    }
-  }, [user, hasChecked]);
 
   const completeWizard = useCallback(() => {
     if (user) {
@@ -43,6 +22,7 @@ export const useProfileWizard = () => {
     }
   }, [user]);
 
+  // Ouvrir manuellement le wizard (depuis le bouton Modifier ou un CTA)
   const openWizard = useCallback(() => {
     setShowWizard(true);
   }, []);
