@@ -29,8 +29,13 @@ export function AvatarWithBadge({
   const { isAdmin = false, notificationCount = 0, className, onClick } = badge || {}
   
   return (
-    <div className="relative inline-block">
-      <Avatar className={cn("h-10 w-10", className)} onClick={onClick}>
+    <div 
+      className={cn("relative inline-block", onClick && "cursor-pointer touch-manipulation")} 
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+    >
+      <Avatar className={cn("h-10 w-10", className)}>
         {src ? (
           <AvatarImage src={src} alt={alt} />
         ) : (
@@ -40,7 +45,7 @@ export function AvatarWithBadge({
       
       {/* Badge de notification pour champs manquants */}
       {notificationCount > 0 && (
-        <div className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-background text-xs font-bold animate-pulse">
+        <div className="absolute -top-1 -right-1 min-w-5 h-5 px-1.5 bg-red-500 text-white rounded-full flex items-center justify-center shadow-md border-2 border-background text-xs font-bold">
           {notificationCount}
         </div>
       )}
