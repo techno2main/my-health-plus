@@ -17,7 +17,7 @@ export function AppHeader() {
   const navigate = useNavigate()
   const { theme, setTheme } = useTheme()
   const { isAdmin } = useUserRole()
-  const { missingFieldsCount, isComplete } = useProfileCompletion()
+  const { missingFieldsCount, isComplete, isLoading: profileLoading } = useProfileCompletion()
   
   // Mettre à jour la barre de statut selon le thème
   useStatusBarTheme(theme)
@@ -90,8 +90,9 @@ export function AppHeader() {
               }}
               badge={{
                 isAdmin,
-                notificationCount: isComplete ? 0 : missingFieldsCount,
-                className: "cursor-pointer",
+                // Ne pas afficher de notification pendant le chargement ou si profil complet
+                notificationCount: profileLoading || isComplete ? 0 : missingFieldsCount,
+                className: "cursor-pointer touch-manipulation",
                 onClick: () => navigate("/profile"),
               }}
             />

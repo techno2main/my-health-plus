@@ -25,17 +25,20 @@ export interface ProfileCompletionState {
 }
 
 export const useProfileCompletion = (): ProfileCompletionState => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(true);
   const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [hasFetched, setHasFetched] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     if (!user) {
       setIsLoading(false);
+      setHasFetched(true);
       return;
     }
 
     try {
+      setIsLoading(true);
       const { data, error } = await supabase
         .from("profiles")
         .select("first_name, last_name, date_of_birth, blood_type, height, weight")
@@ -48,12 +51,15 @@ export const useProfileCompletion = (): ProfileCompletionState => {
       console.error("Error fetching profile completion:", error);
     } finally {
       setIsLoading(false);
+      setHasFetched(true);
     }
   }, [user]);
 
   useEffect(() => {
+    // Ne pas fetch tant que l'auth n'est pas terminé
+    if (authLoading) return;
     fetchProfile();
-  }, [fetchProfile]);
+  }, [fetchProfile, authLoading]);
 
   const calculateCompletion = (data: ProfileData | null) => {
     if (!data) return { filled: 0, total: PROFILE_FIELDS.length };
@@ -70,13 +76,16 @@ export const useProfileCompletion = (): ProfileCompletionState => {
   const completionPercent = Math.round((filled / total) * 100);
   const missingFieldsCount = total - filled;
 
+  // Considérer comme "en chargement" tant qu'on n'a pas fait le premier fetch
+  const stillLoading = authLoading || isLoading || !hasFetched;
+
   return {
-    isLoading,
-    completionPercent,
-    missingFieldsCount,
-    filledFieldsCount: filled,
+    isLoading: stillLoading,
+    completionPercent: stillLoading ? 100 : completionPercent, // Default à 100% pendant le chargement pour ne pas afficher de badge
+    missingFieldsCount: stillLoading ? 0 : missingFieldsCount,
+    filledFieldsCount: stillLoading ? total : filled,
     totalFields: total,
-    isComplete: completionPercent === 100,
+    isComplete: stillLoading ? true : completionPercent === 100, // Default à true pendant le chargement
     profile,
     refetch: fetchProfile,
   };
