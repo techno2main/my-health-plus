@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { getAuthenticatedUser } from "@/lib/auth-guard";
@@ -15,6 +15,7 @@ interface MedicationCatalog {
   } | null;
   default_posology: string | null;
   strength: string | null;
+  form: string | null;
   description: string | null;
   initial_stock: number;
   min_threshold: number;
@@ -26,6 +27,7 @@ interface MedicationCatalog {
 interface FormData {
   name: string;
   pathology_id: string;
+  form: string;
   default_posology: string;
   strength: string;
   description: string;
@@ -36,7 +38,8 @@ interface FormData {
 
 const initialFormData: FormData = {
   name: "",
-  pathology_id: undefined as any,
+  pathology_id: "",
+  form: "",
   default_posology: "Définir une ou plusieurs prises",
   strength: "",
   description: "",
@@ -51,16 +54,15 @@ export function useMedicationCatalog() {
   const [pathologies, setPathologies] = useState<{ id: string; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedLetter, setSelectedLetter] = useState<string>("ALL");
+  const [isAlphabetOpen, setIsAlphabetOpen] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingMed, setEditingMed] = useState<MedicationCatalog | null>(null);
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
-  useEffect(() => {
-    loadMedications();
-    loadPathologies();
-  }, []);
+  // PAS de useEffect automatique - le composant parent doit appeler manuellement
 
   const loadPathologies = async () => {
     try {
@@ -78,7 +80,9 @@ export function useMedicationCatalog() {
 
   const loadMedications = async () => {
     try {
-      const { data, error } = await supabase
+      setLoading(true);
+      
+      let query = supabase
         .from("medication_catalog")
         .select(`
           *,
@@ -87,42 +91,18 @@ export function useMedicationCatalog() {
             name,
             description
           )
-        `)
-        .order("name");
+        `);
+
+      if (selectedLetter !== "ALL") {
+        query = query.ilike("name", `${selectedLetter}%`);
+      }
+
+      const { data, error } = await query.order("name").limit(selectedLetter === "ALL" ? 2000 : 500);
 
       if (error) throw error;
 
-      // Pour chaque médicament du catalogue, calculer le stock total des traitements ACTIFS uniquement
-      const medsWithStock = await Promise.all(
-        (data || []).map(async (med: any) => {
-          // Récupérer uniquement les médicaments liés à des traitements actifs
-          const { data: stockData } = await supabase
-            .from("medications")
-            .select(`
-              current_stock, 
-              min_threshold,
-              treatments!inner(is_active)
-            `)
-            .eq("catalog_id", med.id)
-            .eq("treatments.is_active", true);
-
-          const totalStock = stockData?.reduce((sum, item) => sum + (item.current_stock || 0), 0) || 0;
-
-          // Calculer le seuil minimal moyen ou utiliser celui du catalogue
-          const avgThreshold =
-            stockData && stockData.length > 0
-              ? Math.round(stockData.reduce((sum, item) => sum + (item.min_threshold || 10), 0) / stockData.length)
-              : med.min_threshold || 10;
-
-          return {
-            ...med,
-            total_stock: totalStock,
-            effective_threshold: avgThreshold,
-          } as MedicationCatalog;
-        })
-      );
-
-      setMedications(medsWithStock);
+      // PAS de chargement de stock - version simple
+      setMedications(data || []);
     } catch (error) {
       console.error("Error loading medications:", error);
       toast.error("Erreur lors du chargement du référentiel");
@@ -131,67 +111,63 @@ export function useMedicationCatalog() {
     }
   };
 
+  const filteredMedications = useMemo(() => {
+    if (!searchTerm) return medications;
+    const lowerSearch = searchTerm.toLowerCase();
+    return medications.filter((med) =>
+      med.name.toLowerCase().includes(lowerSearch) ||
+      med.pathologies?.name?.toLowerCase().includes(lowerSearch)
+    );
+  }, [medications, searchTerm]);
+
   const handleSubmit = async () => {
     if (!formData.name) {
       toast.error("Le nom du médicament est obligatoire");
       return;
     }
 
-    // Validation : au moins une prise doit être définie
-    if (formData.default_times.length === 0) {
-      toast.error("Veuillez définir au moins une heure de prise");
-      return;
-    }
-
-    // Validation : la posologie ne doit pas être vide
-    if (!formData.default_posology || formData.default_posology.trim() === "") {
-      toast.error("Veuillez définir la posologie");
-      return;
-    }
-
     try {
+      console.log('[SUBMIT] formData.pathology_id:', formData.pathology_id);
+      
       if (editingMed) {
+        const updateData = {
+          name: formData.name,
+          pathology_id: formData.pathology_id || null,
+          form: formData.form || null,
+          strength: formData.strength || null,
+          description: formData.description || null,
+        };
+        console.log('[SUBMIT] UPDATE data:', updateData);
+        
         const { error } = await supabase
           .from("medication_catalog")
-          .update({
-            name: formData.name,
-            pathology_id: formData.pathology_id || null,
-            default_posology: formData.default_posology || null,
-            strength: formData.strength || null,
-            description: formData.description || null,
-            initial_stock: parseInt(formData.initial_stock) || 0,
-            min_threshold: parseInt(formData.min_threshold) || 10,
-            default_times: formData.default_times.length > 0 ? formData.default_times : null,
-          })
+          .update(updateData)
           .eq("id", editingMed.id);
 
         if (error) throw error;
         toast.success("Médicament modifié avec succès");
       } else {
-        const { data: user, error } = await getAuthenticatedUser();
-        if (error) {
-          console.warn('[useMedicationCatalog] Utilisateur non authentifié:', error.message);
-        }
+        const { data: user } = await getAuthenticatedUser();
         
-        const { error: insertError } = await supabase.from("medication_catalog").insert({
+        const insertData = {
           name: formData.name,
           pathology_id: formData.pathology_id || null,
-          default_posology: formData.default_posology || null,
+          form: formData.form || null,
           strength: formData.strength || null,
           description: formData.description || null,
-          initial_stock: parseInt(formData.initial_stock) || 0,
-          min_threshold: parseInt(formData.min_threshold) || 10,
-          default_times: formData.default_times.length > 0 ? formData.default_times : null,
           created_by: user?.id,
-          is_approved: false,
-        });
+          is_approved: true,
+        };
+        console.log('[SUBMIT] INSERT data:', insertData);
+        
+        const { error: insertError } = await supabase.from("medication_catalog").insert(insertData);
 
         if (insertError) throw insertError;
         toast.success("Médicament ajouté avec succès");
       }
 
-      loadMedications();
       closeDialog();
+      await loadMedications();
     } catch (error) {
       console.error("Error saving medication:", error);
       toast.error("Erreur lors de l'enregistrement");
@@ -206,7 +182,7 @@ export function useMedicationCatalog() {
 
       if (error) throw error;
       toast.success("Médicament supprimé");
-      loadMedications();
+      await loadMedications();
     } catch (error) {
       console.error("Error deleting medication:", error);
       toast.error("Erreur lors de la suppression");
@@ -227,6 +203,7 @@ export function useMedicationCatalog() {
       setFormData({
         name: med.name,
         pathology_id: med.pathology_id || "",
+        form: med.form || "",
         default_posology: med.default_posology || "",
         strength: med.strength || "",
         description: med.description || "",
@@ -248,30 +225,9 @@ export function useMedicationCatalog() {
   };
 
   const handleStockClick = async (catalogId: string) => {
-    // Trouver le premier médicament dans les traitements ACTIFS qui utilise ce catalog_id
-    const { data } = await supabase
-      .from("medications")
-      .select(`
-        id,
-        treatments!inner(is_active)
-      `)
-      .eq("catalog_id", catalogId)
-      .eq("treatments.is_active", true)
-      .limit(1)
-      .single();
-
-    if (data) {
-      navigate(`/stocks/${data.id}`);
-    } else {
-      navigate("/stocks");
-    }
+    // Navigation simple vers stocks
+    navigate("/stocks");
   };
-
-  const filteredMedications = medications.filter(
-    (med) =>
-      med.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      med.pathologies?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   return {
     medications,
@@ -279,6 +235,10 @@ export function useMedicationCatalog() {
     loading,
     searchTerm,
     setSearchTerm,
+    selectedLetter,
+    setSelectedLetter,
+    isAlphabetOpen,
+    setIsAlphabetOpen,
     showDialog,
     setShowDialog: openDialog,
     closeDialog,
@@ -294,5 +254,7 @@ export function useMedicationCatalog() {
     filteredMedications,
     openDialog,
     navigate,
+    loadMedications,
+    loadPathologies,
   };
 }
