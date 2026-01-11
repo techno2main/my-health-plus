@@ -11,8 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TimePickerInput } from "@/components/ui/time-picker-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { ArrowLeft, Pill } from "lucide-react";
+import { ArrowLeft, Pill, Search } from "lucide-react";
 import { detectTakesFromDosage, getDefaultTimes, generateDosageFromTimes } from "../utils/medicationUtils";
+import { useState, useEffect } from "react";
+import { AdminSearchDialog } from "./AdminSearchDialog";
+import { getPathologyFromSubstance } from "@/services/ansmApiService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface MedicationDialogProps {
   open: boolean;
@@ -21,6 +25,7 @@ interface MedicationDialogProps {
   formData: {
     name: string;
     pathology_id: string;
+    form: string;
     default_posology: string;
     strength: string;
     description: string;
@@ -44,12 +49,73 @@ export function MedicationDialog({
   onSubmit,
   onStockClick,
 }: MedicationDialogProps) {
-  // Normaliser pour Select: null/"" → undefined
-  const pathologyValue = formData.pathology_id || undefined;
+  const [showSearchDialog, setShowSearchDialog] = useState(false);
+  
+  // Normaliser pour Select: null/undefined → "" (évite warning controlled/uncontrolled)
+  const pathologyValue = formData.pathology_id || "";
+
+  const handleMedicationSelect = async (medication: any) => {
+    // Pré-remplir le formulaire avec les données ANSM
+    const cleanName = cleanMedicationName(medication.denomination);
+    const strength = extractStrength(medication.denomination);
+    const form = medication.formePharmaceutique || "";
+    
+    // Tenter de trouver la pathologie associée
+    let pathologyId = "";
+    
+    if (medication.substanceActive) {
+      const pathologyName = getPathologyFromSubstance(medication.substanceActive);
+      console.log('[ANSM] Substance:', medication.substanceActive, '-> Pathologie:', pathologyName);
+      
+      if (pathologyName) {
+        // Rechercher l'ID de la pathologie dans Supabase avec recherche exacte
+        const { data: pathologyData, error } = await supabase
+          .from("pathologies")
+          .select("id, name")
+          .eq("name", pathologyName)
+          .maybeSingle();
+        
+        console.log('[ANSM] Recherche Supabase pour:', pathologyName, '-> Résultat:', pathologyData, 'Erreur:', error);
+        
+        if (pathologyData) {
+          pathologyId = pathologyData.id;
+          console.log('[ANSM] ✅ Pathologie trouvée:', pathologyData.name, 'ID:', pathologyId);
+        } else {
+          console.warn('[ANSM] ❌ Pathologie non trouvée en base:', pathologyName);
+        }
+      }
+    }
+    
+    console.log('[ANSM] FormData pathology_id final:', pathologyId);
+    
+    setFormData({
+      ...formData,
+      name: cleanName,
+      strength: strength || "",
+      form: form,
+      description: `${medication.formePharmaceutique || ""} - ${medication.commercialisation || ""}`.trim(),
+      pathology_id: pathologyId,
+    });
+    setShowSearchDialog(false);
+  };
+
+  // Fonctions utilitaires pour parser les données ANSM
+  const cleanMedicationName = (denomination: string): string => {
+    return denomination
+      .replace(/,?\s*\d+(?:[,\.]\d+)?\s*(?:mg|g|ml|µg|UI|%).*$/i, '')
+      .replace(/,?\s*(comprimé|gélule|capsule|solution|sirop|poudre).*$/i, '')
+      .trim();
+  };
+
+  const extractStrength = (denomination: string): string | null => {
+    const strengthMatch = denomination.match(/(\d+(?:[,\.]\d+)?\s*(?:mg|g|ml|µg|UI|%)(?:\s*\/\s*\d+(?:[,\.]\d+)?\s*(?:mg|g|ml|µg|UI|%))*)/i);
+    return strengthMatch ? strengthMatch[1].replace(',', '.') : null;
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 top-[45%]">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-3xl h-[85vh] max-h-[85vh] flex flex-col p-0 gap-0 top-[45%]">
         <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8 w-8 p-0">
@@ -66,6 +132,22 @@ export function MedicationDialog({
         
         <ScrollArea className="flex-1 overflow-y-auto">
           <div className="px-6 py-4 space-y-4 pb-8">
+            {/* Bouton de recherche ANSM */}
+            {!editingMed && (
+              <div className="flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowSearchDialog(true)}
+                  className="gap-2"
+                >
+                  <Search className="h-4 w-4" />
+                  Rechercher dans la base ANSM
+                </Button>
+              </div>
+            )}
+
             {/* Première ligne : Nom + Dosage */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -91,12 +173,24 @@ export function MedicationDialog({
               </div>
             </div>
 
+            {/* Forme pharmaceutique */}
+            <div className="space-y-2">
+              <Label htmlFor="form">Forme pharmaceutique</Label>
+              <Input
+                id="form"
+                value={formData.form}
+                onChange={(e) => setFormData({ ...formData, form: e.target.value })}
+                placeholder="Ex: comprimé, gélule, solution"
+                className="bg-surface"
+              />
+            </div>
+
             {/* Deuxième ligne : Pathologie seule */}
             <div className="space-y-2">
               <Label htmlFor="pathology">Pathologie</Label>
               <Select 
                 value={pathologyValue} 
-                onValueChange={(value) => setFormData({ ...formData, pathology_id: value })}
+                onValueChange={(value) => setFormData({ ...formData, pathology_id: value || "" })}
               >
                 <SelectTrigger className="bg-surface">
                   <SelectValue placeholder="Sélectionner une pathologie" />
@@ -120,133 +214,6 @@ export function MedicationDialog({
                 placeholder="Ex: Metformine"
                 className="bg-surface"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="dosage">Posologie</Label>
-              <Input
-                id="dosage"
-                value={formData.default_posology}
-                onChange={(e) => {
-                  const newDosage = e.target.value.trim();
-                  
-                  // Si le champ est vidé manuellement
-                  if (newDosage === "") {
-                    setFormData({ 
-                      ...formData, 
-                      default_posology: "Définir une ou plusieurs prises",
-                      default_times: []
-                    });
-                    return;
-                  }
-                  
-                  // Sinon, détection automatique normale
-                  const detectedTakes = detectTakesFromDosage(newDosage);
-                  const newTimes = getDefaultTimes(detectedTakes.count, detectedTakes.moments);
-                  setFormData({ 
-                    ...formData, 
-                    default_posology: newDosage,
-                    default_times: newTimes
-                  });
-                }}
-                placeholder="Ex: 1 comprimé matin et soir"
-                className="bg-surface"
-              />
-            </div>
-
-            {/* Heures de prises - Design compact */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label>Heures de prises par défaut</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setFormData({ ...formData, default_times: [...formData.default_times, "09:00"] });
-                  }}
-                >
-                  + Ajouter
-                </Button>
-              </div>
-              
-              {formData.default_times.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-3 border border-dashed rounded-md">
-                  Aucune heure de prise définie
-                </p>
-              ) : (
-                <div className="flex flex-wrap gap-2">
-                  {formData.default_times.map((time, index) => (
-                    <div key={index} className="flex items-center gap-1 p-2 rounded-md border bg-muted/30">
-                      <TimePickerInput
-                        value={time}
-                        onValueChange={(value) => {
-                          const newTimes = [...formData.default_times];
-                          newTimes[index] = value;
-                          const newDosage = generateDosageFromTimes(newTimes);
-                          setFormData({ 
-                            ...formData, 
-                            default_times: newTimes,
-                            default_posology: newDosage
-                          });
-                        }}
-                        className="bg-surface w-24 h-8 text-sm"
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          const newTimes = formData.default_times.filter((_, i) => i !== index);
-                          const newDosage = generateDosageFromTimes(newTimes);
-                          setFormData({ 
-                            ...formData, 
-                            default_times: newTimes,
-                            default_posology: newDosage
-                          });
-                        }}
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                      >
-                        ×
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              )}
-              
-              <p className="text-xs text-muted-foreground">
-                Heures pré-remplies à l'ajout d'un traitement
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="initial_stock">Stock initial</Label>
-                <Input
-                  id="initial_stock"
-                  type="number"
-                  min="0"
-                  value={formData.initial_stock}
-                  onChange={(e) => setFormData({ ...formData, initial_stock: e.target.value })}
-                  placeholder="0"
-                  className="bg-surface"
-                  disabled={!!editingMed}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="min_threshold">Seuil minimum</Label>
-                <Input
-                  id="min_threshold"
-                  type="number"
-                  min="0"
-                  value={formData.min_threshold}
-                  onChange={(e) => setFormData({ ...formData, min_threshold: e.target.value })}
-                  placeholder="10"
-                  className="bg-surface"
-                  disabled={!!editingMed}
-                />
-              </div>
             </div>
 
             {editingMed && editingMed.total_stock !== undefined && (
@@ -294,5 +261,13 @@ export function MedicationDialog({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Dialog de recherche ANSM pour admin */}
+    <AdminSearchDialog
+      open={showSearchDialog}
+      onOpenChange={setShowSearchDialog}
+      onSelect={handleMedicationSelect}
+    />
+    </>
   );
 }
