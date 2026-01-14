@@ -55,6 +55,20 @@ export const IntakeActionDialog = ({
 
   if (!intake) return null
 
+  // Calculer l'heure décalée pour l'affichage
+  const getPostponedTime = () => {
+    if (!showPostpone || !intake) return null
+    
+    const scheduledDate = new Date(intake.date)
+    
+    if (postponeMode === "interval") {
+      const newTime = addMinutes(scheduledDate, parseInt(postponeMinutes))
+      return format(newTime, 'HH:mm', { locale: fr })
+    } else {
+      return postponeTime
+    }
+  }
+
   const handlePostpone = () => {
     if (!onPostponeIntake || !intake) return
     
@@ -98,7 +112,11 @@ export const IntakeActionDialog = ({
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span>Maintenant : {format(new Date(), 'HH:mm', { locale: fr })}</span>
+              {showPostpone ? (
+                <span>Décalé à : {getPostponedTime()}</span>
+              ) : (
+                <span>Maintenant : {format(new Date(), 'HH:mm', { locale: fr })}</span>
+              )}
             </div>
           </div>
           {intake.pathology && (
