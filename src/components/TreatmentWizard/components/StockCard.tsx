@@ -32,7 +32,9 @@ export function StockCard({
   const { medication, index } = data;
   const { stock, onStockChange, onThresholdChange } = handlers;
   const dailyConsumption = medication.takesPerDay * medication.unitsPerTake;
-  const estimatedDays = stock ? Math.floor(stock / dailyConsumption) : 0;
+  const currentStock = stock ?? 0; // Garantir une valeur par défaut
+  const currentThreshold = medication.minThreshold ?? 10; // Garantir une valeur par défaut
+  const estimatedDays = currentStock ? Math.floor(currentStock / dailyConsumption) : 0;
 
   const handleStockFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     e.target.select();
@@ -91,7 +93,7 @@ export function StockCard({
         <div className="space-y-2">
           <Label htmlFor={`stock-${index}`}>
             Stock initial *
-            {(!stock || stock === 0) && (
+            {(!currentStock || currentStock === 0) && (
               <span className="text-destructive ml-1">Obligatoire</span>
             )}
           </Label>
@@ -99,7 +101,7 @@ export function StockCard({
             id={`stock-${index}`}
             type="number"
             min="0"
-            value={stock === 0 ? "" : stock}
+            value={currentStock === 0 ? "" : currentStock}
             onChange={handleStockChange}
             onFocus={handleStockFocus}
             onDoubleClick={(e) => e.currentTarget.select()}
@@ -115,7 +117,7 @@ export function StockCard({
             id={`threshold-${index}`}
             type="number"
             min="0"
-            value={medication.minThreshold === 0 ? "" : medication.minThreshold}
+            value={currentThreshold === 0 ? "" : currentThreshold}
             onChange={handleThresholdChange}
             onFocus={handleThresholdFocus}
             onDoubleClick={(e) => e.currentTarget.select()}
