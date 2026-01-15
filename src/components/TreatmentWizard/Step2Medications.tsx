@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { useState } from "react"
-import { TreatmentFormData } from "./types"
+import { useState, useEffect } from "react"
+import { TreatmentFormData, MedicationItem } from "./types"
 import { useStep2Medications } from "./hooks/useStep2Medications"
 import { MedicationsList } from "./components/MedicationsList"
-import { CatalogDialogEnhanced } from "./components/CatalogDialogEnhanced"
-import { CustomMedicationDialog } from "./components/CustomMedicationDialog"
 import { MedicationsProvider } from "./contexts/MedicationsContext"
+import { MedicationSearchDialog } from "@/components/shared/MedicationSearchDialog"
+import { PosologyConfigDialog } from "@/components/shared/PosologyConfigDialog"
+import { supabase } from "@/integrations/supabase/client"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,62 +25,100 @@ interface Step2MedicationsProps {
 }
 
 export function Step2Medications({ formData, setFormData }: Step2MedicationsProps) {
-  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false)
-  const [existingCatalogMed, setExistingCatalogMed] = useState<any>(null)
+  const [showSearchDialog, setShowSearchDialog] = useState(false)
+  const [showPosologyDialog, setShowPosologyDialog] = useState(false)
+  const [selectedMedication, setSelectedMedication] = useState<any>(null)
+  const [existingPosology, setExistingPosology] = useState<string>("")
+  const [existingTimes, setExistingTimes] = useState<string[]>([])
   
   const {
-    catalog,
-    pathologySuggestions,
-    showPathologySuggestions,
-    showDialog,
-    setShowDialog,
-    showCustomDialog,
-    setShowCustomDialog,
-    newCustomMed,
-    handleMedicationFieldChange,
-    selectPathology,
-    addMedicationFromCatalog,
-    addCustomMedication,
     updateMedication,
     updateMedicationPosology,
     removeMedication,
     updateTimeSlot,
     updateTakesPerDay,
-    resetCustomMed
-  } = useStep2Medications(formData, setFormData, (catalogMed) => {
-    setExistingCatalogMed(catalogMed)
-    setShowDuplicateDialog(true)
-  })
+  } = useStep2Medications(formData, setFormData, () => {})
 
-  const handleCustomDialogChange = (open: boolean) => {
-    setShowCustomDialog(open)
-    if (!open) {
-      resetCustomMed()
+  const handleMedicationSelect = async (medication: any) => {
+    let pathologyName = medication.pathologyName;
+    
+    // Récupérer la posologie ET la pathologie si le médicament est déjà dans le catalogue
+    if (medication.catalogId) {
+      const { data: catalogMed, error: catalogError } = await supabase
+        .from('medication_catalog')
+        .select('pathology_id, pathologies(name)')
+        .eq('id', medication.catalogId)
+        .single()
+      
+      if (!catalogError && catalogMed?.pathologies) {
+        pathologyName = (catalogMed.pathologies as any).name;
+      }
+      
+      const { data: existingMed, error } = await supabase
+        .from('medications')
+        .select('posology, times')
+        .eq('catalog_id', medication.catalogId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      
+      if (!error && existingMed) {
+        setExistingPosology(existingMed.posology || '')
+        setExistingTimes(existingMed.times || [])
+      } else {
+        setExistingPosology('')
+        setExistingTimes([])
+      }
+    } else {
+      setExistingPosology('')
+      setExistingTimes([])
     }
+    
+    // Mettre à jour la pathologie dans l'objet medication
+    setSelectedMedication({
+      ...medication,
+      pathologyName: pathologyName || medication.pathologyName
+    })
+    setShowSearchDialog(false)
+    setShowPosologyDialog(true)
+  }
+
+  const handlePosologyConfirm = (posology: string, times: string[]) => {
+    if (!selectedMedication) return
+
+    const newMed: MedicationItem = {
+      name: selectedMedication.name,
+      pathology: selectedMedication.pathologyName || 'Non spécifié',
+      posology,
+      takesPerDay: times.length,
+      times,
+      unitsPerTake: 1,
+      minThreshold: 10,
+      strength: selectedMedication.strength,
+      isCustom: selectedMedication.source === 'manual',
+      pendingInsertion: true,
+    }
+
+    setFormData({
+      ...formData,
+      medications: [...formData.medications, newMed]
+    })
+
+    setShowPosologyDialog(false)
+    setSelectedMedication(null)
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <div className="grid grid-cols-2 gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowDialog(true)}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Ajouter
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowCustomDialog(true)}
-          className="w-full"
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Créer
-        </Button>
-      </div>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => setShowSearchDialog(true)}
+        className="w-full"
+      >
+        <Plus className="h-4 w-4 mr-2" />
+        Rechercher un médicament
+      </Button>
 
       <MedicationsProvider
         value={{
@@ -96,70 +135,23 @@ export function Step2Medications({ formData, setFormData }: Step2MedicationsProp
         <MedicationsList />
       </MedicationsProvider>
 
-      <CatalogDialogEnhanced
-        open={showDialog}
-        onOpenChange={setShowDialog}
-        catalog={catalog}
-        onSelect={addMedicationFromCatalog}
-        onCreateCustom={() => {
-          setShowDialog(false)
-          setShowCustomDialog(true)
-        }}
+      <MedicationSearchDialog
+        open={showSearchDialog}
+        onOpenChange={setShowSearchDialog}
+        onSelect={handleMedicationSelect}
       />
 
-      <CustomMedicationDialog
-        dialog={{
-          open: showCustomDialog,
-          onOpenChange: handleCustomDialogChange
-        }}
-        formData={{
-          name: newCustomMed.name,
-          pathology: newCustomMed.pathology,
-          posology: newCustomMed.posology,
-          strength: newCustomMed.strength
-        }}
-        pathology={{
-          suggestions: pathologySuggestions,
-          showSuggestions: showPathologySuggestions,
-          onSelect: selectPathology
-        }}
-        onFieldChange={handleMedicationFieldChange}
-        onSubmit={addCustomMedication}
-      />
-
-      <AlertDialog open={showDuplicateDialog} onOpenChange={setShowDuplicateDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Médicament existant</AlertDialogTitle>
-            <AlertDialogDescription>
-              Le médicament &quot;{existingCatalogMed?.name}&quot; existe déjà dans le catalogue.
-              <br /><br />
-              Voulez-vous l&apos;ajouter depuis le catalogue plutôt que d&apos;en créer un nouveau ?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => {
-                setShowDuplicateDialog(false);
-              }}
-            >
-              Créer quand même
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (existingCatalogMed) {
-                  addMedicationFromCatalog(existingCatalogMed);
-                  setShowCustomDialog(false);
-                  resetCustomMed();
-                }
-                setShowDuplicateDialog(false);
-              }}
-            >
-              Utiliser le catalogue
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {selectedMedication && (
+        <PosologyConfigDialog
+          open={showPosologyDialog}
+          onOpenChange={setShowPosologyDialog}
+          medicationName={selectedMedication.name}
+          medicationStrength={selectedMedication.strength}
+          initialPosology={existingPosology}
+          initialTimes={existingTimes}
+          onConfirm={handlePosologyConfirm}
+        />
+      )}
     </div>
   )
 }

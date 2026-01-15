@@ -1,8 +1,10 @@
 /**
- * Service d'accès à l'API officielle ANSM
- * Base de Données Publique des Médicaments
- * https://base-donnees-publique.medicaments.gouv.fr/
+ * Service d'accès à la base ANSM
+ * IMPORTANT : L'API REST officielle n'est pas accessible via CORS
+ * Solution : Recherche dans le catalogue Supabase (pré-importé depuis ANSM)
  */
+
+import { supabase } from "@/integrations/supabase/client";
 
 export interface ANSMMedication {
   codeCIS: string;
@@ -12,10 +14,11 @@ export interface ANSMMedication {
   statutAMM: string;
   commercialisation: string;
   titulaire?: string;
-  substanceActive?: string; // Ajouté pour le mapping pathologie
+  substanceActive?: string;
+  catalogId?: string; // ID dans medication_catalog si déjà existant
 }
 
-// Mapping substance active → pathologie (même logique que l'import)
+// Mapping substance active → pathologie
 const SUBSTANCE_TO_PATHOLOGY_MAP: Record<string, string> = {
   'PARACÉTAMOL': 'Douleur/Fièvre',
   'IBUPROFÈNE': 'Douleur/Fièvre',
@@ -57,57 +60,11 @@ const SUBSTANCE_TO_PATHOLOGY_MAP: Record<string, string> = {
   'TICAGRÉLOR': 'Prévention cardiovasculaire',
 };
 
-// Cache pour le fichier compositions (évite les rechargements multiples)
-let compositionsCache: Map<string, string> | null = null;
-let compositionsLoadingPromise: Promise<Map<string, string>> | null = null;
-
 /**
- * Charge le fichier compositions et crée un cache CIS → substance
- */
-async function loadCompositionsCache(): Promise<Map<string, string>> {
-  if (compositionsCache) return compositionsCache;
-  if (compositionsLoadingPromise) return compositionsLoadingPromise;
-
-  compositionsLoadingPromise = (async () => {
-    try {
-      const response = await fetch('/datas/CIS_COMPO_bdpm_utf8.txt');
-      if (!response.ok) {
-        console.warn('[ANSM] Fichier compositions non accessible');
-        return new Map();
-      }
-
-      const text = await response.text();
-      const lines = text.split('\n');
-      const cache = new Map<string, string>();
-
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        const columns = line.split('\t');
-        const codeCIS = columns[0]?.trim();
-        const substance = columns[3]?.trim().toUpperCase();
-        
-        if (codeCIS && substance && !cache.has(codeCIS)) {
-          cache.set(codeCIS, substance);
-        }
-      }
-
-      compositionsCache = cache;
-      return cache;
-    } catch (error) {
-      console.error('[ANSM] Erreur chargement compositions:', error);
-      return new Map();
-    } finally {
-      compositionsLoadingPromise = null;
-    }
-  })();
-
-  return compositionsLoadingPromise;
-}
-
-/**
- * Recherche un médicament dans la base officielle ANSM
+ * Recherche dans la table ANSM officielle (15 823 médicaments)
+ * Utilise PostgreSQL full-text search pour performance optimale
  * @param searchTerm - Terme de recherche (nom du médicament)
- * @returns Liste des médicaments trouvés avec leurs substances actives
+ * @returns Liste des médicaments trouvés
  */
 export async function searchANSMApi(searchTerm: string): Promise<ANSMMedication[]> {
   if (!searchTerm || searchTerm.length < 3) {
@@ -115,83 +72,119 @@ export async function searchANSMApi(searchTerm: string): Promise<ANSMMedication[
   }
 
   try {
-    // Charger les deux fichiers en parallèle
-    const [cisFetch, compositionsMap] = await Promise.all([
-      fetch('/datas/CIS_bdpm_utf8.txt'),
-      loadCompositionsCache()
-    ]);
+    // Extraire nom commercial depuis denomination (avant le dosage)
+    const extractCommercialName = (denom: string): string => {
+      return denom.split(/\s+\d/)[0].trim().toUpperCase();
+    };
 
-    if (!cisFetch.ok) {
-      console.warn('[ANSM API] Fichier CIS_bdpm_utf8.txt non accessible');
+    // Recherche dans nom commercial ET substance active
+    const { data, error } = await supabase
+      .from('ansm_medications')
+      .select('code_cis, name, form, strength, substance_active, pathology_id, administration_route')
+      .or(`name.ilike.${searchTerm}%,substance_active.ilike.%${searchTerm}%`) // Priorité: commence par
+      .order('substance_active')
+      .order('strength')
+      .limit(50);
+
+    if (error) {
+      console.error('[ANSM Search] Erreur Supabase:', error);
       return [];
     }
 
-    const content = await cisFetch.text();
-    const lines = content.split('\n');
-    const results: ANSMMedication[] = [];
-    const searchLower = normalizeForSearch(searchTerm);
-
-    for (const line of lines) {
-      if (!line.trim()) continue;
-      
-      const parts = line.split('\t');
-      if (parts.length < 8) continue;
-
-      const denomination = parts[1]?.trim() || '';
-      const denominationNormalized = normalizeForSearch(denomination);
-
-      // Recherche insensible aux accents et casse
-      if (denominationNormalized.includes(searchLower)) {
-        const codeCIS = parts[0]?.trim() || '';
-        const substanceActive = compositionsMap.get(codeCIS);
-        
-        results.push({
-          codeCIS: codeCIS,
-          denomination: denomination,
-          formePharmaceutique: parts[2]?.trim() || '',
-          voiesAdministration: parts[3]?.split(';').map(v => v.trim()) || [],
-          statutAMM: parts[4]?.trim() || '',
-          commercialisation: parts[6]?.trim() || '',
-          titulaire: parts[8]?.trim() || '',
-          substanceActive: substanceActive,
-        });
-
-        // Limiter à 20 résultats pour performance
-        if (results.length >= 20) break;
-      }
+    if (!data || data.length === 0) {
+      return [];
     }
+
+    // Nettoyer substance active (enlever sels chimiques)
+    const cleanSubstance = (sub: string): string => {
+      return sub
+        .replace(/^(CHLORHYDRATE|SULFATE|CITRATE|SUCCINATE|PHOSPHATE|TARTRATE|FUMARATE|MALEATE|ACETATE|MALATE) (DE |D')/i, '')
+        .trim();
+    };
+
+    // Filtrer résultats pertinents (nom commercial ou substance commence par terme)
+    const relevantData = data.filter(med => {
+      const commercialName = extractCommercialName(med.name);
+      const cleanedSub = cleanSubstance(med.substance_active || '');
+      const searchUpper = searchTerm.toUpperCase();
+      
+      return commercialName.startsWith(searchUpper) || 
+             cleanedSub.toUpperCase().startsWith(searchUpper);
+    }).slice(0, 20);
+
+    // Vérifier catalog avec noms commerciaux ET substances
+    const { data: catalogMeds } = await supabase
+      .from('medication_catalog')
+      .select('id, name, strength');
+
+    // Créer Map avec ID pour matching flexible pour dosages combinés
+    const catalogMap = new Map(
+      (catalogMeds || []).map(c => {
+        const normalizedStrength = (c.strength || '').replace(/\s/g, '').toUpperCase();
+        return [`${c.name.toUpperCase()}|${normalizedStrength}`, c.id];
+      })
+    );
+
+    const results: ANSMMedication[] = relevantData.map(med => {
+      const cleanedSub = cleanSubstance(med.substance_active || '');
+      const commercialName = extractCommercialName(med.name);
+      const normalizedStrength = (med.strength || '').replace(/\s/g, '').toUpperCase();
+      
+      // Vérifier si dans catalog (matching flexible pour dosages combinés)
+      let catalogId: string | undefined;
+      
+      // Essayer match exact
+      const keyCommercial = `${commercialName}|${normalizedStrength}`;
+      const keySubstance = `${cleanedSub.toUpperCase()}|${normalizedStrength}`;
+      
+      if (catalogMap.has(keyCommercial)) {
+        catalogId = catalogMap.get(keyCommercial);
+      } else if (catalogMap.has(keySubstance)) {
+        catalogId = catalogMap.get(keySubstance);
+      } else {
+        // Match par préfixe (pour XIGDUO 5mg qui matche 5mg/1000mg)
+        for (const [catalogKey, id] of catalogMap) {
+          const [catalogName, catalogStrength] = catalogKey.split('|');
+          
+          // Si nom matche ET dosage catalog commence par dosage ANSM
+          if ((catalogName === commercialName || catalogName === cleanedSub.toUpperCase()) &&
+              catalogStrength.startsWith(normalizedStrength)) {
+            catalogId = id;
+            break;
+          }
+        }
+      }
+      
+      return {
+        codeCIS: med.code_cis,
+        denomination: med.name,
+        formePharmaceutique: med.form || '',
+        voiesAdministration: med.administration_route ? [med.administration_route] : [],
+        statutAMM: catalogId ? 'Déjà utilisé' : 'Validé ANSM',
+        commercialisation: 'Commercialisé',
+        titulaire: '',
+        substanceActive: cleanedSub,
+        catalogId, // AJOUT : ID du catalog si trouvé
+      };
+    });
 
     return results;
   } catch (error) {
-    console.error('[ANSM API] Erreur lors de la recherche:', error);
+    console.error('[ANSM Search] Erreur:', error);
     return [];
   }
 }
 
 /**
- * Normalise une chaîne pour la recherche (retire accents, minuscules)
- */
-function normalizeForSearch(str: string): string {
-  return str
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, ''); // Retire les diacritiques
-}
-
-/**
  * Trouve la pathologie associée à une substance active
- * Utilise le même mapping que l'import initial
  */
 export function getPathologyFromSubstance(substanceActive: string | undefined): string | null {
   if (!substanceActive) return null;
 
-  // Normaliser la substance pour comparaison (sans accents)
-  const normalized = normalizeForSearch(substanceActive.toUpperCase());
+  const normalized = substanceActive.toUpperCase().trim();
 
-  // Chercher dans le mapping
   for (const [substance, pathology] of Object.entries(SUBSTANCE_TO_PATHOLOGY_MAP)) {
-    const substanceNormalized = normalizeForSearch(substance);
-    if (substanceNormalized === normalized) {
+    if (normalized.includes(substance)) {
       return pathology;
     }
   }
