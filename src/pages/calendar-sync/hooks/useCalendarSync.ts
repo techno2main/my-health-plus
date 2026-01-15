@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useNativeCalendar } from './useNativeCalendar';
 import { useSyncConfig } from './useSyncConfig';
-import { filterEventsFromStartDate } from '../utils/dateUtils';
+import { filterEventsByDateRange, calculateDateRange } from '../utils/dateUtils';
 import {
   mapIntakesToEvents,
   mapPharmacyVisitsToEvents,
@@ -25,8 +25,28 @@ export const useCalendarSync = () => {
     const allEvents: CalendarEvent[] = [];
 
     try {
+      // Calculer les plages de dates basées sur la config
+      const historyRange = config.intakes.history.keepHistory 
+        ? calculateDateRange(config.intakes.history.period, false)
+        : null;
+      
+      const futureRange = config.intakes.future.syncFuture
+        ? calculateDateRange(config.intakes.future.period, true)
+        : null;
+      
+      // Déterminer la plage globale
+      const globalStart = historyRange ? historyRange.start : (futureRange ? futureRange.start : new Date());
+      const globalEnd = futureRange ? futureRange.end : (historyRange ? historyRange.end : new Date());
+      
+      console.log('[Calendar Sync] Date range:', {
+        start: globalStart.toISOString(),
+        end: globalEnd.toISOString(),
+        historyDays: config.intakes.history.period.value,
+        futureDays: config.intakes.future.period.value
+      });
+
       // 1. Charger les prises de médicaments si activé
-      if (config.intakes.enabled && config.intakes.future.syncFuture) {
+      if (config.intakes.enabled && (config.intakes.history.keepHistory || config.intakes.future.syncFuture)) {
         const { data: intakes } = await supabase
           .from('medication_intakes')
           .select(`
@@ -41,19 +61,29 @@ export const useCalendarSync = () => {
               medication_catalog (form)
             )
           `)
-          .eq('medications.treatments.is_active', true)
-          .gte('scheduled_time', '2025-10-13T00:00:00Z')
+          .gte('scheduled_time', globalStart.toISOString())
+          .lte('scheduled_time', globalEnd.toISOString())
           .order('scheduled_time', { ascending: true });
 
         if (intakes) {
-          const filteredIntakes = filterEventsFromStartDate(intakes);
-          const intakeEvents = mapIntakesToEvents(filteredIntakes);
+          console.log(`[Calendar Sync] Loaded ${intakes.length} intakes from DB`);
+          const intakeEvents = mapIntakesToEvents(intakes);
           allEvents.push(...intakeEvents);
         }
       }
 
       // 2. Charger les visites pharmacie si activé
-      if (config.appointments.enabled && config.appointments.syncPharmacyVisits && config.appointments.future.syncFuture) {
+      if (config.appointments.enabled && config.appointments.syncPharmacyVisits) {
+        const apptHistoryRange = config.appointments.history.keepHistory
+          ? calculateDateRange(config.appointments.history.period, false)
+          : null;
+        const apptFutureRange = config.appointments.future.syncFuture
+          ? calculateDateRange(config.appointments.future.period, true)
+          : null;
+        
+        const apptStart = apptHistoryRange ? apptHistoryRange.start : (apptFutureRange ? apptFutureRange.start : new Date());
+        const apptEnd = apptFutureRange ? apptFutureRange.end : (apptHistoryRange ? apptHistoryRange.end : new Date());
+
         const { data: visits } = await supabase
           .from('pharmacy_visits')
           .select(`
@@ -64,20 +94,29 @@ export const useCalendarSync = () => {
             treatments!inner (name, is_active),
             health_professionals:pharmacy_id (name, street_address)
           `)
-          .eq('is_completed', false)
-          .eq('treatments.is_active', true)
-          .gte('visit_date', '2025-10-13')
+          .gte('visit_date', apptStart.toISOString().split('T')[0])
+          .lte('visit_date', apptEnd.toISOString().split('T')[0])
           .order('visit_date', { ascending: true });
 
         if (visits) {
-          const filteredVisits = filterEventsFromStartDate(visits);
-          const visitEvents = mapPharmacyVisitsToEvents(filteredVisits);
+          console.log(`[Calendar Sync] Loaded ${visits.length} pharmacy visits from DB`);
+          const visitEvents = mapPharmacyVisitsToEvents(visits);
           allEvents.push(...visitEvents);
         }
       }
 
       // 3. Charger les RDV médecin (fin de traitement) si activé
-      if (config.appointments.enabled && config.appointments.syncDoctorVisits && config.appointments.future.syncFuture) {
+      if (config.appointments.enabled && config.appointments.syncDoctorVisits) {
+        const apptHistoryRange = config.appointments.history.keepHistory
+          ? calculateDateRange(config.appointments.history.period, false)
+          : null;
+        const apptFutureRange = config.appointments.future.syncFuture
+          ? calculateDateRange(config.appointments.future.period, true)
+          : null;
+        
+        const apptStart = apptHistoryRange ? apptHistoryRange.start : (apptFutureRange ? apptFutureRange.start : new Date());
+        const apptEnd = apptFutureRange ? apptFutureRange.end : (apptHistoryRange ? apptHistoryRange.end : new Date());
+
         const { data: treatments } = await supabase
           .from('treatments')
           .select(`
@@ -90,12 +129,13 @@ export const useCalendarSync = () => {
               health_professionals (name)
             )
           `)
-          .eq('is_active', true)
           .not('end_date', 'is', null)
-          .gte('end_date', '2025-10-13')
+          .gte('end_date', apptStart.toISOString().split('T')[0])
+          .lte('end_date', apptEnd.toISOString().split('T')[0])
           .order('end_date', { ascending: true });
 
         if (treatments) {
+          console.log(`[Calendar Sync] Loaded ${treatments.length} doctor appointments from DB`);
           const doctorEvents = mapDoctorVisitsToEvents(treatments);
           allEvents.push(...doctorEvents);
         }
@@ -302,21 +342,30 @@ export const useCalendarSync = () => {
       e.eventType === 'pharmacy_visit'
     );
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // Calculer les vraies périodes basées sur la config
+    const historyDays = config.intakes.history.keepHistory 
+      ? (config.intakes.history.period.type === 'days' ? config.intakes.history.period.value 
+         : config.intakes.history.period.type === 'weeks' ? config.intakes.history.period.value * 7
+         : config.intakes.history.period.value * 30)
+      : 0;
     
-    const futureEvents = events.filter(e => e.startDate >= today);
+    const futureDays = config.intakes.future.syncFuture
+      ? (config.intakes.future.period.type === 'days' ? config.intakes.future.period.value 
+         : config.intakes.future.period.type === 'weeks' ? config.intakes.future.period.value * 7
+         : config.intakes.future.period.value * 30)
+      : 0;
     
     const summary: SyncSummary = {
-      totalEvents: futureEvents.length,
+      totalEvents: events.length,
       intakesCount: intakes.length,
       appointmentsCount: appointments.length,
-      periodStart: futureEvents.length > 0 ? new Date(Math.min(...futureEvents.map(e => e.startDate.getTime()))) : new Date(),
-      periodEnd: futureEvents.length > 0 ? new Date(Math.max(...futureEvents.map(e => e.startDate.getTime()))) : new Date(),
-      historyDays: 0,
-      futureDays: config.intakes.future.period?.value || 7
+      periodStart: events.length > 0 ? new Date(Math.min(...events.map(e => e.startDate.getTime()))) : new Date(),
+      periodEnd: events.length > 0 ? new Date(Math.max(...events.map(e => e.startDate.getTime()))) : new Date(),
+      historyDays,
+      futureDays
     };
 
+    console.log('[Calendar Sync] Summary:', summary);
     setSyncSummary(summary);
   };
 

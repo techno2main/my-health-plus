@@ -135,18 +135,19 @@ export const AppointmentSyncOptions = ({ config, onUpdate }: AppointmentSyncOpti
                         id="appt-history-value"
                         type="number"
                         min="1"
-                        value={config.history.period?.value || 30}
+                        value={config.history.period?.value || 120}
                         onChange={(e) => updateHistoryPeriod(
-                          parseInt(e.target.value) || 30,
+                          parseInt(e.target.value) || 120,
                           config.history.period?.type || 'days'
                         )}
+                        onFocus={(e) => e.target.select()}
                         className="mt-1"
                       />
                     </div>
                     <Select
                       value={config.history.period?.type || 'days'}
                       onValueChange={(value: any) => updateHistoryPeriod(
-                        config.history.period?.value || 30,
+                        config.history.period?.value || 120,
                         value
                       )}
                     >
@@ -215,18 +216,19 @@ export const AppointmentSyncOptions = ({ config, onUpdate }: AppointmentSyncOpti
                         id="appt-future-value"
                         type="number"
                         min="1"
-                        value={config.future.period?.value || 90}
+                        value={config.future.period?.value || 120}
                         onChange={(e) => updateFuturePeriod(
-                          parseInt(e.target.value) || 90,
+                          parseInt(e.target.value) || 120,
                           config.future.period?.type || 'days'
                         )}
+                        onFocus={(e) => e.target.select()}
                         className="mt-1"
                       />
                     </div>
                     <Select
                       value={config.future.period?.type || 'days'}
                       onValueChange={(value: any) => updateFuturePeriod(
-                        config.future.period?.value || 90,
+                        config.future.period?.value || 120,
                         value
                       )}
                     >

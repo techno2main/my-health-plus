@@ -2,9 +2,21 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
-import { Pencil, Pause } from "lucide-react"
+import { Pencil, Pause, Trash2 } from "lucide-react"
 import type { Medication } from "../types"
 import { useMedicationPause } from "../hooks/useMedicationPause"
+import { useMedicationDelete } from "../hooks/useMedicationDelete"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useState } from "react"
 
 interface MedicationsListProps {
   medications: Medication[]
@@ -20,6 +32,8 @@ export const MedicationsList = ({
   onMedicationUpdated
 }: MedicationsListProps) => {
   const { togglePause, loading } = useMedicationPause();
+  const { deleteMedication, loading: deleteLoading } = useMedicationDelete();
+  const [medicationToDelete, setMedicationToDelete] = useState<Medication | null>(null);
 
   const handleTogglePause = async (med: Medication) => {
     const success = await togglePause(
@@ -29,6 +43,17 @@ export const MedicationsList = ({
     );
     
     if (success) {
+      onMedicationUpdated();
+    }
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!medicationToDelete) return;
+    
+    const success = await deleteMedication(medicationToDelete.id, medicationToDelete.name);
+    
+    if (success) {
+      setMedicationToDelete(null);
       onMedicationUpdated();
     }
   };
@@ -63,17 +88,27 @@ export const MedicationsList = ({
                 )}
               </div>
               
-              {/* Ligne 2: Posologie + Icône Edit */}
+              {/* Ligne 2: Posologie + Icône Edit + Icône Delete */}
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-muted-foreground">{med.posology}</p>
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={() => onEditMedication(med)}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8"
+                    onClick={() => onEditMedication(med)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    onClick={() => setMedicationToDelete(med)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
               
               {/* Ligne 3: Horaires de prise + Pastilles */}
@@ -106,6 +141,29 @@ export const MedicationsList = ({
           ))
         )}
       </div>
+
+      {/* Dialog de confirmation de suppression */}
+      <AlertDialog open={!!medicationToDelete} onOpenChange={(open) => !open && setMedicationToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Supprimer ce médicament ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Êtes-vous sûr de vouloir supprimer <strong>{medicationToDelete?.name}</strong> de ce traitement ?
+              Toutes les prises associées seront également supprimées. Cette action est irréversible.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleteLoading}>Annuler</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={deleteLoading}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleteLoading ? "Suppression..." : "Supprimer"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }

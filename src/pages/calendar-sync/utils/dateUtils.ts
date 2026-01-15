@@ -5,6 +5,37 @@
  */
 
 import { getCurrentDateInParis } from '@/lib/dateUtils';
+import type { SyncPeriod } from '../types';
+
+/**
+ * Calcule une plage de dates basée sur une période
+ */
+export const calculateDateRange = (period: SyncPeriod, fromToday: boolean = false): { start: Date; end: Date } => {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  
+  const multiplier = period.type === 'days' ? 1 : period.type === 'weeks' ? 7 : 30;
+  const days = period.value * multiplier;
+  
+  if (fromToday) {
+    // Pour le futur : de demain jusqu'à +X jours
+    const start = new Date(now);
+    start.setDate(start.getDate() + 1); // À partir de demain
+    
+    const end = new Date(start);
+    end.setDate(end.getDate() + days);
+    
+    return { start, end };
+  } else {
+    // Pour l'historique : de -X jours jusqu'à aujourd'hui
+    const start = new Date(now);
+    start.setDate(start.getDate() - days);
+    
+    const end = new Date(now);
+    
+    return { start, end };
+  }
+};
 
 /**
  * Récupère une date UTC depuis la BDD sans conversion
@@ -24,29 +55,35 @@ export const createEndDate = (startDate: Date, durationMinutes: number = 30): Da
 };
 
 /**
- * Filtre les événements à partir du 13/10/2025
+ * Filtre les événements selon une plage de dates
  */
-export const filterEventsFromStartDate = <T extends { scheduled_time?: string; visit_date?: string; prescription_date?: string }>(
-  events: T[]
+export const filterEventsByDateRange = <T extends { scheduled_time?: string; visit_date?: string; prescription_date?: string; end_date?: string }>(
+  events: T[],
+  startDate: Date,
+  endDate: Date
 ): T[] => {
-  const startDate = new Date('2025-10-13T00:00:00Z');
-  const now = getCurrentDateInParis(); // CRITIQUE: Utiliser l'heure de Paris
-  
   return events.filter(event => {
     const eventDate = event.scheduled_time 
       ? new Date(event.scheduled_time)
       : event.visit_date
       ? new Date(event.visit_date)
+      : event.end_date
+      ? new Date(event.end_date)
       : event.prescription_date
       ? new Date(event.prescription_date)
       : null;
     
     if (!eventDate) return false;
     
-    // Inclure uniquement les événements >= 13/10/2025 OU >= maintenant
-    return eventDate >= startDate || eventDate >= now;
+    // Inclure si dans la plage [startDate, endDate]
+    return eventDate >= startDate && eventDate <= endDate;
   });
 };
+
+/**
+ * @deprecated Utiliser filterEventsByDateRange
+ */
+export const filterEventsFromStartDate = filterEventsByDateRange;
 
 /**
  * Détermine le statut d'une prise de médicament

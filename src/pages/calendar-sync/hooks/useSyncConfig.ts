@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import type { SyncConfig } from '../types';
 
 const STORAGE_KEY = 'calendar_sync_config';
+const CONFIG_VERSION = 2; // Incrémenter pour forcer la migration
 
 const DEFAULT_CONFIG: SyncConfig = {
   selectedCalendarId: null,
@@ -9,34 +10,35 @@ const DEFAULT_CONFIG: SyncConfig = {
   intakes: {
     enabled: true,
     history: {
-      keepHistory: false,
+      keepHistory: true,
       deleteHistory: false,
-      period: { value: 7, type: 'days' }
+      period: { value: 120, type: 'days' }
     },
     future: {
       syncFuture: true,
       doNotSync: false,
-      period: { value: 7, type: 'days' }
+      period: { value: 14, type: 'days' }
     }
   },
   appointments: {
     enabled: true,
     syncDoctorVisits: true,
-    syncLabVisits: false,
+    syncLabVisits: true,
     syncPharmacyVisits: true,
     history: {
-      keepHistory: false,
+      keepHistory: true,
       deleteHistory: false,
-      period: { value: 30, type: 'days' }
+      period: { value: 120, type: 'days' }
     },
     future: {
       syncFuture: true,
       doNotSync: false,
-      period: { value: 90, type: 'days' }
+      period: { value: 120, type: 'days' }
     }
   },
   lastSyncDate: null,
-  syncedEvents: {}
+  syncedEvents: {},
+  version: CONFIG_VERSION
 };
 
 /**
@@ -57,29 +59,26 @@ export const useSyncConfig = () => {
       if (stored) {
         const parsed = JSON.parse(stored) as any;
         
-        // Migration depuis ancienne structure si nécessaire
-        if ('syncIntakes' in parsed) {
-          console.log('[Calendar Sync] Migrating old config format...');
+        // Vérifier si migration nécessaire (version < 2 ou absente)
+        const storedVersion = parsed.version || 0;
+        const needsMigration = storedVersion < CONFIG_VERSION || 'syncIntakes' in parsed;
+        
+        if (needsMigration) {
+          console.log('[Calendar Sync] Migrating config to version', CONFIG_VERSION);
+          
+          // Migration: Appliquer les nouvelles valeurs par défaut tout en conservant selectedCalendarId
           const migratedConfig: SyncConfig = {
             ...DEFAULT_CONFIG,
-            selectedCalendarId: parsed.selectedCalendarId,
-            syncEnabled: parsed.syncEnabled,
-            lastSyncDate: parsed.lastSyncDate,
+            selectedCalendarId: parsed.selectedCalendarId || null,
+            lastSyncDate: parsed.lastSyncDate || null,
             syncedEvents: parsed.syncedEvents || {},
-            intakes: {
-              ...DEFAULT_CONFIG.intakes,
-              enabled: parsed.syncIntakes
-            },
-            appointments: {
-              ...DEFAULT_CONFIG.appointments,
-              syncDoctorVisits: parsed.syncDoctorVisits,
-              syncPharmacyVisits: parsed.syncPharmacyVisits
-            }
+            version: CONFIG_VERSION
           };
+          
           setConfig(migratedConfig);
           localStorage.setItem(STORAGE_KEY, JSON.stringify(migratedConfig));
         } else {
-          // Nouvelle structure
+          // Config déjà à jour
           setConfig({ ...DEFAULT_CONFIG, ...parsed });
         }
       }
@@ -91,7 +90,7 @@ export const useSyncConfig = () => {
   };
 
   const updateConfig = (updates: Partial<SyncConfig>) => {
-    const newConfig = { ...config, ...updates };
+    const newConfig = { ...config, ...updates, version: CONFIG_VERSION };
     setConfig(newConfig);
     
     try {

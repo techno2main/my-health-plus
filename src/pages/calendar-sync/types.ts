@@ -77,6 +77,7 @@ export interface SyncConfig {
   appointments: AppointmentSyncConfig;
   lastSyncDate: string | null;
   syncedEvents: Record<string, string>; // app_event_id -> native_event_id mapping
+  version?: number; // Version de la config pour la migration
 }
 
 export interface SyncResult {

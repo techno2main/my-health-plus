@@ -2,13 +2,14 @@ import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { TimePickerInput } from "@/components/ui/time-picker-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { X, ArrowLeft } from "lucide-react";
+import { ArrowLeft, Search } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { MedicationSearchDialog } from "@/components/shared/MedicationSearchDialog";
+import { Badge } from "@/components/ui/badge";
 
 // Fonctions utilitaires pour la détection automatique des prises
 const detectTakesFromDosage = (posology: string): { count: number; moments: string[] } => {
@@ -66,14 +67,11 @@ const getDefaultTimes = (numberOfTakes: number, detectedMoments: string[] = []):
   }
 };
 
-interface CatalogMedication {
-  id: string;
+interface SelectedMedicationInfo {
   name: string;
-  pathology: string;
-  default_posology: string;
   strength?: string;
-  initial_stock?: number;
-  min_threshold?: number;
+  pathologyId?: string;
+  catalogId?: string;
 }
 
 interface Medication {
@@ -82,6 +80,7 @@ interface Medication {
   posology: string;
   times: string[];
   catalog_id?: string;
+  strength?: string;
 }
 
 interface MedicationEditDialogProps {
@@ -93,69 +92,52 @@ interface MedicationEditDialogProps {
 }
 
 export function MedicationEditDialog({ open, onOpenChange, medication, treatmentId, onSave }: MedicationEditDialogProps) {
-  const [catalog, setCatalog] = useState<CatalogMedication[]>([]);
-  const [selectedCatalogId, setSelectedCatalogId] = useState<string | undefined>(undefined);
+  const [showSearchDialog, setShowSearchDialog] = useState(false);
+  const [selectedMedication, setSelectedMedication] = useState<SelectedMedicationInfo | null>(null);
   const [posology, setPosology] = useState("");
   const [times, setTimes] = useState<string[]>([]);
 
   useEffect(() => {
-    loadCatalog();
-  }, []);
-
-  // Stabiliser la valeur pour éviter le warning uncontrolled/controlled
-  const stableCatalogId = useMemo(() => {
-    return (selectedCatalogId === null || selectedCatalogId === undefined || selectedCatalogId === '') ? undefined : selectedCatalogId;
-  }, [selectedCatalogId]);
-
-  useEffect(() => {
     if (open) {
       if (medication) {
-        // Mode édition - toujours undefined pour les valeurs vides
-        setSelectedCatalogId((medication.catalog_id === null || medication.catalog_id === '') ? undefined : medication.catalog_id);
+        // Mode édition
+        setSelectedMedication({
+          name: medication.name,
+          strength: medication.strength,
+          catalogId: medication.catalog_id || undefined
+        });
         setPosology(medication.posology);
         setTimes(medication.times || []);
       } else {
-        // Mode ajout
-        setSelectedCatalogId(undefined);
+        // Mode ajout - ouvrir directement la recherche
+        setSelectedMedication(null);
         setPosology("");
         setTimes([]);
+        setShowSearchDialog(true);
       }
     }
   }, [medication, open]);
 
-  const loadCatalog = async () => {
-    const { data, error } = await supabase
-      .from("medication_catalog")
-      .select("id, name, pathology, default_posology, strength, initial_stock, min_threshold")
-      .order("name");
-
-    if (error) {
-      toast.error("Erreur lors du chargement du référentiel");
-      return;
-    }
-
-    setCatalog(data || []);
-  };
-
-  const handleCatalogChange = (catalogId: string) => {
-    setSelectedCatalogId(catalogId);
-    const selected = catalog.find(c => c.id === catalogId);
-    if (selected && selected.default_posology) {
-      const detectedTakes = detectTakesFromDosage(selected.default_posology);
-      const newTimes = getDefaultTimes(detectedTakes.count, detectedTakes.moments);
-      setPosology(selected.default_posology);
-      setTimes(newTimes);
+  const handleMedicationSelect = (selected: any) => {
+    setSelectedMedication({
+      name: selected.name,
+      strength: selected.strength,
+      pathologyId: selected.pathologyId,
+      catalogId: selected.catalogId
+    });
+    
+    // Posologie par défaut : 1 prise le matin
+    if (!medication) {
+      setPosology("1 comprimé le matin");
+      setTimes(["09:30"]);
     }
   };
 
   const handleSave = async () => {
-    if (!selectedCatalogId || !posology || times.length === 0) {
+    if (!selectedMedication || !posology || times.length === 0) {
       toast.error("Veuillez remplir tous les champs");
       return;
     }
-
-    const selectedMed = catalog.find(c => c.id === selectedCatalogId);
-    if (!selectedMed) return;
 
     try {
       if (medication) {
@@ -163,27 +145,61 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
         const { error } = await supabase
           .from("medications")
           .update({
-            catalog_id: selectedCatalogId,
-            name: selectedMed.name,
+            name: selectedMedication.name,
             posology,
-            times
+            times,
+            strength: selectedMedication.strength || null
           })
           .eq("id", medication.id);
 
         if (error) throw error;
         toast.success("Médicament mis à jour");
       } else {
-        // Mode ajout
+        // Mode ajout - vérifier si le médicament existe déjà dans le catalog
+        let catalogId = selectedMedication.catalogId;
+        
+        // Si pas de catalogId, créer une entrée dans le catalog si nécessaire
+        if (!catalogId && selectedMedication.pathologyId) {
+          const { data: existingCatalog } = await supabase
+            .from("medication_catalog")
+            .select("id")
+            .eq("name", selectedMedication.name)
+            .maybeSingle();
+          
+          if (existingCatalog) {
+            catalogId = existingCatalog.id;
+          } else {
+            // Créer une nouvelle entrée dans le catalog
+            const { data: newCatalog, error: catalogError } = await supabase
+              .from("medication_catalog")
+              .insert({
+                name: selectedMedication.name,
+                strength: selectedMedication.strength,
+                pathology_id: selectedMedication.pathologyId,
+                default_posology: posology,
+                initial_stock: 0,
+                min_threshold: 10
+              })
+              .select("id")
+              .single();
+            
+            if (!catalogError && newCatalog) {
+              catalogId = newCatalog.id;
+            }
+          }
+        }
+
         const { error } = await supabase
           .from("medications")
           .insert({
             treatment_id: treatmentId,
-            catalog_id: selectedCatalogId,
-            name: selectedMed.name,
+            catalog_id: catalogId || null,
+            name: selectedMedication.name,
             posology,
             times,
-            current_stock: selectedMed.initial_stock || 0,
-            min_threshold: selectedMed.min_threshold || 10
+            strength: selectedMedication.strength || null,
+            current_stock: 0,
+            min_threshold: 10
           });
 
         if (error) throw error;
@@ -199,61 +215,81 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8 w-8 p-0">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <DialogTitle>{medication ? "Modifier" : "Ajouter"}</DialogTitle>
-          </div>
-          <DialogDescription className="text-muted-foreground">
-            {medication ? "Modifiez les paramètres de ce médicament" : "Ajoutez un nouveau médicament à votre traitement"}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="px-6 py-4 space-y-4">
-            <div className="space-y-2">
-              <Label>Médicament du référentiel</Label>
-              <Select value={stableCatalogId} onValueChange={handleCatalogChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner un médicament" />
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px] bg-popover z-50">
-                  {catalog.map((med) => (
-                    <SelectItem key={med.id} value={med.id}>
-                      <div className="flex flex-col">
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium">{med.name}</span>
-                          {med.strength && <span className="text-xs text-muted-foreground">{med.strength}</span>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {med.pathology && <span className="text-xs text-muted-foreground">{med.pathology}</span>}
-                          {med.default_posology && <span className="text-xs text-muted-foreground">{med.default_posology}</span>}
-                        </div>
+    <>
+      <MedicationSearchDialog
+        open={showSearchDialog}
+        onOpenChange={setShowSearchDialog}
+        onSelect={handleMedicationSelect}
+        title="Rechercher un médicament"
+        description="Recherchez dans la base officielle ANSM pour ajouter à votre traitement"
+      />
+      
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-6 pt-6 pb-4 border-b flex-shrink-0">
+            <div className="flex items-center gap-3">
+              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="h-8 w-8 p-0">
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+              <DialogTitle>{medication ? "Modifier" : "Ajouter"}</DialogTitle>
+            </div>
+            <DialogDescription className="text-muted-foreground">
+              {medication ? "Modifiez les paramètres de ce médicament" : "Ajoutez un nouveau médicament à votre traitement"}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="px-6 py-4 space-y-4">
+              {/* Médicament sélectionné */}
+              <div className="space-y-2">
+                <Label>Médicament sélectionné</Label>
+                {selectedMedication ? (
+                  <div className="flex items-center justify-between p-3 border rounded-lg bg-muted/30">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{selectedMedication.name}</span>
+                        {selectedMedication.strength && (
+                          <Badge variant="secondary" className="text-xs">{selectedMedication.strength}</Badge>
+                        )}
                       </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                    </div>
+                    {!medication && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowSearchDialog(true)}
+                      >
+                        <Search className="h-4 w-4 mr-2" />
+                        Changer
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => setShowSearchDialog(true)}
+                  >
+                    <Search className="h-4 w-4 mr-2" />
+                    Rechercher un médicament
+                  </Button>
+                )}
+              </div>
 
-            <div className="space-y-2">
-              <Label>Posologie</Label>
-              <Input 
-                value={posology}
-                onChange={(e) => {
-                  const newDosage = e.target.value;
-                  const detectedTakes = detectTakesFromDosage(newDosage);
-                  const newTimes = getDefaultTimes(detectedTakes.count, detectedTakes.moments);
-                  setPosology(newDosage);
-                  setTimes(newTimes);
-                }}
-                placeholder="Ex: 1 comprimé matin et soir"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label>Posologie</Label>
+                <Input 
+                  value={posology}
+                  onChange={(e) => {
+                    const newDosage = e.target.value;
+                    const detectedTakes = detectTakesFromDosage(newDosage);
+                    const newTimes = getDefaultTimes(detectedTakes.count, detectedTakes.moments);
+                    setPosology(newDosage);
+                    setTimes(newTimes);
+                  }}
+                  placeholder="Ex: 1 comprimé matin et soir"
+                />
+              </div>
 
             {/* Heures de prises - Design comme dans le référentiel */}
             <div className="space-y-3">
@@ -324,5 +360,6 @@ export function MedicationEditDialog({ open, onOpenChange, medication, treatment
         </div>
       </DialogContent>
     </Dialog>
+    </>
   );
 }

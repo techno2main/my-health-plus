@@ -51,6 +51,10 @@ export default function TreatmentEdit() {
     }
   }
 
+  const onCancel = () => {
+    navigate("/treatments")
+  }
+
   if (loading) {
     return (
       <AppLayout>
@@ -100,6 +104,7 @@ export default function TreatmentEdit() {
 
         <ActionButtons
           onSave={onSave}
+          onCancel={onCancel}
           deleteDialogOpen={deleteDialogOpen}
           onDeleteDialogChange={setDeleteDialogOpen}
           onDelete={handleDelete}
