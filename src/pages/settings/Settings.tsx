@@ -86,8 +86,8 @@ export default function Settings() {
         <h3 className="text-sm font-medium text-muted-foreground px-1">Rattrapage</h3>
         <NavigationCard
           icon={Clock}
-          title="Rattrapage des prises"
-          description="Gérer les prises manquées"
+          title="Mise à jour des prises"
+          description="Gérer les prises non trraitées"
           onClick={() => navigate("/rattrapage")}
         />
       </div>
