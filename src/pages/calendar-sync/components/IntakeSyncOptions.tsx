@@ -91,7 +91,6 @@ export const IntakeSyncOptions = ({ config, onUpdate }: IntakeSyncOptionsProps) 
                           parseInt(e.target.value) || 120,
                           config.history.period?.type || 'days'
                         )}
-                        onFocus={(e) => e.target.select()}
                         className="mt-1"
                       />
                     </div>
@@ -172,7 +171,6 @@ export const IntakeSyncOptions = ({ config, onUpdate }: IntakeSyncOptionsProps) 
                           parseInt(e.target.value) || 14,
                           config.future.period?.type || 'days'
                         )}
-                        onFocus={(e) => e.target.select()}
                         className="mt-1"
                       />
                     </div>
