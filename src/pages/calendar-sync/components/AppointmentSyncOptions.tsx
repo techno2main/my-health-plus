@@ -140,7 +140,6 @@ export const AppointmentSyncOptions = ({ config, onUpdate }: AppointmentSyncOpti
                           parseInt(e.target.value) || 120,
                           config.history.period?.type || 'days'
                         )}
-                        onFocus={(e) => e.target.select()}
                         className="mt-1"
                       />
                     </div>
@@ -221,7 +220,6 @@ export const AppointmentSyncOptions = ({ config, onUpdate }: AppointmentSyncOpti
                           parseInt(e.target.value) || 120,
                           config.future.period?.type || 'days'
                         )}
-                        onFocus={(e) => e.target.select()}
                         className="mt-1"
                       />
                     </div>
