@@ -72,7 +72,7 @@ export default function Onboarding() {
     if (success) {
       // Petit délai pour que le localStorage soit bien synchronisé
       setTimeout(() => {
-        navigate("/profile", { replace: true });
+        navigate("/getting-started", { replace: true });
       }, 100);
     } else {
       console.error('Échec de la complétion de l\'onboarding');
