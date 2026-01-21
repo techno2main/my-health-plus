@@ -40,6 +40,7 @@ const SettingsSectionOrder = lazy(() => import("./pages/settings/SettingsSection
 const NotFound = lazy(() => import("./pages/not-found/NotFound"));
 const Rattrapage = lazy(() => import("./pages/rattrapage/Rattrapage"));
 const Onboarding = lazy(() => import("./pages/onboarding/Onboarding"));
+const GettingStarted = lazy(() => import("./pages/getting-started/GettingStarted"));
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => {
             </div>}>
             <Routes>
             <Route path="/auth" element={<Auth />} />
+            <Route path="/getting-started" element={<ProtectedRoute><GettingStarted /></ProtectedRoute>} />
             <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
             <Route path="/treatments" element={<ProtectedRoute><Treatments /></ProtectedRoute>} />
             <Route path="/treatments/new" element={<ProtectedRoute><TreatmentForm /></ProtectedRoute>} />

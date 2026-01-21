@@ -140,17 +140,28 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // LECTURE DIRECTE depuis localStorage pour éviter les problèmes de synchronisation React
   const hasSeenOnboarding = checkOnboardingStatus(user.id);
-  const isFirstLogin = checkFirstLoginStatus(user.id);
 
   // Rediriger vers l'onboarding si c'est la première visite de cet utilisateur
   if (!hasSeenOnboarding && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }
 
-  // Après l'onboarding, rediriger les nouveaux utilisateurs vers leur profil
-  if (isFirstLogin && location.pathname !== '/profile' && location.pathname !== '/onboarding') {
-    markFirstLoginAsHandled(user.id);
-    return <Navigate to="/profile" replace />;
+  // Vérifier getting-started SEULEMENT si l'utilisateur a déjà vu l'onboarding
+  if (hasSeenOnboarding) {
+    const hasCompletedGettingStarted = localStorage.getItem(`gettingStartedCompleted_${user.id}`) === 'true';
+
+    // Routes autorisées depuis getting-started (pour compléter le profil)
+    const allowedRoutesFromGettingStarted = [
+      '/getting-started',
+      '/profile',
+      '/referentials/health-professionals',
+      '/referentials/allergies'
+    ];
+
+    // Rediriger vers getting-started si pas encore complété ET pas sur une route autorisée
+    if (!hasCompletedGettingStarted && !allowedRoutesFromGettingStarted.some(route => location.pathname.startsWith(route))) {
+      return <Navigate to="/getting-started" replace />;
+    }
   }
 
   if (isLocked && requireAuthOnOpen) {
