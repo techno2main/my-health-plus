@@ -73,7 +73,18 @@ Quand je te demande un « Flow GH » ou « Flow GitHub » :
 
 ---
 
-## 6. Comportement général attendu
+## 6. Règles sur la création de branches dédiées
+
+- Quand je te demande de créer une nouvelle branche dédiée (feature, fix, etc.) :
+  - Tu vérifies que `dev` est à jour (`git pull origin dev`).
+  - Tu crées la branche depuis `dev` avec un nom explicite : `feature/nom-fonctionnalite` ou `fix/nom-correction`.
+  - Tu NE PUSH PAS la branche vide sur origin.
+  - Tu attends mes instructions pour les modifications.
+- Le push de la branche sur origin ne se fait QUE quand des commits sont prêts à être partagés.
+
+---
+
+## 7. Comportement général attendu
 
 - Tu privilégies la sécurité, la lisibilité et la traçabilité :
   - aucun commit ou push surprise,

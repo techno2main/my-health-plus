@@ -23,20 +23,15 @@ const History = lazy(() => import("./pages/history/History"));
 const TreatmentForm = lazy(() => import("./pages/treatment-form/TreatmentForm"));
 const StockForm = lazy(() => import("./pages/stocks/StockForm"));
 const Referentials = lazy(() => import("./pages/referentials/Referentials"));
-const HealthProfessionals = lazy(() => import("./pages/health-professionals/HealthProfessionals"));
-const Pathologies = lazy(() => import("./pages/pathologies/Pathologies"));
-const Allergies = lazy(() => import("./pages/allergies/Allergies"));
 const Profile = lazy(() => import("./pages/profile/Profile"));
-const Privacy = lazy(() => import("./pages/privacy/Privacy"));
 const About = lazy(() => import("./pages/about/About"));
 const StockDetails = lazy(() => import("./pages/stocks/StockDetails"));
 const TreatmentEdit = lazy(() => import("./pages/treatment-edit/TreatmentEdit"));
-const NotificationSettings = lazy(() => import("./pages/notification-settings/NotificationSettings"));
-const CalendarSync = lazy(() => import("./pages/calendar-sync/CalendarSync"));
 const ProfileExport = lazy(() => import("./pages/profile-export/ProfileExport"));
 const NotificationDebug = lazy(() => import("./pages/admin/NotificationDebug"));
-const NavigationManager = lazy(() => import("./pages/admin/NavigationManager"));
 const SettingsSectionOrder = lazy(() => import("./pages/settings/SettingsSectionOrder"));
+const Personnalisation = lazy(() => import("./pages/settings/Personnalisation"));
+const Reglages = lazy(() => import("./pages/settings/Reglages"));
 const NotFound = lazy(() => import("./pages/not-found/NotFound"));
 const Rattrapage = lazy(() => import("./pages/rattrapage/Rattrapage"));
 const Onboarding = lazy(() => import("./pages/onboarding/Onboarding"));
@@ -73,21 +68,16 @@ const App = () => {
             <Route path="/stocks/new" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
             <Route path="/stocks/adjust" element={<ProtectedRoute><StockForm /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><Calendar /></ProtectedRoute>} />
-            <Route path="/calendar-sync" element={<ProtectedRoute><CalendarSync /></ProtectedRoute>} />
             <Route path="/profile-export" element={<ProtectedRoute><ProfileExport /></ProtectedRoute>} />
             <Route path="/prescriptions" element={<ProtectedRoute><Prescriptions /></ProtectedRoute>} />
             <Route path="/referentials" element={<ProtectedRoute><Referentials /></ProtectedRoute>} />
-            <Route path="/referentials/health-professionals" element={<ProtectedRoute><HealthProfessionals /></ProtectedRoute>} />
-            <Route path="/referentials/pathologies" element={<ProtectedRoute><Pathologies /></ProtectedRoute>} />
-            <Route path="/referentials/allergies" element={<ProtectedRoute><Allergies /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-            <Route path="/settings/navigation" element={<ProtectedRoute><NavigationManager /></ProtectedRoute>} />
             <Route path="/settings/sections-order" element={<ProtectedRoute><SettingsSectionOrder /></ProtectedRoute>} />
-            <Route path="/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
+            <Route path="/settings/personnalisation" element={<ProtectedRoute><Personnalisation /></ProtectedRoute>} />
+            <Route path="/settings/reglages" element={<ProtectedRoute><Reglages /></ProtectedRoute>} />
             <Route path="/notifications/debug" element={<ProtectedRoute><NotificationDebug /></ProtectedRoute>} />
             <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/privacy" element={<ProtectedRoute><Privacy /></ProtectedRoute>} />
             <Route path="/about" element={<ProtectedRoute><About /></ProtectedRoute>} />
             <Route path="/stocks/:id" element={<ProtectedRoute><StockDetails /></ProtectedRoute>} />
             <Route path="/treatments/:id/edit" element={<ProtectedRoute><TreatmentEdit /></ProtectedRoute>} />

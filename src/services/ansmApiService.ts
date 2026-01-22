@@ -64,9 +64,10 @@ const SUBSTANCE_TO_PATHOLOGY_MAP: Record<string, string> = {
  * Recherche dans la table ANSM officielle (15 823 médicaments)
  * Utilise PostgreSQL full-text search pour performance optimale
  * @param searchTerm - Terme de recherche (nom du médicament)
+ * @param searchMode - Mode de recherche: 'startsWith' ou 'contains'
  * @returns Liste des médicaments trouvés
  */
-export async function searchANSMApi(searchTerm: string): Promise<ANSMMedication[]> {
+export async function searchANSMApi(searchTerm: string, searchMode: 'startsWith' | 'contains' = 'startsWith'): Promise<ANSMMedication[]> {
   if (!searchTerm || searchTerm.length < 3) {
     return [];
   }
@@ -77,11 +78,16 @@ export async function searchANSMApi(searchTerm: string): Promise<ANSMMedication[
       return denom.split(/\s+\d/)[0].trim().toUpperCase();
     };
 
+    // Construire la requête selon le mode de recherche
+    const searchPattern = searchMode === 'startsWith' 
+      ? `${searchTerm}%` 
+      : `%${searchTerm}%`;
+
     // Recherche dans nom commercial ET substance active
     const { data, error } = await supabase
       .from('ansm_medications')
       .select('code_cis, name, form, strength, substance_active, pathology_id, administration_route')
-      .or(`name.ilike.${searchTerm}%,substance_active.ilike.%${searchTerm}%`) // Priorité: commence par
+      .or(`name.ilike.${searchPattern},substance_active.ilike.${searchPattern}`)
       .order('substance_active')
       .order('strength')
       .limit(50);
@@ -102,15 +108,17 @@ export async function searchANSMApi(searchTerm: string): Promise<ANSMMedication[
         .trim();
     };
 
-    // Filtrer résultats pertinents (nom commercial ou substance commence par terme)
-    const relevantData = data.filter(med => {
-      const commercialName = extractCommercialName(med.name);
-      const cleanedSub = cleanSubstance(med.substance_active || '');
-      const searchUpper = searchTerm.toUpperCase();
-      
-      return commercialName.startsWith(searchUpper) || 
-             cleanedSub.toUpperCase().startsWith(searchUpper);
-    }).slice(0, 20);
+    // En mode 'contains', pas de filtrage supplémentaire nécessaire
+    const relevantData = searchMode === 'contains' 
+      ? data.slice(0, 20)
+      : data.filter(med => {
+          const commercialName = extractCommercialName(med.name);
+          const cleanedSub = cleanSubstance(med.substance_active || '');
+          const searchUpper = searchTerm.toUpperCase();
+          
+          return commercialName.startsWith(searchUpper) || 
+                 cleanedSub.toUpperCase().startsWith(searchUpper);
+        }).slice(0, 20);
 
     // Vérifier catalog avec noms commerciaux ET substances
     const { data: catalogMeds } = await supabase

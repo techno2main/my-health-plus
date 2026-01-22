@@ -308,7 +308,7 @@ export const CalendarView = ({
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate("/calendar-sync")}
+                onClick={() => navigate("/settings/reglages?tab=synchronisation")}
                 className="gap-2 text-muted-foreground hover:text-foreground rounded-full"
               >
                 <RefreshCw className="h-4 w-4" />

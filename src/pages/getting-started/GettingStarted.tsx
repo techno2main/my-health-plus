@@ -133,14 +133,8 @@ export default function GettingStarted() {
         <Card 
           className="p-4 hover:shadow-md transition-shadow cursor-pointer"
           onClick={() => {
-            // Rediriger vers le bon onglet selon ce qui manque
-            if (!completion.healthProfessionals.hasMedecin) {
-              navigate('/referentials/health-professionals?tab=medecins');
-            } else if (!completion.healthProfessionals.hasPharmacie) {
-              navigate('/referentials/health-professionals?tab=pharmacies');
-            } else {
-              navigate('/referentials/health-professionals');
-            }
+            // Rediriger vers le profil avec l'onglet réseau
+            navigate('/profile?tab=reseau');
           }}
         >
           <div className="flex items-start gap-4">
@@ -195,7 +189,7 @@ export default function GettingStarted() {
         {/* Carte 3 : Mes allergies (optionnel) */}
         <Card 
           className="p-4 hover:shadow-md transition-shadow cursor-pointer border-dashed"
-          onClick={() => navigate('/referentials/allergies')}
+          onClick={() => navigate('/profile?tab=sante&subtab=allergies')}
         >
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
