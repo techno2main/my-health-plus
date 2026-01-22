@@ -1,12 +1,15 @@
 import { Card } from "@/components/ui/card"
 import { AdherenceStats } from "@/hooks/useAdherenceStats"
 import { StatusIcon, statusBgClasses, statusHoverBgClasses, IntakeStatus } from "@/components/ui/status-icon"
+import { format } from "date-fns"
+import { fr } from "date-fns/locale"
 
 interface StatsCardsProps {
   stats: AdherenceStats
   onFilterClick: (filter: 'ontime' | 'late' | 'missed' | 'skipped') => void
   totalCompleted: number
   totalPending: number
+  firstIntakeDate?: Date
 }
 
 const statItems: { status: IntakeStatus; key: keyof AdherenceStats }[] = [
@@ -16,7 +19,11 @@ const statItems: { status: IntakeStatus; key: keyof AdherenceStats }[] = [
   { status: 'missed', key: 'missed' },
 ]
 
-export const StatsCards = ({ stats, onFilterClick, totalCompleted, totalPending }: StatsCardsProps) => {
+export const StatsCards = ({ stats, onFilterClick, totalCompleted, totalPending, firstIntakeDate }: StatsCardsProps) => {
+  const titleText = firstIntakeDate 
+    ? `Résumé (depuis le ${format(firstIntakeDate, 'dd/MM/yy', { locale: fr })})`
+    : 'Résumé'
+  
   return (
     <>
       <Card className="p-6">
@@ -51,20 +58,27 @@ export const StatsCards = ({ stats, onFilterClick, totalCompleted, totalPending 
       </Card>
 
       <Card className="p-6">
-        <h3 className="font-semibold mb-4">Résumé (depuis le 13/10/25)</h3>
+        <h3 className="font-semibold mb-4">{titleText}</h3>
         <div className="grid grid-cols-4 gap-2">
           {statItems.map(({ status, key }) => (
             <div 
               key={status}
-              className={`p-3 rounded-lg cursor-pointer transition-colors text-center ${statusBgClasses[status]} ${statusHoverBgClasses[status]}`}
-              onClick={() => onFilterClick(status as 'ontime' | 'late' | 'missed' | 'skipped')}
+              className="flex flex-col items-center gap-1"
             >
-              <div className="flex justify-center mb-1">
-                <StatusIcon status={status} size="md" />
+              <div 
+                className={`p-3 rounded-lg cursor-pointer transition-colors text-center w-full ${statusBgClasses[status]} ${statusHoverBgClasses[status]}`}
+                onClick={() => onFilterClick(status as 'ontime' | 'late' | 'missed' | 'skipped')}
+              >
+                <div className="flex justify-center mb-1">
+                  <StatusIcon status={status} size="md" />
+                </div>
+                <p className={`text-2xl font-bold ${status === 'missed' ? 'text-danger' : status === 'skipped' ? 'text-warning' : 'text-success'}`}>
+                  {stats[key]}
+                </p>
               </div>
-              <p className={`text-2xl font-bold ${status === 'missed' ? 'text-danger' : status === 'skipped' ? 'text-warning' : 'text-success'}`}>
-                {stats[key]}
-              </p>
+              <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                {status === 'ontime' ? 'À l\'heure' : status === 'late' ? 'Retard' : status === 'skipped' ? 'Sautées' : 'Manquées'}
+              </span>
             </div>
           ))}
         </div>

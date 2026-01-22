@@ -64,26 +64,31 @@ export const FilterButtons = ({ filterStatus, onFilterChange, counts }: FilterBu
             const count = counts[filterKey]
             
             return (
-              <Tooltip key={status}>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant={isActive ? "default" : "outline"} 
-                    size="sm"
-                    onClick={() => onFilterChange(filterKey)}
-                    className={`h-10 w-full relative px-1 ${isActive ? '' : borderClass}`}
-                  >
-                    <StatusIcon status={status} size="md" showTooltip={false} />
-                    {count > 0 && (
-                      <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[9px] font-bold rounded-full border-2 border-background ${getBadgeClasses(isActive, status)}`}>
-                        {count}
-                      </span>
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{statusLabels[status]}</p>
-                </TooltipContent>
-              </Tooltip>
+              <div key={status} className="flex flex-col items-center gap-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant={isActive ? "default" : "outline"} 
+                      size="sm"
+                      onClick={() => onFilterChange(filterKey)}
+                      className={`h-10 w-full relative px-1 ${isActive ? '' : borderClass}`}
+                    >
+                      <StatusIcon status={status} size="md" showTooltip={false} />
+                      {count > 0 && (
+                        <span className={`absolute -top-1 -right-1 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 text-[9px] font-bold rounded-full border-2 border-background ${getBadgeClasses(isActive, status)}`}>
+                          {count}
+                        </span>
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{statusLabels[status]}</p>
+                  </TooltipContent>
+                </Tooltip>
+                <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                  {status === 'all' ? 'Tout' : status === 'ontime' ? 'À l\'heure' : status === 'late' ? 'Retard' : status === 'skipped' ? 'Sautées' : 'Manquées'}
+                </span>
+              </div>
             )
           })}
         </div>

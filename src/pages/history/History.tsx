@@ -9,7 +9,9 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useHistoryData } from "./hooks/useHistoryData"
 import { useFilteredHistory } from "./hooks/useFilteredHistory"
 import { useExpandedDays } from "./hooks/useExpandedDays"
+import { useGroupedHistory } from "./hooks/useGroupedHistory"
 import { FilterButtons } from "./components/FilterButtons"
+import { MonthSection } from "./components/MonthSection"
 import { DaySection } from "./components/DaySection"
 import { StatsCards } from "./components/StatsCards"
 import { EmptyState } from "./components/EmptyState"
@@ -20,6 +22,7 @@ export default function History() {
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<ActiveTab>((searchParams.get("tab") as ActiveTab) || "history")
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all")
+  const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set([]))
   
   const { historyData, loading } = useHistoryData()
   const { stats, loading: statsLoading } = useAdherenceStats()
@@ -36,8 +39,65 @@ export default function History() {
     })
   }, [filteredData])
   
+  // Separate today from the rest
+  const today = startOfDay(new Date())
+  const todayData = displayData.find(day => 
+    startOfDay(day.date).getTime() === today.getTime()
+  )
+  
+  const historyWithoutToday = displayData.filter(day => 
+    startOfDay(day.date).getTime() !== today.getTime()
+  )
+  
+  // Group by month (without today)
+  const monthGroups = useGroupedHistory(historyWithoutToday)
+  
   // Expanded days management
-  const { expandedDays, todayRef, toggleDay } = useExpandedDays(historyData, filterStatus, activeTab)
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set())
+  const [isInitialized, setIsInitialized] = useState(false)
+  const todayRef = null
+  
+  // Initial setup: expand today
+  useEffect(() => {
+    if (!isInitialized && todayData) {
+      setExpandedDays(new Set([todayData.date.toISOString()]))
+      setIsInitialized(true)
+    } else if (!isInitialized && !todayData && monthGroups.length > 0) {
+      const firstDay = monthGroups[0].days[0]
+      if (firstDay) {
+        setExpandedDays(new Set([firstDay.date.toISOString()]))
+        setExpandedMonths(new Set([monthGroups[0].key]))
+        setIsInitialized(true)
+      }
+    }
+  }, [todayData, monthGroups, isInitialized])
+  
+  // Reset on filter/tab change
+  useEffect(() => {
+    setExpandedMonths(new Set())
+    
+    if (todayData) {
+      setExpandedDays(new Set([todayData.date.toISOString()]))
+    } else if (monthGroups.length > 0 && monthGroups[0].days.length > 0) {
+      const firstDay = monthGroups[0].days[0]
+      setExpandedDays(new Set([firstDay.date.toISOString()]))
+      setExpandedMonths(new Set([monthGroups[0].key]))
+    } else {
+      setExpandedDays(new Set())
+    }
+  }, [filterStatus, activeTab])
+  
+  const toggleDay = (dateKey: string) => {
+    setExpandedDays(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(dateKey)) {
+        newSet.delete(dateKey)
+      } else {
+        newSet.add(dateKey)
+      }
+      return newSet
+    })
+  }
 
   // Calculate filter counts from stats
   const filterCounts = useMemo(() => {
@@ -51,15 +111,23 @@ export default function History() {
     }
   }, [stats])
 
-  // Calculate total completed and pending
-  const { totalCompleted, totalPending } = useMemo(() => {
+  // Calculate total completed and pending + first intake date
+  const { totalCompleted, totalPending, firstIntakeDate } = useMemo(() => {
     const completed = historyData.reduce((sum, day) => 
       sum + day.intakes.filter(i => i.status !== 'pending').length, 0
     )
     const pending = historyData.reduce((sum, day) => 
       sum + day.intakes.filter(i => i.status === 'pending').length, 0
     )
-    return { totalCompleted: completed, totalPending: pending }
+    
+    // Find first intake date
+    let firstDate: Date | undefined = undefined
+    if (historyData.length > 0) {
+      const sortedDays = [...historyData].sort((a, b) => a.date.getTime() - b.date.getTime())
+      firstDate = sortedDays[0]?.date
+    }
+    
+    return { totalCompleted: completed, totalPending: pending, firstIntakeDate: firstDate }
   }, [historyData])
 
   // Sync tab with URL
@@ -79,6 +147,18 @@ export default function History() {
     setFilterStatus(filter)
     setActiveTab("history")
     setSearchParams({ tab: "history" })
+  }
+
+  const toggleMonth = (monthKey: string) => {
+    setExpandedMonths(prev => {
+      const newSet = new Set(prev)
+      if (newSet.has(monthKey)) {
+        newSet.delete(monthKey)
+      } else {
+        newSet.add(monthKey)
+      }
+      return newSet
+    })
   }
 
   if (loading) {
@@ -116,23 +196,45 @@ export default function History() {
               counts={filterCounts}
             />
 
-            {displayData.length === 0 ? (
+            {!todayData && monthGroups.length === 0 ? (
               <EmptyState />
             ) : (
-              displayData.map((day, dayIdx) => {
-                const dateKey = day.date.toISOString()
-                const isExpanded = expandedDays.has(dateKey)
-                
-                return (
-                  <DaySection
-                    key={dayIdx}
-                    day={day}
-                    isExpanded={isExpanded}
-                    onToggle={() => toggleDay(dateKey)}
-                    ref={dayIdx === 0 ? todayRef : null}
-                  />
-                )
-              })
+              <>
+                {/* Section Aujourd'hui */}
+                {todayData && (
+                  <div className="space-y-3">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-2">
+                      Aujourd'hui
+                    </h3>
+                    <DaySection
+                      day={todayData}
+                      isExpanded={expandedDays.has(todayData.date.toISOString())}
+                      onToggle={() => toggleDay(todayData.date.toISOString())}
+                    />
+                  </div>
+                )}
+
+                {/* Historique par mois */}
+                {monthGroups.length > 0 && (
+                  <div className="space-y-3">
+                    {todayData && (
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider px-2 mt-6">
+                        Historique
+                      </h3>
+                    )}
+                    {monthGroups.map((monthGroup) => (
+                      <MonthSection
+                        key={monthGroup.key}
+                        monthGroup={monthGroup}
+                        isExpanded={expandedMonths.has(monthGroup.key)}
+                        onToggle={() => toggleMonth(monthGroup.key)}
+                        expandedDays={expandedDays}
+                        onToggleDay={toggleDay}
+                      />
+                    ))}
+                  </div>
+                )}
+              </>
             )}
           </TabsContent>
 
@@ -143,6 +245,7 @@ export default function History() {
                 onFilterClick={handleFilterClick}
                 totalCompleted={totalCompleted}
                 totalPending={totalPending}
+                firstIntakeDate={firstIntakeDate}
               />
             )}
           </TabsContent>
