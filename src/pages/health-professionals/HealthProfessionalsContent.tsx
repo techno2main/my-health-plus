@@ -1,8 +1,5 @@
-import { AppLayout } from "@/components/Layout/AppLayout";
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { filterByType, TabType, mapTypeToDb, ProfessionalType, type HealthProfessional, type HealthProfessionalFormData } from "./utils/professionalUtils";
 import { useEntityCrud } from "@/hooks/generic/useEntityCrud";
 import { useEntityDialog } from "@/hooks/generic/useEntityDialog";
@@ -11,8 +8,7 @@ import { ProfessionalDialog } from "./components/ProfessionalDialog";
 import { ProfessionalDeleteAlert } from "./components/ProfessionalDeleteAlert";
 import { FloatingAddButton } from "./components/FloatingAddButton";
 
-const HealthProfessionals = () => {
-  const navigate = useNavigate();
+export const HealthProfessionalsContent = () => {
   const [searchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState<TabType>("medecins");
@@ -110,50 +106,34 @@ const HealthProfessionals = () => {
     laboratoires: filterByType(professionals, "laboratoires", searchTerm),
   };
 
-  const totalCount = professionals.length;
-
   return (
-    <AppLayout>
-      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/referentials")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <header className="flex-1">
-            <h1 className="text-xl font-bold">Professionnels de santé</h1>
-            <p className="text-sm text-muted-foreground">{totalCount} professionnel(s)</p>
-          </header>
-        </div>
+    <div className="space-y-6">
+      <ProfessionalTabs
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        professionals={filteredData}
+        isLoading={isLoading}
+        onEdit={handleEdit}
+        onDelete={handleDelete}
+        onAdd={handleAdd}
+      />
 
-        <ProfessionalTabs
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          professionals={filteredData}
-          isLoading={isLoading}
-          onEdit={handleEdit}
-          onDelete={handleDelete}
-          onAdd={handleAdd}
-        />
+      <FloatingAddButton onAdd={handleAdd} />
 
-        <FloatingAddButton onAdd={handleAdd} />
+      <ProfessionalDialog
+        open={showDialog}
+        onClose={closeDialog}
+        editingItem={editingItem}
+        formData={formData}
+        onFormChange={setFormData}
+        onSubmit={handleSubmit}
+      />
 
-        <ProfessionalDialog
-          open={showDialog}
-          onClose={closeDialog}
-          editingItem={editingItem}
-          formData={formData}
-          onFormChange={setFormData}
-          onSubmit={handleSubmit}
-        />
-
-        <ProfessionalDeleteAlert
-          open={!!deletingId}
-          onClose={() => setDeletingId(null)}
-          onConfirm={confirmDelete}
-        />
-      </div>
-    </AppLayout>
+      <ProfessionalDeleteAlert
+        open={!!deletingId}
+        onClose={() => setDeletingId(null)}
+        onConfirm={confirmDelete}
+      />
+    </div>
   );
 };
-
-export default HealthProfessionals;
