@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client"
  */
 export function useNavigationItems() {
   return useQuery({
-    queryKey: ["navigation-items"],
+    queryKey: ["navigation-items", "active"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("navigation_items")
