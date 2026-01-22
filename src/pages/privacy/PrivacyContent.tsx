@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { AppLayout } from "@/components/Layout/AppLayout";
-import { PageHeader } from "@/components/Layout/PageHeader";
 import { SecurityCard } from "./components/SecurityCard";
 import { ChangePasswordDialog } from "./components/ChangePasswordDialog";
 import { ForgotPasswordDialog } from "./components/ForgotPasswordDialog";
@@ -10,7 +8,7 @@ import { DeleteAccountDialog } from "./components/DeleteAccountDialog";
 import { usePrivacySettings } from "./hooks/usePrivacySettings";
 import { usePrivacyDialogs } from "./hooks/usePrivacyDialogs";
 
-export default function Privacy() {
+export function PrivacyContent() {
   const {
     authProvider,
     biometricEnabled,
@@ -52,7 +50,6 @@ export default function Privacy() {
     setPendingTwoFactorChange,
   } = usePrivacyDialogs();
 
-  // States pour les nouveaux dialogs
   const [showChangePasswordDialog, setShowChangePasswordDialog] = useState(false);
   const [showForgotPasswordDialog, setShowForgotPasswordDialog] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
@@ -118,84 +115,70 @@ export default function Privacy() {
   };
 
   if (loading) {
-    return (
-      <AppLayout>
-        <div className="container max-w-2xl mx-auto px-4 py-6">
-          <p>Chargement...</p>
-        </div>
-      </AppLayout>
-    );
+    return <p>Chargement...</p>;
   }
 
   return (
-    <AppLayout>
-      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <PageHeader 
-          title="Sécurité"
-          subtitle="Protection des données personnelles"
-          backTo="/settings"
-        />
+    <div className="space-y-6">
+      <SecurityCard
+        authProvider={authProvider}
+        biometricEnabled={biometricEnabled}
+        twoFactorEnabled={twoFactorEnabled}
+        requireAuthOnOpen={requireAuthOnOpen}
+        inactivityTimeoutMinutes={inactivityTimeoutMinutes}
+        onPasswordChange={() => setShowChangePasswordDialog(true)}
+        onBiometricToggle={onBiometricToggle}
+        onTwoFactorToggle={onTwoFactorToggle}
+        onRequireAuthOnOpenToggle={() => handleRequireAuthOnOpenToggle(!requireAuthOnOpen)}
+        onInactivityTimeoutChange={handleInactivityTimeoutChange}
+        onDeleteAccount={() => setShowDeleteDialog(true)}
+      />
 
-        <SecurityCard
-          authProvider={authProvider}
-          biometricEnabled={biometricEnabled}
-          twoFactorEnabled={twoFactorEnabled}
-          requireAuthOnOpen={requireAuthOnOpen}
-          inactivityTimeoutMinutes={inactivityTimeoutMinutes}
-          onPasswordChange={() => setShowChangePasswordDialog(true)}
-          onBiometricToggle={onBiometricToggle}
-          onTwoFactorToggle={onTwoFactorToggle}
-          onRequireAuthOnOpenToggle={() => handleRequireAuthOnOpenToggle(!requireAuthOnOpen)}
-          onInactivityTimeoutChange={handleInactivityTimeoutChange}
-          onDeleteAccount={() => setShowDeleteDialog(true)}
-        />
+      <ChangePasswordDialog
+        open={showChangePasswordDialog}
+        onOpenChange={setShowChangePasswordDialog}
+        onConfirm={onChangePasswordConfirm}
+        onForgotPassword={() => setShowForgotPasswordDialog(true)}
+        isChanging={isChangingPassword}
+      />
 
-        <ChangePasswordDialog
-          open={showChangePasswordDialog}
-          onOpenChange={setShowChangePasswordDialog}
-          onConfirm={onChangePasswordConfirm}
-          onForgotPassword={() => setShowForgotPasswordDialog(true)}
-          isChanging={isChangingPassword}
-        />
+      <ForgotPasswordDialog
+        open={showForgotPasswordDialog}
+        onOpenChange={setShowForgotPasswordDialog}
+        onConfirm={onForgotPasswordConfirm}
+        biometricEnabled={biometricEnabled}
+        isSending={isSendingResetEmail}
+      />
 
-        <ForgotPasswordDialog
-          open={showForgotPasswordDialog}
-          onOpenChange={setShowForgotPasswordDialog}
-          onConfirm={onForgotPasswordConfirm}
-          biometricEnabled={biometricEnabled}
-          isSending={isSendingResetEmail}
-        />
+      <BiometricPasswordDialog
+        open={showBiometricPasswordDialog}
+        onOpenChange={closeBiometricPasswordDialog}
+        password={biometricPassword}
+        onPasswordChange={setBiometricPassword}
+        onSubmit={onBiometricPasswordSubmit}
+      />
 
-        <BiometricPasswordDialog
-          open={showBiometricPasswordDialog}
-          onOpenChange={closeBiometricPasswordDialog}
-          password={biometricPassword}
-          onPasswordChange={setBiometricPassword}
-          onSubmit={onBiometricPasswordSubmit}
-        />
+      <ConfirmationAlerts
+        biometricOpen={pendingBiometricChange}
+        biometricEnabled={biometricEnabled}
+        onBiometricOpenChange={setPendingBiometricChange}
+        onBiometricConfirm={onBiometricConfirm}
+        twoFactorOpen={pendingTwoFactorChange}
+        twoFactorEnabled={twoFactorEnabled}
+        onTwoFactorOpenChange={setPendingTwoFactorChange}
+        onTwoFactorConfirm={onTwoFactorConfirm}
+        exportOpen={showExportDialog}
+        onExportOpenChange={setShowExportDialog}
+        onExportConfirm={onExportConfirm}
+      />
 
-        <ConfirmationAlerts
-          biometricOpen={pendingBiometricChange}
-          biometricEnabled={biometricEnabled}
-          onBiometricOpenChange={setPendingBiometricChange}
-          onBiometricConfirm={onBiometricConfirm}
-          twoFactorOpen={pendingTwoFactorChange}
-          twoFactorEnabled={twoFactorEnabled}
-          onTwoFactorOpenChange={setPendingTwoFactorChange}
-          onTwoFactorConfirm={onTwoFactorConfirm}
-          exportOpen={showExportDialog}
-          onExportOpenChange={setShowExportDialog}
-          onExportConfirm={onExportConfirm}
-        />
-
-        <DeleteAccountDialog
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-          onConfirmDelete={onDeleteConfirm}
-          authProvider={authProvider}
-          biometricEnabled={biometricEnabled}
-        />
-      </div>
-    </AppLayout>
+      <DeleteAccountDialog
+        open={showDeleteDialog}
+        onOpenChange={setShowDeleteDialog}
+        onConfirmDelete={onDeleteConfirm}
+        authProvider={authProvider}
+        biometricEnabled={biometricEnabled}
+      />
+    </div>
   );
 }
