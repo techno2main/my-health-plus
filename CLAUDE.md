@@ -1,5 +1,15 @@
 # Mémoire projet – MyHealth+
 
+## 0. RÈGLE CRITIQUE : Vérification systématique des erreurs
+
+**OBLIGATOIRE APRÈS CHAQUE MODIFICATION DE CODE :**
+- Après CHAQUE modification de fichier(s), tu dois SYSTÉMATIQUEMENT exécuter `get_errors` pour vérifier qu'aucune erreur TypeScript/compilation n'a été introduite.
+- Si des erreurs sont détectées, tu dois les corriger IMMÉDIATEMENT avant de poursuivre ou de répondre à l'utilisateur.
+- Cette vérification est NON NÉGOCIABLE et s'applique à TOUTES les modifications de code, sans exception.
+- Cette règle a la PRIORITÉ ABSOLUE sur toutes les autres règles de ce document.
+
+---
+
 ## 1. Référence centrale du Flow GitHub
 
 Pour tout ce qui concerne le workflow Git / Flow GH :
