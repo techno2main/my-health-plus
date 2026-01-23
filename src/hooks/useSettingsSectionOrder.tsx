@@ -15,8 +15,9 @@ const DEFAULT_SECTIONS: SettingsSection[] = [
   { id: "profil", title: "Profil utilisateur", order: 1, visible: true },
   { id: "reglages", title: "Réglages", order: 2, visible: true },
   { id: "rattrapage", title: "Rattrapage", order: 3, visible: true },
-  { id: "diagnostics", title: "Diagnostics", order: 4, visible: true },
-  { id: "about", title: "À propos", order: 5, visible: true },
+  { id: "about", title: "MyHealth+", order: 4, visible: true },
+  { id: "didacticiels", title: "Didacticiels", order: 5, visible: true },
+  { id: "diagnostics", title: "Diagnostics", order: 6, visible: true },
 ];
 
 export function useSettingsSectionOrder() {

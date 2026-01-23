@@ -6,11 +6,16 @@ import { NavigationCard } from "./components/NavigationCard";
 import { Button } from "@/components/ui/button";
 import { useSettingsSectionOrder } from "@/hooks/useSettingsSectionOrder";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useEffect } from "react";
 
 export default function Settings() {
   const navigate = useNavigate();
   const { sections, loading } = useSettingsSectionOrder();
   const { resetOnboarding } = useOnboarding();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleReplayOnboarding = () => {
     resetOnboarding();
@@ -77,17 +82,22 @@ export default function Settings() {
     ),
     about: (
       <div className="space-y-3" key="about">
-        <h3 className="text-sm font-medium text-muted-foreground px-1">À propos</h3>
+        <h3 className="text-sm font-medium text-muted-foreground px-1">MyHealth+</h3>
         <NavigationCard
           icon={Smartphone}
-          title="À propos de l'application"
-          description="Version 1.1.0"
+          title="L'application"
+          description="À propos et Présentation"
           onClick={() => navigate("/about")}
         />
+      </div>
+    ),
+    didacticiels: (
+      <div className="space-y-3" key="didacticiels">
+        <h3 className="text-sm font-medium text-muted-foreground px-1">Didacticiels</h3>
         <NavigationCard
           icon={RotateCcw}
-          title="Présentation de l'application"
-          description="Revoir l'onboarding"
+          title="Revoir l'onboarding"
+          description="Parcourir à nouveau la présentation"
           onClick={handleReplayOnboarding}
         />
       </div>
@@ -97,7 +107,7 @@ export default function Settings() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
           <div className="flex items-center justify-between">
             <PageHeader 
               title="Paramètres"
