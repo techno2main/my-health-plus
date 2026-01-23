@@ -1,118 +1,82 @@
 import { AppLayout } from "@/components/Layout/AppLayout";
-import { PageHeader } from "@/components/Layout/PageHeader";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Heart, Mail, Globe, Star } from "lucide-react";
+import { PageHeaderWithHelp } from "@/components/Layout/PageHeaderWithHelp";
+import { ArrowLeft, Info, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AboutContent } from "./AboutContent";
+import { PresentationContent } from "./PresentationContent";
+import { useSearchParams } from "react-router-dom";
 
 export default function About() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState<"about" | "presentation">("about");
+
+  useEffect(() => {
+    // Scroll vers le haut au chargement
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, []);
+
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam === 'presentation') {
+      setActiveTab('presentation');
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (value: string) => {
+    const newTab = value as "about" | "presentation";
+    setActiveTab(newTab);
+    
+    const params = new URLSearchParams(searchParams);
+    params.set('tab', newTab);
+    setSearchParams(params, { replace: true });
+  };
 
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
-          <PageHeader 
-            title="À propos"
-            subtitle="Informations sur l'application"
-            backTo="/settings"
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
+          <PageHeaderWithHelp 
+            title="L'application"
+            subtitle="Informations et présentation"
+            helpText="Découvrez MyHealth+, votre assistant santé personnel. Consultez les informations sur l'application et personnalisez son apparence."
+            leftButton={
+              <button
+                onClick={() => navigate("/settings")}
+                className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                title="Retour"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            }
           />
         </div>
 
-        <div className="mt-4 space-y-6">
-
-        {/* Logo et version */}
-        <Card className="p-8 text-center">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-6 rounded-full bg-primary/10">
-              <Heart className="h-12 w-12 text-primary" />
+        <div className="mt-4">
+          <Tabs value={activeTab} onValueChange={handleTabChange}>
+            <div className="sticky top-[72px] z-20 bg-background pb-4">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="about" className="flex items-center gap-2">
+                  <Info className="h-4 w-4 shrink-0" />
+                  <span className="text-sm">À propos</span>
+                </TabsTrigger>
+                <TabsTrigger value="presentation" className="flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 shrink-0" />
+                  <span className="text-sm">Présentation</span>
+                </TabsTrigger>
+              </TabsList>
             </div>
-          </div>
-          <h2 className="text-2xl font-bold mb-2">MyHealth+</h2>
-          <p className="text-muted-foreground mb-1">Votre assistant santé personnel</p>
-          <p className="text-sm text-muted-foreground">Version 1.1.0</p>
-        </Card>
 
-        {/* Description */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-3">Notre mission</h3>
-          <p className="text-muted-foreground leading-relaxed">
-            MyHealth+ est une application conçue pour vous aider à gérer vos traitements médicaux en toute simplicité. 
-            Suivez vos prises, gérez vos stocks et consultez vos ordonnances en un seul endroit.
-          </p>
-        </Card>
+            <TabsContent value="about" className="mt-4">
+              <AboutContent />
+            </TabsContent>
 
-        {/* Fonctionnalités */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Fonctionnalités principales</h3>
-          <ul className="space-y-3">
-            <li className="flex items-start gap-3">
-              <div className="p-1 rounded-full bg-primary/10 mt-1">
-                <Star className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Suivi des traitements</p>
-                <p className="text-sm text-muted-foreground">Rappels personnalisés pour ne jamais oublier</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="p-1 rounded-full bg-primary/10 mt-1">
-                <Star className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Gestion des stocks</p>
-                <p className="text-sm text-muted-foreground">Alertes de réapprovisionnement</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="p-1 rounded-full bg-primary/10 mt-1">
-                <Star className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Ordonnances numériques</p>
-                <p className="text-sm text-muted-foreground">Stockage sécurisé de vos prescriptions</p>
-              </div>
-            </li>
-            <li className="flex items-start gap-3">
-              <div className="p-1 rounded-full bg-primary/10 mt-1">
-                <Star className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="font-medium">Historique détaillé</p>
-                <p className="text-sm text-muted-foreground">Suivi de votre observance thérapeutique</p>
-              </div>
-            </li>
-          </ul>
-        </Card>
-
-        {/* Contact */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Contact</h3>
-          <div className="space-y-3">
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <a href="mailto:support@techno2main.fr?bcc=techno2main@gmail.com&subject=Contact%20from%20MyHealth%2B%20App">
-                <Mail className="mr-2 h-4 w-4" />
-                E-mail
-              </a>
-            </Button>
-            <Button variant="outline" className="w-full justify-start" asChild>
-              <a href="https://myhealthplus.web-tad.app" target="_blank" rel="noopener noreferrer">
-                <Globe className="mr-2 h-4 w-4" />
-                Application MyHealth+ 
-              </a>
-            </Button>
-          </div>
-        </Card>
-
-        {/* Crédits */}
-        <Card className="p-6 text-center">
-          <p className="text-sm text-muted-foreground">
-            MyHealth+
-          </p>
-          <p className="text-xs text-muted-foreground mt-2">
-            © 2025 • TAD • Tous droits réservés.
-          </p>
-        </Card>
+            <TabsContent value="presentation" className="mt-4">
+              <PresentationContent />
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </AppLayout>
