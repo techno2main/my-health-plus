@@ -1,13 +1,21 @@
 import { AppLayout } from "@/components/Layout/AppLayout";
-import { PageHeader } from "@/components/Layout/PageHeader";
+import { PageHeaderWithHelp } from "@/components/Layout/PageHeaderWithHelp";
+import { ArrowLeft } from "lucide-react";
 import { EmptyState } from "./components/EmptyState";
 import { ActionSummary } from "./components/ActionSummary";
 import { IntakeCard } from "./components/IntakeCard";
 import { RattrapageConfirmationDialog } from "./components/ConfirmationDialog";
 import { useMissedIntakesDetection } from "@/hooks/useMissedIntakesDetection";
 import { useRattrapageActions } from "./hooks/useRattrapageActions";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 export default function Rattrapage() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const { missedIntakes, totalMissed, loading } = useMissedIntakesDetection();
   const {
     actions,
@@ -35,11 +43,20 @@ export default function Rattrapage() {
   return (
     <AppLayout>
       <div className="container max-w-3xl mx-auto px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
-          <PageHeader
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
+          <PageHeaderWithHelp
             title="Mise à jour des prises"
             subtitle={totalMissed === 0 ? "Aucune prise non traitée" : `${totalMissed} prise${totalMissed > 1 ? 's' : ''} non traitée${totalMissed > 1 ? 's' : ''} à mettre à jour`}
-            backTo="/"
+            helpText="Gérez les prises non traitées en les marquant comme prises, sautées ou en ajustant leur statut. Toutes les modifications sont regroupées pour validation."
+            leftButton={
+              <button
+                onClick={() => navigate("/")}
+                className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                title="Retour"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            }
           />
         </div>
 

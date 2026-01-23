@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react"
 import { AppLayout } from "@/components/Layout/AppLayout"
+import { PageHeaderWithHelp } from "@/components/Layout/PageHeaderWithHelp";
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { useNavigate } from "react-router-dom"
@@ -14,6 +15,10 @@ import type { Medication } from "./types"
 
 export default function TreatmentEdit() {
   const navigate = useNavigate()
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const {
     treatment,
     medications: medicationsFromDb,
@@ -115,16 +120,17 @@ export default function TreatmentEdit() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate("/treatments")}>
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-lg font-bold">Modifier le traitement</h1>
-              <p className="text-sm text-muted-foreground">{treatment.name}</p>
-            </div>
-          </div>
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
+          <PageHeaderWithHelp
+            title="Modifier le traitement"
+            subtitle={treatment.name}
+            helpText="Modifiez les informations de votre traitement : nom, dates, description. Gérez les médicaments associés, leurs posologies et horaires de prise. Vous pouvez aussi mettre en pause ou supprimer des médicaments."
+            leftButton={
+              <Button variant="ghost" size="sm" onClick={() => navigate("/treatments")}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            }
+          />
         </div>
 
         <div className="space-y-6 mt-4">

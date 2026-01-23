@@ -2,7 +2,8 @@ import { useState, useEffect, useMemo } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
 import { startOfDay } from "date-fns"
 import { AppLayout } from "@/components/Layout/AppLayout"
-import { PageHeader } from "@/components/Layout/PageHeader"
+import { PageHeaderWithHelp } from "@/components/Layout/PageHeaderWithHelp"
+import { ArrowLeft } from "lucide-react"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { useAdherenceStats } from "@/hooks/useAdherenceStats"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -23,6 +24,10 @@ export default function History() {
   const [activeTab, setActiveTab] = useState<ActiveTab>((searchParams.get("tab") as ActiveTab) || "history")
   const [filterStatus, setFilterStatus] = useState<FilterStatus>("all")
   const [expandedMonths, setExpandedMonths] = useState<Set<string>>(new Set([]))
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const { historyData, loading } = useHistoryData()
   const { stats, loading: statsLoading } = useAdherenceStats()
@@ -174,10 +179,20 @@ export default function History() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
-          <PageHeader 
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
+          <PageHeaderWithHelp 
             title="Historique"
             subtitle="Suivi des prises de médicaments"
+            helpText="Consultez l'historique complet de vos prises de médicaments. Filtrez par statut (effectuées, manquées, prochaines) et visualisez vos statistiques d'observance."
+            leftButton={
+              <button
+                onClick={() => navigate("/")}
+                className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                title="Retour"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            }
           />
         </div>
 

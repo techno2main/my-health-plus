@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/Layout/AppLayout";
-import { PageHeader } from "@/components/Layout/PageHeader";
+import { PageHeaderWithHelp } from "@/components/Layout/PageHeaderWithHelp";
+import { ArrowLeft } from "lucide-react";
 import { useMonthIntakes } from "./hooks/useMonthIntakes";
 import { useDayDetails } from "./hooks/useDayDetails";
 import { useVisitDates } from "./hooks/useVisitDates";
@@ -67,10 +68,20 @@ const Calendar = () => {
   return (
     <AppLayout>
       <div ref={pageTopRef} className="container max-w-2xl mx-auto px-3 md:px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
-          <PageHeader 
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
+          <PageHeaderWithHelp 
             title="Calendrier" 
             subtitle="Suivi détaillé des prises"
+            helpText="Visualisez vos prises de médicaments jour par jour dans un calendrier interactif. Cliquez sur une date pour voir le détail complet des prises et leur statut."
+            leftButton={
+              <button
+                onClick={() => navigate("/")}
+                className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                title="Retour"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            }
           />
         </div>
 

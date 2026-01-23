@@ -1,8 +1,9 @@
 import { AppLayout } from "@/components/Layout/AppLayout";
+import { PageHeaderWithHelp } from "@/components/Layout/PageHeaderWithHelp";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, RefreshCw, Bell } from "lucide-react";
+import { ArrowLeft, RefreshCw, Bell, BellOff } from "lucide-react";
 import { useState, useEffect } from "react";
 import { LocalNotifications } from '@capacitor/local-notifications';
 import { Capacitor } from '@capacitor/core';
@@ -41,6 +42,11 @@ export default function NotificationDebug() {
   const [cache, setCache] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const { rescheduleAll } = useMedicationNotificationScheduler();
+
+  // Scroll vers le haut au chargement de la page
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const loadDebugInfo = async () => {
     setLoading(true);
@@ -180,41 +186,47 @@ export default function NotificationDebug() {
 
   return (
     <AppLayout>
-      <div className="container max-w-2xl mx-auto px-4 py-6 space-y-6">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold">🔍 Debug Notifications</h1>
-            <p className="text-sm text-muted-foreground">
-              Diagnostic complet du système
-            </p>
-          </div>
-          <Button variant="outline" size="sm" onClick={loadDebugInfo} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-          </Button>
+      <div className="container max-w-2xl mx-auto px-4 pb-6">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
+          <PageHeaderWithHelp
+            title="Debug Notifications"
+            subtitle="Diagnostic complet du système"
+            helpText="Outil de diagnostic complet pour analyser les notifications planifiées, les préférences enregistrées et résoudre les problèmes de synchronisation."
+            leftButton={
+              <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            }
+            rightButton={
+              <Button variant="outline" size="sm" onClick={loadDebugInfo} disabled={loading}>
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              </Button>
+            }
+          />
         </div>
+        
+        <div className="mt-4 space-y-6">
 
         {/* Actions rapides */}
         <Card className="p-4">
           <h3 className="font-semibold mb-3">⚡ Actions rapides</h3>
           <div className="flex flex-wrap gap-2">
             <Button 
-              variant="default" 
+              variant="outline" 
               size="sm" 
               onClick={triggerRescheduleWithToasts}
               disabled={loading}
-              className="gap-2"
+              className="gap-2 h-8 text-xs"
             >
-              <Bell className="h-4 w-4" />
+              <Bell className="h-3 w-3" />
               Replanifier avec toasts
             </Button>
-            <Button variant="outline" size="sm" onClick={clearCache}>
+            <Button variant="outline" size="sm" onClick={clearCache} className="h-8 text-xs">
               Vider le cache
             </Button>
-            <Button variant="destructive" size="sm" onClick={cancelAll}>
-              Annuler toutes les notifs
+            <Button variant="outline" size="sm" onClick={cancelAll} className="gap-2 h-8 text-xs">
+              <BellOff className="h-3 w-3" />
+              Annuler toutes les notifications
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-3">
@@ -378,6 +390,7 @@ export default function NotificationDebug() {
             )}
           </div>
         </Card>
+        </div>
       </div>
     </AppLayout>
   );

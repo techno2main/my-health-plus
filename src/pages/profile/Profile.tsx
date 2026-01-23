@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/Layout/AppLayout";
-import { PageHeader } from "@/components/Layout/PageHeader";
+import { PageHeaderWithHelp } from "@/components/Layout/PageHeaderWithHelp";
+import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { useAuth } from "@/hooks/useAuth";
 import { setFilePickerActive } from "@/hooks/useFilePicker";
@@ -26,8 +28,12 @@ import { StockContent } from "@/pages/stocks/StockContent";
 import type { ProfileFieldName } from "@/contexts/ProfileCompletionContext";
 
 export default function Profile() {
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   const { user } = useAuth();
   const { isAdmin } = useUserRole();
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { refetch: refetchProfileCompletion } = useProfileCompletion();
   
@@ -127,15 +133,39 @@ export default function Profile() {
   }
 
   const currentTabInfo = getTabTitle(activeTab);
+  
+  const getHelpText = () => {
+    switch (activeTab) {
+      case "profil":
+        return "Gérez vos informations personnelles : nom, prénom, date de naissance, groupe sanguin, taille et poids. Ces données permettent un suivi médical personnalisé.";
+      case "reseau":
+        return "Enregistrez vos professionnels de santé (médecins, pharmaciens, etc.) pour faciliter la gestion de vos soins et garder leurs coordonnées à portée de main.";
+      case "sante":
+        return "Documentez vos allergies, intolérances et pathologies pour garantir un suivi médical sûr et informé de votre état de santé.";
+      case "stocks":
+        return "Suivez vos médicaments disponibles, leur quantité et leurs dates d'expiration pour éviter les ruptures de stock et les péremptions.";
+      default:
+        return "";
+    }
+  };
 
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 pb-24">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
-          <PageHeader 
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
+          <PageHeaderWithHelp 
             title={currentTabInfo.title}
             subtitle={currentTabInfo.subtitle}
-            backTo="/"
+            helpText={getHelpText()}
+            leftButton={
+              <button
+                onClick={() => navigate("/")}
+                className="p-2 -ml-2 hover:bg-muted rounded-lg transition-colors shrink-0"
+                title="Retour"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            }
           />
         </div>
 
