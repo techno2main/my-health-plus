@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Palette, Navigation } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
@@ -9,6 +9,10 @@ interface PersonnalisationTabsProps {
   apparenceContent: React.ReactNode;
   menusContent: React.ReactNode;
 }
+
+const ActiveTabContext = createContext<PersonnalisationTabType>("apparence");
+
+export const useActiveTab = () => useContext(ActiveTabContext);
 
 export function PersonnalisationTabs({ apparenceContent, menusContent }: PersonnalisationTabsProps) {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,27 +35,29 @@ export function PersonnalisationTabs({ apparenceContent, menusContent }: Personn
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange}>
-      <div className="sticky top-[72px] z-20 bg-background pb-4">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="apparence" className="flex items-center gap-2">
-            <Palette className="h-4 w-4 shrink-0" />
-            <span className="text-sm">Apparence</span>
-          </TabsTrigger>
-          <TabsTrigger value="menus" className="flex items-center gap-2">
-            <Navigation className="h-4 w-4 shrink-0" />
-            <span className="text-sm">Menus</span>
-          </TabsTrigger>
-        </TabsList>
-      </div>
+    <ActiveTabContext.Provider value={activeTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <div className="sticky top-[72px] z-20 bg-background pb-4">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="apparence" className="flex items-center gap-2">
+              <Palette className="h-4 w-4 shrink-0" />
+              <span className="text-sm">Apparence</span>
+            </TabsTrigger>
+            <TabsTrigger value="menus" className="flex items-center gap-2">
+              <Navigation className="h-4 w-4 shrink-0" />
+              <span className="text-sm">Menus</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
-      <TabsContent value="apparence" className="mt-4">
-        {apparenceContent}
-      </TabsContent>
+        <TabsContent value="apparence" className="mt-4">
+          {apparenceContent}
+        </TabsContent>
 
-      <TabsContent value="menus" className="mt-4">
-        {menusContent}
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="menus" className="mt-4">
+          {menusContent}
+        </TabsContent>
+      </Tabs>
+    </ActiveTabContext.Provider>
   );
 }

@@ -1,9 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, Activity } from "lucide-react";
 import { useSearchParams } from "react-router-dom";
 
 export type HealthTabType = "allergies" | "pathologies";
+
+const ActiveHealthTabContext = createContext<HealthTabType>("allergies");
+
+export const useActiveHealthTab = () => useContext(ActiveHealthTabContext);
 
 interface HealthTabsProps {
   allergiesContent: React.ReactNode;
@@ -33,25 +37,27 @@ export function HealthTabs({ allergiesContent, pathologiesContent }: HealthTabsP
   };
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange}>
-      <TabsList className="grid w-full grid-cols-2 mb-6">
-        <TabsTrigger value="allergies" className="flex items-center gap-2">
-          <AlertCircle className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Allergies</span>
-        </TabsTrigger>
-        <TabsTrigger value="pathologies" className="flex items-center gap-2">
-          <Activity className="h-4 w-4 shrink-0" />
-          <span className="text-sm">Pathologies</span>
-        </TabsTrigger>
-      </TabsList>
+    <ActiveHealthTabContext.Provider value={activeTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
+        <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsTrigger value="allergies" className="flex items-center gap-2">
+            <AlertCircle className="h-4 w-4 shrink-0" />
+            <span className="text-sm">Allergies</span>
+          </TabsTrigger>
+          <TabsTrigger value="pathologies" className="flex items-center gap-2">
+            <Activity className="h-4 w-4 shrink-0" />
+            <span className="text-sm">Pathologies</span>
+          </TabsTrigger>
+        </TabsList>
 
-      <TabsContent value="allergies">
-        {allergiesContent}
-      </TabsContent>
+        <TabsContent value="allergies">
+          {allergiesContent}
+        </TabsContent>
 
-      <TabsContent value="pathologies">
-        {pathologiesContent}
-      </TabsContent>
-    </Tabs>
+        <TabsContent value="pathologies">
+          {pathologiesContent}
+        </TabsContent>
+      </Tabs>
+    </ActiveHealthTabContext.Provider>
   );
 }
