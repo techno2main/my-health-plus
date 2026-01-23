@@ -20,6 +20,10 @@ export default function Prescriptions() {
   const { prescriptions, loading, handleToggleVisit, handleDownload } = usePrescriptions();
   const [pendingAction, setPendingAction] = useState<PendingVisitAction | null>(null);
   const [showDialog, setShowDialog] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
   
   const handleVisitClick = (
     treatmentId: string,
@@ -87,7 +91,7 @@ export default function Prescriptions() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
           <PageHeader title="Ordonnances" subtitle="Vos prescriptions médicales" backTo="/treatments" />
         </div>
 

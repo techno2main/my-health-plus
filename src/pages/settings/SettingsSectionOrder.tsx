@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import { PageHeader } from "@/components/Layout/PageHeader";
 import { Card } from "@/components/ui/card";
@@ -80,6 +80,10 @@ export default function SettingsSectionOrder() {
   const { sections, loading, reorderSections, toggleSectionVisibility } = useSettingsSectionOrder();
   const [localSections, setLocalSections] = useState(sections);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -125,7 +129,7 @@ export default function SettingsSectionOrder() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
           <PageHeader 
             title="Ordre des sections"
             subtitle="Réorganisez les sections des paramètres"

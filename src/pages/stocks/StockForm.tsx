@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/Layout/PageHeader";
 import { StockAdjustmentForm } from "./components/StockAdjustmentForm";
 import { useStockForm } from "./hooks/useStockForm";
 import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 export default function StockForm() {
   const {
@@ -19,6 +20,10 @@ export default function StockForm() {
     handleCancel,
   } = useStockForm();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   if (isLoading || !medication) {
     return (
       <AppLayout>
@@ -32,7 +37,7 @@ export default function StockForm() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
           <PageHeader title={`Ajuster le stock - ${medication.name}`} backTo="/stocks" />
         </div>
 

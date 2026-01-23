@@ -31,7 +31,7 @@ const Referentials = () => {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate("/settings")}>
               <ArrowLeft className="h-4 w-4" />

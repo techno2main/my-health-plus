@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { User, Building2, AlertCircle, ChevronRight, Loader2, CheckCircle2 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +15,10 @@ export default function GettingStarted() {
   const { user } = useAuth();
   const completion = useGettingStartedCompletion();
   const [isCompleting, setIsCompleting] = useState(false);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleComplete = async () => {
     if (!user) return;

@@ -9,12 +9,17 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { format } from "date-fns";
+import { useEffect } from "react";
 
 export default function ProfileExport() {
   const { config, updateConfig, loading: configLoading } = useExportConfig();
   const { fetchExportData, loading: exportLoading } = useExportData();
   const { toast } = useToast();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   const handleExportPDF = async () => {
     try {
@@ -71,7 +76,7 @@ export default function ProfileExport() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-4 w-4" />

@@ -4,6 +4,7 @@ import { StockDetailsCard } from "./components/StockDetailsCard";
 import { Button } from "@/components/ui/button";
 import { useStockDetails } from "./hooks/useStockDetails";
 import { Loader2, Edit } from "lucide-react";
+import { useEffect } from "react";
 
 export default function StockDetails() {
   const {
@@ -19,6 +20,10 @@ export default function StockDetails() {
     handleBack,
   } = useStockDetails();
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   if (isLoading || !medication) {
     return (
       <AppLayout>
@@ -32,7 +37,7 @@ export default function StockDetails() {
   return (
     <AppLayout>
       <div className="container max-w-2xl mx-auto px-3 md:px-4 pb-6">
-        <div className="sticky top-0 z-20 bg-background pt-6 pb-4">
+        <div className="sticky top-0 z-20 bg-background pt-8 pb-4">
           <PageHeader title={`Détails - ${medication.name}`} backTo="/stocks" />
         </div>
 
